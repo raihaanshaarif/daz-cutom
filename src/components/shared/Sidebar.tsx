@@ -11,16 +11,20 @@ import {
   Users,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 
 export default function Sidebar() {
   const session = useSession();
-  console.log(session);
   const router = useRouter();
+  const isAdmin =
+    session.data?.user?.role === "ADMIN" ||
+    session.data?.user?.role === "SUPER_ADMIN";
   const [isUserExpanded, setIsUserExpanded] = useState(false);
   const [isBuyerExpanded, setIsBuyerExpanded] = useState(false);
   const [isCountryExpanded, setIsCountryExpanded] = useState(false);
+  const [isTaskExpanded, setIsTaskExpanded] = useState(false);
 
   const handleMyProfile = () => {
     if (session.data?.user?.id) {
@@ -82,39 +86,41 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* User Section */}
-        <div>
-          <button
-            onClick={() => setIsUserExpanded(!isUserExpanded)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black w-full text-left"
-          >
-            <Users className="h-4 w-4" />
-            User
-            {isUserExpanded ? (
-              <ChevronDown className="h-4 w-4 ml-auto" />
-            ) : (
-              <ChevronRight className="h-4 w-4 ml-auto" />
+        {/* User Section — Admin only */}
+        {isAdmin && (
+          <div>
+            <button
+              onClick={() => setIsUserExpanded(!isUserExpanded)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black w-full text-left"
+            >
+              <Users className="h-4 w-4" />
+              User
+              {isUserExpanded ? (
+                <ChevronDown className="h-4 w-4 ml-auto" />
+              ) : (
+                <ChevronRight className="h-4 w-4 ml-auto" />
+              )}
+            </button>
+            {isUserExpanded && (
+              <div className="ml-6 space-y-1">
+                <Link
+                  href="/dashboard/user/create-user"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Create User
+                </Link>
+                <Link
+                  href="/dashboard/user/user-list"
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  User List
+                </Link>
+              </div>
             )}
-          </button>
-          {isUserExpanded && (
-            <div className="ml-6 space-y-1">
-              <Link
-                href="/dashboard/user/create-user"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
-              >
-                <PlusCircle className="h-4 w-4" />
-                Create User
-              </Link>
-              <Link
-                href="/dashboard/user/user-list"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
-              >
-                <PlusCircle className="h-4 w-4" />
-                User List
-              </Link>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Country Section */}
         <div>
@@ -151,7 +157,50 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* User Section */}
+        {/* Task Section */}
+        <div>
+          <button
+            onClick={() => setIsTaskExpanded(!isTaskExpanded)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black w-full text-left"
+          >
+            <ClipboardList className="h-4 w-4" />
+            Tasks
+            {isTaskExpanded ? (
+              <ChevronDown className="h-4 w-4 ml-auto" />
+            ) : (
+              <ChevronRight className="h-4 w-4 ml-auto" />
+            )}
+          </button>
+          {isTaskExpanded && (
+            <div className="ml-6 space-y-1">
+              {isAdmin && (
+                <>
+                  <Link
+                    href="/dashboard/admin/task/create-task"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Create Task
+                  </Link>
+                  <Link
+                    href="/dashboard/admin/task/all-task"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    All Tasks
+                  </Link>
+                </>
+              )}
+              <Link
+                href="/dashboard/my-task"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-gray-100 hover:text-black"
+              >
+                <ClipboardList className="h-4 w-4" />
+                My Tasks
+              </Link>
+            </div>
+          )}
+        </div>
       </nav>
       {/* Bottom action */}
       <div className="p-4 ">

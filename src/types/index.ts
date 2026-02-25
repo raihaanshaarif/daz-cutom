@@ -75,3 +75,38 @@ export interface PerformanceMetrics {
   leadsByStatus: Record<Contact["status"], number>;
   conversionRate: number;
 }
+
+export type TaskStatus = "PENDING" | "COMPLETED" | "FAILED";
+
+export interface TaskDailyLog {
+  id: number;
+  taskId: number;
+  date: string;
+  targetValue: number;
+  achieved: number;
+  performance?: number;
+  status: TaskStatus;
+  createdAt: string;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  targetValue: number;
+  assignedById: number;
+  assignedToId: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  assignedBy?: User;
+  assignedTo?: User;
+  dailyLogs?: TaskDailyLog[];
+}
+
+export interface TaskFormData {
+  title: string;
+  description?: string;
+  targetValue: number;
+  assignedToId: number;
+}

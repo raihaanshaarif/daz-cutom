@@ -2,31 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { User } from "@/types";
+import { User, Task } from "@/types";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+
 import {
   User as UserIcon,
-  Mail,
-  Phone,
-  Calendar,
   Shield,
   Activity,
   ArrowLeft,
   CheckCircle,
   XCircle,
   Clock,
+  Target,
+  TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Loading from "@/components/ui/Loading";
 
 const UserProfile = () => {
@@ -34,6 +27,8 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [taskRefresh, setTaskRefresh] = useState(0);
   const itemsPerPage = 10;
 
   const handlePageChange = (page: number) => {
@@ -41,6 +36,9 @@ const UserProfile = () => {
   };
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin =
+    session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
   const userId = searchParams.get("id");
 
   useEffect(() => {
@@ -69,6 +67,46 @@ const UserProfile = () => {
 
     fetchUser();
   }, [userId]);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!userId) return;
+      try {
+        const res = await fetch(
+          `http://localhost:5001/api/v1/task/my?userId=${userId}&limit=100`,
+        );
+        const json = await res.json();
+        const data = json?.data || json || [];
+        setTasks(Array.isArray(data) ? data : []);
+      } catch {
+        // silently ignore
+      }
+    };
+    fetchTasks();
+  }, [userId, taskRefresh]);
+
+  const handleUpdateTarget = async (task: Task) => {
+    const newTargetStr = prompt(
+      `Enter new daily target for "${task.title}" (current: ${task.targetValue}):`,
+    );
+    if (newTargetStr === null) return;
+    const newTarget = Number(newTargetStr);
+    if (isNaN(newTarget) || newTarget <= 0) {
+      alert("Please enter a valid positive number.");
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:5001/api/v1/task/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetValue: newTarget }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setTaskRefresh((p) => p + 1);
+    } catch {
+      alert("Failed to update target.");
+    }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -196,7 +234,455 @@ const UserProfile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-12">
           {/* Profile Picture & Quick Stats */}
           <div className="space-y-12">
-            <h3 className="text-xl font-bold "> STATS</h3>
+            {/* TARGETS */}
+            {tasks.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded flex items-center justify-center">
+                    <Target className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold">TARGETS</h3>
+                </div>
+                <div className="space-y-4">
+                  {tasks.map((task) => {
+                    const todayStr = new Date().toDateString();
+                    const todayLog = (task.dailyLogs || []).find(
+                      (log) => new Date(log.date).toDateString() === todayStr,
+                    );
+                    const todayAchieved = todayLog?.achieved || 0;
+                    const todayTarget =
+                      todayLog?.targetValue || task.targetValue;
+                    const todayPct =
+                      todayTarget > 0
+                        ? Math.min(
+                            Math.round((todayAchieved / todayTarget) * 100),
+                            100,
+                          )
+                        : 0;
+
+                    const thirtyDaysAgo = new Date();
+                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+                    thirtyDaysAgo.setHours(0, 0, 0, 0);
+                    const isWorkingDay = (d: Date) =>
+                      d.getDay() !== 5 && d.getDay() !== 6; // exclude Fri & Sat
+                    const thirtyDayLogs = (task.dailyLogs || []).filter(
+                      (log) => {
+                        const d = new Date(log.date);
+                        return d >= thirtyDaysAgo && isWorkingDay(d);
+                      },
+                    );
+                    const thirtyDayAchieved = thirtyDayLogs.reduce(
+                      (sum, log) => sum + (log.achieved || 0),
+                      0,
+                    );
+                    // Count working days (excl. Fri & Sat) in last 30 calendar days
+                    const workingDaysIn30 = Array.from(
+                      { length: 30 },
+                      (_, i) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        return d;
+                      },
+                    ).filter(isWorkingDay).length;
+                    const thirtyDayTarget = task.targetValue * workingDaysIn30;
+                    const thirtyDayPct =
+                      thirtyDayTarget > 0
+                        ? Math.min(
+                            Math.round(
+                              (thirtyDayAchieved / thirtyDayTarget) * 100,
+                            ),
+                            100,
+                          )
+                        : 0;
+                    const thirtyDayRemaining = Math.max(
+                      thirtyDayTarget - thirtyDayAchieved,
+                      0,
+                    );
+                    const thirtyDayComplete =
+                      thirtyDayAchieved >= thirtyDayTarget;
+
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 6);
+                    weekAgo.setHours(0, 0, 0, 0);
+                    const weeklyLogs = (task.dailyLogs || []).filter(
+                      (log) => new Date(log.date) >= weekAgo,
+                    );
+                    const weeklyAchieved = weeklyLogs.reduce(
+                      (sum, log) => sum + (log.achieved || 0),
+                      0,
+                    );
+                    const weeklyTarget = task.targetValue * 5;
+                    const weeklyPct =
+                      weeklyTarget > 0
+                        ? Math.min(
+                            Math.round((weeklyAchieved / weeklyTarget) * 100),
+                            100,
+                          )
+                        : 0;
+                    const weeklyRemaining = Math.max(
+                      weeklyTarget - weeklyAchieved,
+                      0,
+                    );
+                    const weeklyComplete = weeklyAchieved >= weeklyTarget;
+
+                    const yesterdayDate = new Date();
+                    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+                    const yesterdayStr = yesterdayDate.toDateString();
+                    const yesterdayLog = (task.dailyLogs || []).find(
+                      (log) =>
+                        new Date(log.date).toDateString() === yesterdayStr,
+                    );
+                    const yesterdayAchieved = yesterdayLog?.achieved || 0;
+                    const yesterdayTarget =
+                      yesterdayLog?.targetValue || task.targetValue;
+                    const yesterdayPct =
+                      yesterdayTarget > 0
+                        ? Math.min(
+                            Math.round(
+                              (yesterdayAchieved / yesterdayTarget) * 100,
+                            ),
+                            100,
+                          )
+                        : 0;
+                    const yesterdayComplete =
+                      yesterdayAchieved >= yesterdayTarget;
+
+                    return (
+                      <div
+                        key={task.id}
+                        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
+                      >
+                        {/* Card 1 — Task Info + Today's Progress */}
+                        <Card className="overflow-hidden">
+                          <CardContent className="p-0">
+                            <div className="p-4 border-b border-gray-100">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-gray-800 truncate">
+                                    {task.title}
+                                  </p>
+                                  {task.description && (
+                                    <p className="text-xs text-gray-500 truncate mt-0.5">
+                                      {task.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <span
+                                  className={`ml-2 shrink-0 inline-flex px-1.5 py-0.5 text-xs font-medium rounded-full ${
+                                    task.isActive
+                                      ? "bg-green-100 text-green-700"
+                                      : "bg-gray-100 text-gray-500"
+                                  }`}
+                                >
+                                  {task.isActive ? "Active" : "Inactive"}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-4 bg-blue-50/40">
+                              <div className="flex items-center gap-1.5 mb-2">
+                                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                  <TrendingUp className="w-2.5 h-2.5 text-white" />
+                                </div>
+                                <span className="text-xs font-semibold text-blue-700">
+                                  Today&apos;s Progress
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center mb-1.5">
+                                <span className="text-xs text-gray-500">
+                                  {todayAchieved} / {todayTarget} achieved today
+                                </span>
+                                <span className="text-xs font-bold text-blue-600">
+                                  {todayPct}%
+                                </span>
+                              </div>
+                              <div className="w-full bg-blue-100 rounded-full h-1.5">
+                                <div
+                                  className="h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
+                                  style={{ width: `${todayPct}%` }}
+                                />
+                              </div>
+                              {!todayLog && (
+                                <p className="text-xs text-gray-400 mt-1 italic">
+                                  No log entry for today yet
+                                </p>
+                              )}
+                            </div>{" "}
+                            {isAdmin && (
+                              <div className="px-4 pb-3">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="w-full h-7 text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                  onClick={() => handleUpdateTarget(task)}
+                                >
+                                  Update Target
+                                </Button>
+                              </div>
+                            )}{" "}
+                          </CardContent>
+                        </Card>
+
+                        {/* Card 2 — Yesterday's Progress */}
+                        <Card className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-1.5 mb-3">
+                              <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                                <TrendingUp className="w-2.5 h-2.5 text-white" />
+                              </div>
+                              <span className="text-xs font-semibold text-amber-700">
+                                Yesterday&apos;s Progress
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-gray-500">
+                                {yesterdayAchieved} / {yesterdayTarget}{" "}
+                                yesterday
+                              </span>
+                              <span
+                                className={`text-xs font-bold ${
+                                  yesterdayComplete
+                                    ? "text-green-600"
+                                    : "text-amber-600"
+                                }`}
+                              >
+                                {yesterdayPct}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-amber-100 rounded-full h-2 mb-4">
+                              <div
+                                className={`h-2 rounded-full transition-all ${
+                                  yesterdayComplete
+                                    ? "bg-gradient-to-r from-green-400 to-green-600"
+                                    : "bg-gradient-to-r from-amber-400 to-amber-600"
+                                }`}
+                                style={{ width: `${yesterdayPct}%` }}
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-amber-50 rounded p-1.5">
+                                <div className="text-xs text-gray-500">
+                                  Target
+                                </div>
+                                <div className="text-sm font-bold text-amber-600">
+                                  {yesterdayTarget}
+                                </div>
+                              </div>
+                              <div className="bg-yellow-50 rounded p-1.5">
+                                <div className="text-xs text-gray-500">
+                                  Achieved
+                                </div>
+                                <div className="text-sm font-bold text-yellow-600">
+                                  {yesterdayAchieved}
+                                </div>
+                              </div>
+                              <div
+                                className={`rounded p-1.5 ${
+                                  yesterdayComplete
+                                    ? "bg-green-50"
+                                    : "bg-orange-50"
+                                }`}
+                              >
+                                <div className="text-xs text-gray-500">Gap</div>
+                                <div
+                                  className={`text-sm font-bold ${
+                                    yesterdayComplete
+                                      ? "text-green-600"
+                                      : "text-orange-600"
+                                  }`}
+                                >
+                                  {yesterdayComplete ? (
+                                    <TrendingUp className="w-4 h-4 mx-auto" />
+                                  ) : (
+                                    yesterdayTarget - yesterdayAchieved
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {!yesterdayLog && (
+                              <p className="text-xs text-gray-400 mt-2 italic">
+                                No log entry for yesterday
+                              </p>
+                            )}
+                          </CardContent>
+                        </Card>
+
+                        {/* Card 4 — Weekly Progress */}
+                        <Card className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-1.5 mb-3">
+                              <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
+                                <TrendingUp className="w-2.5 h-2.5 text-white" />
+                              </div>
+                              <span className="text-xs font-semibold text-purple-700">
+                                This Week&apos;s Progress
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-gray-500">
+                                {weeklyAchieved} / {weeklyTarget} this week
+                              </span>
+                              <span
+                                className={`text-xs font-bold ${
+                                  weeklyComplete
+                                    ? "text-green-600"
+                                    : "text-purple-600"
+                                }`}
+                              >
+                                {weeklyPct}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-purple-100 rounded-full h-2 mb-4">
+                              <div
+                                className={`h-2 rounded-full transition-all ${
+                                  weeklyComplete
+                                    ? "bg-gradient-to-r from-green-400 to-green-600"
+                                    : "bg-gradient-to-r from-purple-400 to-purple-600"
+                                }`}
+                                style={{ width: `${weeklyPct}%` }}
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-purple-50 rounded p-1.5">
+                                <div className="text-xs text-gray-500">
+                                  W.Target
+                                </div>
+                                <div className="text-sm font-bold text-purple-600">
+                                  {weeklyTarget}
+                                </div>
+                              </div>
+                              <div className="bg-violet-50 rounded p-1.5">
+                                <div className="text-xs text-gray-500">
+                                  Achieved
+                                </div>
+                                <div className="text-sm font-bold text-violet-600">
+                                  {weeklyAchieved}
+                                </div>
+                              </div>
+                              <div
+                                className={`rounded p-1.5 ${
+                                  weeklyRemaining === 0
+                                    ? "bg-green-50"
+                                    : "bg-orange-50"
+                                }`}
+                              >
+                                <div className="text-xs text-gray-500">
+                                  Remaining
+                                </div>
+                                <div
+                                  className={`text-sm font-bold ${
+                                    weeklyRemaining === 0
+                                      ? "text-green-600"
+                                      : "text-orange-600"
+                                  }`}
+                                >
+                                  {weeklyRemaining === 0 ? (
+                                    <TrendingUp className="w-4 h-4 mx-auto" />
+                                  ) : (
+                                    weeklyRemaining
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2">
+                              {weeklyLogs.length} log
+                              {weeklyLogs.length !== 1 ? "s" : ""} this week
+                            </p>
+                          </CardContent>
+                        </Card>
+
+                        {/* Card 4 — Last 30 Days Progress */}
+                        <Card className="overflow-hidden">
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-1.5 mb-3">
+                              <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
+                                <TrendingUp className="w-2.5 h-2.5 text-white" />
+                              </div>
+                              <span className="text-xs font-semibold text-teal-700">
+                                Last 30 Days
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center mb-1">
+                              <span className="text-xs text-gray-500">
+                                {thirtyDayAchieved} / {thirtyDayTarget}
+                              </span>
+                              <span
+                                className={`text-xs font-bold ${
+                                  thirtyDayComplete
+                                    ? "text-green-600"
+                                    : "text-teal-600"
+                                }`}
+                              >
+                                {thirtyDayPct}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-teal-100 rounded-full h-2 mb-4">
+                              <div
+                                className={`h-2 rounded-full transition-all ${
+                                  thirtyDayComplete
+                                    ? "bg-gradient-to-r from-green-400 to-green-600"
+                                    : "bg-gradient-to-r from-teal-400 to-teal-600"
+                                }`}
+                                style={{ width: `${thirtyDayPct}%` }}
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div className="bg-teal-50 rounded p-1.5">
+                                <div className="text-xs text-gray-500">
+                                  Target
+                                </div>
+                                <div className="text-sm font-bold text-teal-600">
+                                  {thirtyDayTarget}
+                                </div>
+                              </div>
+                              <div className="bg-cyan-50 rounded p-1.5">
+                                <div className="text-xs text-gray-500">
+                                  Achieved
+                                </div>
+                                <div className="text-sm font-bold text-cyan-600">
+                                  {thirtyDayAchieved}
+                                </div>
+                              </div>
+                              <div
+                                className={`rounded p-1.5 ${
+                                  thirtyDayRemaining === 0
+                                    ? "bg-green-50"
+                                    : "bg-orange-50"
+                                }`}
+                              >
+                                <div className="text-xs text-gray-500">
+                                  Remaining
+                                </div>
+                                <div
+                                  className={`text-sm font-bold ${
+                                    thirtyDayRemaining === 0
+                                      ? "text-green-600"
+                                      : "text-orange-600"
+                                  }`}
+                                >
+                                  {thirtyDayRemaining === 0 ? (
+                                    <TrendingUp className="w-4 h-4 mx-auto" />
+                                  ) : (
+                                    thirtyDayRemaining
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2">
+                              {thirtyDayLogs.length} log
+                              {thirtyDayLogs.length !== 1 ? "s" : ""} ·{" "}
+                              {workingDaysIn30} working days (excl. Fri &amp;
+                              Sat)
+                            </p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <h3 className="text-xl font-bold"> STATS</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-9 gap-1">
               {/* Today's Contacts */}
               <Card className="text-center">

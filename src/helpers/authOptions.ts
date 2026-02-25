@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
               password: credentials.password,
             }),
           });
-          console.log("Response From Backend:", res);
+          // console.log("Response From Backend:", res);
           if (!res?.ok) {
             console.error("Login Failed", await res.text());
             return null;
