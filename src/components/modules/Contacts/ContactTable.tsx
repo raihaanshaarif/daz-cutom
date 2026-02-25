@@ -114,6 +114,13 @@ export function ContactTable({
         ),
       },
       {
+        accessorKey: "designation",
+        header: "Designation",
+        cell: ({ row }) => (
+          <div className="capitalize">{row.getValue("designation") || "-"}</div>
+        ),
+      },
+      {
         accessorKey: "company",
         header: "Company",
         cell: ({ row }) => (

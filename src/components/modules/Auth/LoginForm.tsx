@@ -13,10 +13,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import Image from "next/image";
+
 import { signIn } from "next-auth/react";
-import { login } from "@/actions/auth";
-import { toast } from "sonner";
 
 // type LoginFormValues = {
 //   email: string;
@@ -60,7 +58,9 @@ export default function LoginForm() {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 w-full max-w-md"
           >
-            <h2 className="text-3xl font-bold text-center">Login</h2>
+            <h2 className="text-3xl font-bold text-center">
+              Daz Employee Login
+            </h2>
 
             {/* Email */}
             <FormField
@@ -106,55 +106,11 @@ export default function LoginForm() {
 
             <div className="flex items-center justify-center space-x-2">
               <div className="h-px w-16 bg-gray-300" />
-              <span className="text-sm text-gray-500">or continue with</span>
+
               <div className="h-px w-16 bg-gray-300" />
             </div>
           </form>
         </Form>
-        {/* Social Login Buttons */}
-        <div className="flex flex-col gap-3 mt-4">
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2"
-            onClick={() => handleSocialLogin("github")}
-          >
-            {/* GitHub */}
-            <Image
-              src="https://img.icons8.com/ios-glyphs/24/github.png"
-              alt="GitHub"
-              className="w-5 h-5"
-              width={20}
-              height={20}
-            />
-            Login with GitHub
-          </Button>
-
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2"
-            onClick={() =>
-              signIn("google", {
-                callbackUrl: "/dashboard",
-              })
-            }
-          >
-            {/* Google */}
-            <Image
-              src="https://img.icons8.com/color/24/google-logo.png"
-              alt="Google"
-              className="w-5 h-5"
-              width={20}
-              height={20}
-            />
-            Login with Google
-          </Button>
-        </div>
-        <p className="text-center text-sm text-gray-500 mt-4">
-          Don’t have an account?{" "}
-          <Link href="/register" className="text-blue-500 hover:underline">
-            Register
-          </Link>
-        </p>
       </div>
     </div>
   );

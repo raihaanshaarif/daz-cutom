@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Eye } from "lucide-react";
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,17 +35,28 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { User } from "@/types";
+import { Country } from "@/types";
 
-interface DataTableProps {
-  data: User[];
-  onEdit?: (user: User) => void;
-  onView?: (user: User) => void;
-  onDelete?: (user: User) => void;
+interface CountryTableProps {
+  data: Country[];
+  onEdit?: (country: Country) => void;
+  onView?: (country: Country) => void;
+  onDelete?: (country: Country) => void;
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
 }
 
-export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
-  const columns = React.useMemo<ColumnDef<User>[]>(
+export function CountryTable({
+  data,
+  onEdit,
+  onView,
+  onDelete,
+  currentPage = 1,
+  totalPages = 1,
+  onPageChange,
+}: CountryTableProps) {
+  const columns = React.useMemo<ColumnDef<Country>[]>(
     () => [
       {
         id: "select",
@@ -73,13 +84,6 @@ export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
       },
       {
         accessorKey: "name",
-        header: "Name",
-        cell: ({ row }) => (
-          <div className="capitalize">{row.getValue("name")}</div>
-        ),
-      },
-      {
-        accessorKey: "email",
         header: ({ column }) => {
           return (
             <Button
@@ -88,34 +92,71 @@ export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
                 column.toggleSorting(column.getIsSorted() === "asc")
               }
             >
-              Email
+              Country Name
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           );
         },
         cell: ({ row }) => (
-          <div className="lowercase">{row.getValue("email")}</div>
+          <div className="capitalize">{row.getValue("name")}</div>
         ),
       },
       {
-        accessorKey: "status",
-        header: "Status",
+        accessorKey: "code",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Country Code
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
         cell: ({ row }) => (
-          <div className="capitalize">{row.getValue("status")}</div>
-        ),
-      },
-      {
-        accessorKey: "role",
-        header: "Role",
-        cell: ({ row }) => (
-          <div className="capitalize">{row.getValue("role")}</div>
+          <div className="uppercase font-mono">{row.getValue("code")}</div>
         ),
       },
       {
         accessorKey: "createdAt",
-        header: "Created At",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Created At
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
         cell: ({ row }) => {
           const date = new Date(row.getValue("createdAt"));
+          return <div>{date.toLocaleDateString()}</div>;
+        },
+      },
+      {
+        accessorKey: "updatedAt",
+        header: ({ column }) => {
+          return (
+            <Button
+              variant="ghost"
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
+            >
+              Updated At
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          );
+        },
+        cell: ({ row }) => {
+          const date = new Date(row.getValue("updatedAt"));
           return <div>{date.toLocaleDateString()}</div>;
         },
       },
@@ -123,47 +164,37 @@ export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
         id: "actions",
         enableHiding: false,
         cell: ({ row }) => {
-          const user = row.original;
+          const country = row.original;
 
           return (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={() => onView?.(user)}
-              >
-                <span className="sr-only">View user</span>
-                <Eye className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Open menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem
-                    onClick={() =>
-                      navigator.clipboard.writeText(user.id.toString())
-                    }
-                  >
-                    Copy user ID
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => onView?.(user)}>
-                    View user
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit?.(user)}>
-                    Edit user
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDelete?.(user)}>
-                    Delete user
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigator.clipboard.writeText(country.id.toString())
+                  }
+                >
+                  Copy country ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => onView?.(country)}>
+                  View country
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit?.(country)}>
+                  Edit country
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete?.(country)}>
+                  Delete country
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           );
         },
       },
@@ -202,10 +233,10 @@ export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter countries..."
+          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("name")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -295,16 +326,16 @@ export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => onPageChange?.(currentPage - 1)}
+            disabled={currentPage <= 1}
           >
             Previous
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => onPageChange?.(currentPage + 1)}
+            disabled={currentPage >= totalPages}
           >
             Next
           </Button>

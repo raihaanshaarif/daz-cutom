@@ -42,6 +42,7 @@ export function EditContactForm({
   const [formData, setFormData] = useState<ContactFormData>({
     name: "",
     email: "",
+    designation: "",
     company: "",
     domain: "",
     country: undefined,
@@ -62,7 +63,7 @@ export function EditContactForm({
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country`);
+        const res = await fetch(`http://localhost:5001/api/v1/country`);
         if (res.ok) {
           const data = await res.json();
           const countriesArray = Array.isArray(data) ? data : data?.data || [];
@@ -84,6 +85,7 @@ export function EditContactForm({
       setFormData({
         name: contact.name,
         email: contact.email,
+        designation: contact.designation || "",
         company: contact.company,
         domain: contact.domain || "",
         country: contact.country?.id,
@@ -242,6 +244,22 @@ export function EditContactForm({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="designation" className="text-sm font-medium">
+                Designation
+              </Label>
+              <Input
+                id="designation"
+                value={formData.designation || ""}
+                onChange={(e) =>
+                  handleInputChange("designation", e.target.value)
+                }
+                className="h-9"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="domain" className="text-sm font-medium">
                 Domain
               </Label>
@@ -249,6 +267,20 @@ export function EditContactForm({
                 id="domain"
                 value={formData.domain}
                 onChange={(e) => handleInputChange("domain", e.target.value)}
+                className="h-9"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="personalLinkedin" className="text-sm font-medium">
+                Personal LinkedIn
+              </Label>
+              <Input
+                id="personalLinkedin"
+                value={formData.personalLinkedin}
+                onChange={(e) =>
+                  handleInputChange("personalLinkedin", e.target.value)
+                }
                 className="h-9"
               />
             </div>

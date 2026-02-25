@@ -25,6 +25,7 @@ import {
   Target,
   Trophy,
   XCircle,
+  Briefcase,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -85,9 +86,13 @@ export default function CreateContactForm() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/country`,
-        );
+        console.log("NEXT_PUBLIC_BASE_API:", process.env.NEXT_PUBLIC_BASE_API);
+        const apiUrl = `http://localhost:5001/api/v1/country`;
+        console.log("Fetching countries from:", apiUrl);
+
+        const response = await fetch(apiUrl);
+        console.log("Response status:", response.status);
+
         if (response.ok) {
           const data = await response.json();
           console.log("Countries API response:", data);
@@ -96,9 +101,17 @@ export default function CreateContactForm() {
           const countriesArray = Array.isArray(data)
             ? data
             : data.data || data.countries || [];
+
+          console.log("Parsed countries array:", countriesArray);
+          console.log("Countries array length:", countriesArray.length);
+
           setCountries(countriesArray);
+          console.log("Countries state set successfully");
+          console.log("Setting countries to:", countriesArray);
         } else {
           console.error("Failed to fetch countries:", response.status);
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
         }
       } catch (error) {
         console.error("Error fetching countries:", error);
@@ -128,7 +141,7 @@ export default function CreateContactForm() {
         });
         // Navigate after a short delay to let the user see the toast
         setTimeout(() => {
-          router.push("/dashboard/my-contacts");
+          router.push("/dashboard/contact/my-contacts");
         }, 1500);
       } else {
         toast.error("Failed to create contact", {
@@ -210,6 +223,23 @@ export default function CreateContactForm() {
                     type="email"
                     required
                     placeholder="contact@company.com"
+                    className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
+                  />
+                </div>
+
+                {/* Designation */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="designation"
+                    className="text-xs font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <Briefcase className="w-3.5 h-3.5" />
+                    Designation
+                  </Label>
+                  <Input
+                    id="designation"
+                    name="designation"
+                    placeholder="Job title or role"
                     className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all duration-200"
                   />
                 </div>

@@ -9,6 +9,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      role?: string | null;
     };
   }
   interface User {
@@ -16,6 +17,7 @@ declare module "next-auth" {
     name?: string | null;
     email?: string | null;
     image?: string | null;
+    role?: string | null;
   }
 }
 
@@ -39,19 +41,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BASE_API}/auth/login`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
+          const res = await fetch(`http://localhost:5001/api/v1/auth/login`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
             },
-          );
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
           console.log("Response From Backend:", res);
           if (!res?.ok) {
             console.error("Login Failed", await res.text());
@@ -64,6 +63,7 @@ export const authOptions: NextAuthOptions = {
               id: user?.id,
               name: user?.name,
               email: user?.email,
+              role: user?.role,
               image: user?.picture,
             };
           } else {
@@ -80,12 +80,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user?.id;
+        token.role = user?.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token?.id as string;
+        session.user.role = token?.role as string;
       }
       return session;
     },

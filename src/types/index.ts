@@ -4,6 +4,9 @@ export interface User {
   email: string;
   role: "SUPER_ADMIN" | "ADMIN" | "USER";
   status: "ACTIVE" | "INACTIVE" | "BLOCK";
+  phone?: string;
+  picture?: string | null;
+  isVerified?: boolean;
   createdAt: string;
   updatedAt: string;
   contacts: Contact[];
@@ -21,6 +24,7 @@ export interface Contact {
   id: number;
   name: string;
   email: string;
+  designation?: string;
   company: string;
   domain?: string;
   country?: Country;
@@ -44,6 +48,7 @@ export interface Contact {
 export interface ContactFormData {
   name: string;
   email: string;
+  designation?: string;
   company: string;
   domain?: string;
   country?: number;

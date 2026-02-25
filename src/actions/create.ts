@@ -12,7 +12,7 @@ export const create = async (data: FormData) => {
     authorId: session?.user?.id,
   };
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
+  const res = await fetch(`http://localhost:5001/api/v1/post`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export const createContact = async (data: FormData) => {
     }),
   };
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact`, {
+  const res = await fetch(`http://localhost:5001/api/v1/contact`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -56,6 +56,26 @@ export const createContact = async (data: FormData) => {
   if (result?.id) {
     revalidateTag("CONTACTS");
     revalidatePath("/dashboard/my-contacts");
+  }
+  return result;
+};
+
+export const createCountry = async (data: FormData) => {
+  const contactInfo = Object.fromEntries(data.entries());
+
+  const res = await fetch(`http://localhost:5001/api/v1/country`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(contactInfo),
+  });
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("COUNTRY");
+    revalidatePath("/dashboard/country-list");
   }
   return result;
 };

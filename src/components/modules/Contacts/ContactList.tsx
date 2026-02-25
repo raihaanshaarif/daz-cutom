@@ -63,7 +63,7 @@ export default function ContactList() {
         console.log("API call with params:", queryString);
 
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/contact?${queryString}`,
+          `http://localhost:5001/api/v1/contact?${queryString}`,
           {
             cache: "no-store",
           },
@@ -118,12 +118,12 @@ export default function ContactList() {
       try {
         // Try multiple possible endpoints
         const endpoints = [
-          `${process.env.NEXT_PUBLIC_BASE_API}/user`,
-          `${process.env.NEXT_PUBLIC_BASE_API}/users`,
-          `${process.env.NEXT_PUBLIC_BASE_API}/api/user`,
-          `${process.env.NEXT_PUBLIC_BASE_API}/api/users`,
-          `${process.env.NEXT_PUBLIC_BASE_API}/user/list`,
-          `${process.env.NEXT_PUBLIC_BASE_API}/users/list`,
+          `http://localhost:5001/api/v1/user`,
+          `http://localhost:5001/api/v1/users`,
+          `http://localhost:5001/api/v1/api/user`,
+          `http://localhost:5001/api/v1/api/users`,
+          `http://localhost:5001/api/v1/user/list`,
+          `http://localhost:5001/api/v1/users/list`,
         ];
 
         let usersData = null;
@@ -165,7 +165,7 @@ export default function ContactList() {
           console.log("Trying to get users from contacts...");
           try {
             const contactsRes = await fetch(
-              `${process.env.NEXT_PUBLIC_BASE_API}/contact?page=1&limit=100`,
+              `http://localhost:5001/api/v1/contact?page=1&limit=100`,
               { cache: "no-store" },
             );
 
