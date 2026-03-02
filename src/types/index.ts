@@ -28,6 +28,7 @@ export interface Contact {
   company: string;
   domain?: string;
   country?: Country;
+  countryId?: number;
   companyLinkedin?: string;
   personalLinkedin?: string;
   status:

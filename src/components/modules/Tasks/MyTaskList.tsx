@@ -108,7 +108,7 @@ export default function MyTaskList() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-2 px-4">
+      <div className="min-h-screen bg-background py-2 px-4">
         <div className="w-full mx-auto">
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-3">
@@ -122,7 +122,7 @@ export default function MyTaskList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-2 px-4">
+    <div className="min-h-screen bg-background py-2 px-4">
       <div className="w-full mx-auto">
         {/* Header */}
         <div className="mb-3 text-center">

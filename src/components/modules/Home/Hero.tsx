@@ -36,7 +36,7 @@ export default async function Hero() {
             Access Dashboard
           </Link>
           <Link
-            href="/auth/login"
+            href="/login"
             className="inline-flex items-center justify-center px-8 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg shadow-sm transition-colors duration-200"
           >
             Sign In

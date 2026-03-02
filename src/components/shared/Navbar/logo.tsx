@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export const Logo = () => (
-  <Image width={90} height={90} src="/logo.jpg" alt="Company Logo"></Image>
+  <span className="text-xl font-bold tracking-tight">Daz International</span>
 );

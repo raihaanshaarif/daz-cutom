@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFoundPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-6xl font-bold text-gray-800">404</h1>
-        <h2 className="mt-2 text-2xl font-semibold text-gray-700">
+        <h1 className="text-6xl font-bold text-foreground">404</h1>
+        <h2 className="mt-2 text-2xl font-semibold text-foreground">
           Page not found
         </h2>
-        <p className="mt-2 text-gray-500">
+        <p className="mt-2 text-muted-foreground">
           Sorry, we couldn’t find the page you’re looking for.
         </p>
 

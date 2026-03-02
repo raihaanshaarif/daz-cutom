@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { User, Task } from "@/types";
+import { User, Task, Country } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,10 @@ import {
   Clock,
   Target,
   TrendingUp,
+  Calendar,
+  BarChart2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
@@ -29,7 +33,21 @@ const UserProfile = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [taskRefresh, setTaskRefresh] = useState(0);
+  const [countries, setCountries] = useState<Country[]>([]);
   const itemsPerPage = 10;
+
+  // Period analysis state
+  type PeriodMode = "monthly" | "yearly" | "custom";
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("monthly");
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [selectedYear, setSelectedYear] = useState(() =>
+    new Date().getFullYear(),
+  );
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -69,8 +87,21 @@ const UserProfile = () => {
   }, [userId]);
 
   useEffect(() => {
+    fetch("http://localhost:5001/api/v1/country?limit=1000")
+      .then((r) => r.json())
+      .then((data) => {
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray(data?.data)
+            ? data.data
+            : [];
+        setCountries(list);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     const fetchTasks = async () => {
-      if (!userId) return;
       try {
         const res = await fetch(
           `http://localhost:5001/api/v1/task/my?userId=${userId}&limit=100`,
@@ -130,7 +161,7 @@ const UserProfile = () => {
       case "BLOCK":
         return "bg-red-100 text-red-800 border-red-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-foreground border-border";
     }
   };
 
@@ -141,9 +172,9 @@ const UserProfile = () => {
       case "ADMIN":
         return "bg-blue-100 text-blue-800 border-blue-200";
       case "USER":
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-foreground border-border";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-foreground border-border";
     }
   };
 
@@ -153,7 +184,7 @@ const UserProfile = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-2 px-4">
+      <div className="min-h-screen bg-background py-2 px-4">
         <div className="w-full mx-auto">
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-8 h-8 bg-red-100 rounded-lg mb-3">
@@ -176,7 +207,7 @@ const UserProfile = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-2 px-4">
+      <div className="min-h-screen bg-background py-2 px-4">
         <div className="w-full mx-auto">
           <div className="text-center py-12">
             <div className="inline-flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-lg mb-3">
@@ -198,7 +229,7 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-2 px-4">
+    <div className="min-h-screen bg-background py-2 px-4">
       <div className="w-full mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -215,7 +246,7 @@ const UserProfile = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4 shadow-md">
               <UserIcon className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
               {user.name}
             </h1>
             <div className="flex items-center justify-center gap-2 mb-4">
@@ -235,640 +266,1703 @@ const UserProfile = () => {
           {/* Profile Picture & Quick Stats */}
           <div className="space-y-12">
             {/* TARGETS */}
-            {tasks.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded flex items-center justify-center">
-                    <Target className="w-3.5 h-3.5 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold">TARGETS</h3>
-                </div>
-                <div className="space-y-4">
-                  {tasks.map((task) => {
-                    const todayStr = new Date().toDateString();
-                    const todayLog = (task.dailyLogs || []).find(
-                      (log) => new Date(log.date).toDateString() === todayStr,
-                    );
-                    const todayAchieved = todayLog?.achieved || 0;
-                    const todayTarget =
-                      todayLog?.targetValue || task.targetValue;
-                    const todayPct =
-                      todayTarget > 0
-                        ? Math.min(
-                            Math.round((todayAchieved / todayTarget) * 100),
-                            100,
-                          )
-                        : 0;
 
-                    const thirtyDaysAgo = new Date();
-                    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-                    thirtyDaysAgo.setHours(0, 0, 0, 0);
-                    const isWorkingDay = (d: Date) =>
-                      d.getDay() !== 5 && d.getDay() !== 6; // exclude Fri & Sat
-                    const thirtyDayLogs = (task.dailyLogs || []).filter(
-                      (log) => {
-                        const d = new Date(log.date);
-                        return d >= thirtyDaysAgo && isWorkingDay(d);
-                      },
-                    );
-                    const thirtyDayAchieved = thirtyDayLogs.reduce(
-                      (sum, log) => sum + (log.achieved || 0),
-                      0,
-                    );
-                    // Count working days (excl. Fri & Sat) in last 30 calendar days
-                    const workingDaysIn30 = Array.from(
-                      { length: 30 },
-                      (_, i) => {
-                        const d = new Date();
-                        d.setDate(d.getDate() - i);
-                        return d;
-                      },
-                    ).filter(isWorkingDay).length;
-                    const thirtyDayTarget = task.targetValue * workingDaysIn30;
-                    const thirtyDayPct =
-                      thirtyDayTarget > 0
-                        ? Math.min(
-                            Math.round(
-                              (thirtyDayAchieved / thirtyDayTarget) * 100,
-                            ),
-                            100,
-                          )
-                        : 0;
-                    const thirtyDayRemaining = Math.max(
-                      thirtyDayTarget - thirtyDayAchieved,
-                      0,
-                    );
-                    const thirtyDayComplete =
-                      thirtyDayAchieved >= thirtyDayTarget;
+            {/* ── DAILY TASKS DASHBOARD ── */}
+            {tasks.length > 0 &&
+              (() => {
+                const now = new Date();
+                const todayStr = now.toDateString();
 
-                    const weekAgo = new Date();
-                    weekAgo.setDate(weekAgo.getDate() - 6);
-                    weekAgo.setHours(0, 0, 0, 0);
-                    const weeklyLogs = (task.dailyLogs || []).filter(
-                      (log) => new Date(log.date) >= weekAgo,
-                    );
-                    const weeklyAchieved = weeklyLogs.reduce(
-                      (sum, log) => sum + (log.achieved || 0),
-                      0,
-                    );
-                    const weeklyTarget = task.targetValue * 5;
-                    const weeklyPct =
-                      weeklyTarget > 0
-                        ? Math.min(
-                            Math.round((weeklyAchieved / weeklyTarget) * 100),
-                            100,
-                          )
-                        : 0;
-                    const weeklyRemaining = Math.max(
-                      weeklyTarget - weeklyAchieved,
-                      0,
-                    );
-                    const weeklyComplete = weeklyAchieved >= weeklyTarget;
+                const yest = new Date(now);
+                yest.setDate(now.getDate() - 1);
+                const yesterdayStr = yest.toDateString();
 
-                    const yesterdayDate = new Date();
-                    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-                    const yesterdayStr = yesterdayDate.toDateString();
-                    const yesterdayLog = (task.dailyLogs || []).find(
-                      (log) =>
-                        new Date(log.date).toDateString() === yesterdayStr,
-                    );
-                    const yesterdayAchieved = yesterdayLog?.achieved || 0;
-                    const yesterdayTarget =
-                      yesterdayLog?.targetValue || task.targetValue;
-                    const yesterdayPct =
-                      yesterdayTarget > 0
-                        ? Math.min(
-                            Math.round(
-                              (yesterdayAchieved / yesterdayTarget) * 100,
-                            ),
-                            100,
-                          )
-                        : 0;
-                    const yesterdayComplete =
-                      yesterdayAchieved >= yesterdayTarget;
+                // this week Sun–Thu
+                const dow = now.getDay();
+                const wkSun = new Date(now);
+                wkSun.setDate(now.getDate() - dow);
+                wkSun.setHours(0, 0, 0, 0);
 
-                    return (
-                      <div
-                        key={task.id}
-                        className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3"
-                      >
-                        {/* Card 1 — Task Info + Today's Progress */}
-                        <Card className="overflow-hidden">
-                          <CardContent className="p-0">
-                            <div className="p-4 border-b border-gray-100">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-gray-800 truncate">
+                // this month
+                const monthStart = new Date(
+                  now.getFullYear(),
+                  now.getMonth(),
+                  1,
+                );
+
+                const isWorkDay = (d: Date) =>
+                  d.getDay() !== 5 && d.getDay() !== 6;
+
+                // overall summary
+                const activeTasks = tasks.filter((t) => t.isActive);
+                const hitToday = tasks.filter((t) => {
+                  const log = (t.dailyLogs || []).find(
+                    (l) => new Date(l.date).toDateString() === todayStr,
+                  );
+                  return (
+                    log && log.achieved >= (log.targetValue || t.targetValue)
+                  );
+                }).length;
+
+                return (
+                  <div className="space-y-3">
+                    {/* section header */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded flex items-center justify-center">
+                        <Target className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold">DAILY TASKS</h3>
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-semibold">
+                          {activeTasks.length} active
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+                          {hitToday}/{tasks.length} hit today
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* per-task cards */}
+                    <div className="space-y-3">
+                      {tasks.map((task) => {
+                        const logs = task.dailyLogs || [];
+
+                        // today
+                        const todayLog = logs.find(
+                          (l) => new Date(l.date).toDateString() === todayStr,
+                        );
+                        const todayAch = todayLog?.achieved ?? 0;
+                        const todayTgt =
+                          todayLog?.targetValue ?? task.targetValue;
+                        const todayPct =
+                          todayTgt > 0
+                            ? Math.min(
+                                Math.round((todayAch / todayTgt) * 100),
+                                100,
+                              )
+                            : 0;
+                        const todayDone = todayAch >= todayTgt;
+
+                        // yesterday
+                        const yestLog = logs.find(
+                          (l) =>
+                            new Date(l.date).toDateString() === yesterdayStr,
+                        );
+                        const yestAch = yestLog?.achieved ?? 0;
+                        const yestTgt =
+                          yestLog?.targetValue ?? task.targetValue;
+                        const yestPct =
+                          yestTgt > 0
+                            ? Math.min(
+                                Math.round((yestAch / yestTgt) * 100),
+                                100,
+                              )
+                            : 0;
+                        const yestDone = yestAch >= yestTgt;
+
+                        // this week (Sun–today, working days)
+                        const weekLogs = logs.filter((l) => {
+                          const d = new Date(l.date);
+                          return d >= wkSun && d <= now && isWorkDay(d);
+                        });
+                        const weekAch = weekLogs.reduce(
+                          (s, l) => s + (l.achieved || 0),
+                          0,
+                        );
+                        const weekWorkDays = Array.from(
+                          {
+                            length:
+                              Math.floor(
+                                (now.getTime() - wkSun.getTime()) / 86400000,
+                              ) + 1,
+                          },
+                          (_, i) => {
+                            const d = new Date(wkSun);
+                            d.setDate(wkSun.getDate() + i);
+                            return d;
+                          },
+                        ).filter(isWorkDay).length;
+                        const weekTgt =
+                          task.targetValue * Math.max(1, weekWorkDays);
+                        const weekPct =
+                          weekTgt > 0
+                            ? Math.min(
+                                Math.round((weekAch / weekTgt) * 100),
+                                100,
+                              )
+                            : 0;
+                        const weekDone = weekAch >= weekTgt;
+
+                        // this month
+                        const monthLogs = logs.filter((l) => {
+                          const d = new Date(l.date);
+                          return d >= monthStart && isWorkDay(d);
+                        });
+                        const monthAch = monthLogs.reduce(
+                          (s, l) => s + (l.achieved || 0),
+                          0,
+                        );
+                        const monthWorkDays = Array.from(
+                          {
+                            length:
+                              Math.floor(
+                                (now.getTime() - monthStart.getTime()) /
+                                  86400000,
+                              ) + 1,
+                          },
+                          (_, i) => {
+                            const d = new Date(monthStart);
+                            d.setDate(monthStart.getDate() + i);
+                            return d;
+                          },
+                        ).filter(isWorkDay).length;
+                        const monthTgt =
+                          task.targetValue * Math.max(1, monthWorkDays);
+                        const monthPct =
+                          monthTgt > 0
+                            ? Math.min(
+                                Math.round((monthAch / monthTgt) * 100),
+                                100,
+                              )
+                            : 0;
+                        const monthDone = monthAch >= monthTgt;
+
+                        // consecutive streak (working days going back from yesterday)
+                        let streak = 0;
+                        {
+                          const check = new Date(yest);
+                          for (let i = 0; i < 60; i++) {
+                            if (!isWorkDay(check)) {
+                              check.setDate(check.getDate() - 1);
+                              continue;
+                            }
+                            const dStr = check.toDateString();
+                            const l = logs.find(
+                              (x) => new Date(x.date).toDateString() === dStr,
+                            );
+                            if (
+                              l &&
+                              l.achieved >= (l.targetValue || task.targetValue)
+                            ) {
+                              streak++;
+                              check.setDate(check.getDate() - 1);
+                            } else {
+                              break;
+                            }
+                          }
+                        }
+
+                        // last 7 days mini bars
+                        const last7 = Array.from({ length: 7 }, (_, i) => {
+                          const d = new Date(now);
+                          d.setDate(now.getDate() - (6 - i));
+                          const dStr = d.toDateString();
+                          const l = logs.find(
+                            (x) => new Date(x.date).toDateString() === dStr,
+                          );
+                          const ach = l?.achieved ?? 0;
+                          const tgt = l?.targetValue ?? task.targetValue;
+                          const p =
+                            tgt > 0
+                              ? Math.min(Math.round((ach / tgt) * 100), 100)
+                              : 0;
+                          const done = ach >= tgt && tgt > 0;
+                          const isToday = dStr === todayStr;
+                          return { d, ach, tgt, p, done, isToday, hasLog: !!l };
+                        });
+
+                        return (
+                          <Card key={task.id} className="overflow-hidden">
+                            <CardContent className="p-0">
+                              {/* task header */}
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-muted/30">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span
+                                    className={`shrink-0 w-2 h-2 rounded-full ${task.isActive ? "bg-green-500" : "bg-gray-300"}`}
+                                  />
+                                  <span className="text-sm font-semibold text-gray-800 truncate">
                                     {task.title}
-                                  </p>
+                                  </span>
                                   {task.description && (
-                                    <p className="text-xs text-gray-500 truncate mt-0.5">
-                                      {task.description}
+                                    <span className="text-xs text-gray-400 truncate hidden sm:block">
+                                      — {task.description}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0 ml-2">
+                                  {streak > 0 && (
+                                    <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full font-semibold">
+                                      🔥 {streak}d streak
+                                    </span>
+                                  )}
+                                  <span className="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full font-medium">
+                                    Target: {task.targetValue}/day
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${task.isActive ? "bg-green-100 text-green-700" : "bg-muted text-muted-foreground"}`}
+                                  >
+                                    {task.isActive ? "Active" : "Inactive"}
+                                  </span>
+                                  {isAdmin && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-6 text-[10px] px-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
+                                      onClick={() => handleUpdateTarget(task)}
+                                    >
+                                      Edit Target
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* KPI row */}
+                              <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
+                                {/* Today */}
+                                <div
+                                  className={`p-3 ${todayDone ? "bg-green-50/50" : ""}`}
+                                >
+                                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                                    Today
+                                  </div>
+                                  <div className="flex items-end gap-1">
+                                    <span
+                                      className={`text-xl font-bold ${todayDone ? "text-green-600" : !todayLog ? "text-gray-300" : "text-blue-600"}`}
+                                    >
+                                      {todayAch}
+                                    </span>
+                                    <span className="text-xs text-gray-400 mb-0.5">
+                                      / {todayTgt}
+                                    </span>
+                                    <span
+                                      className={`text-xs font-bold ml-auto mb-0.5 ${todayDone ? "text-green-600" : "text-blue-500"}`}
+                                    >
+                                      {todayPct}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                                    <div
+                                      className={`h-1.5 rounded-full ${todayDone ? "bg-green-500" : "bg-blue-400"}`}
+                                      style={{ width: `${todayPct}%` }}
+                                    />
+                                  </div>
+                                  {!todayLog && (
+                                    <p className="text-[10px] text-gray-300 mt-1 italic">
+                                      No log yet
                                     </p>
                                   )}
                                 </div>
-                                <span
-                                  className={`ml-2 shrink-0 inline-flex px-1.5 py-0.5 text-xs font-medium rounded-full ${
-                                    task.isActive
-                                      ? "bg-green-100 text-green-700"
-                                      : "bg-gray-100 text-gray-500"
-                                  }`}
-                                >
-                                  {task.isActive ? "Active" : "Inactive"}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="p-4 bg-blue-50/40">
-                              <div className="flex items-center gap-1.5 mb-2">
-                                <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                  <TrendingUp className="w-2.5 h-2.5 text-white" />
-                                </div>
-                                <span className="text-xs font-semibold text-blue-700">
-                                  Today&apos;s Progress
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center mb-1.5">
-                                <span className="text-xs text-gray-500">
-                                  {todayAchieved} / {todayTarget} achieved today
-                                </span>
-                                <span className="text-xs font-bold text-blue-600">
-                                  {todayPct}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-blue-100 rounded-full h-1.5">
-                                <div
-                                  className="h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
-                                  style={{ width: `${todayPct}%` }}
-                                />
-                              </div>
-                              {!todayLog && (
-                                <p className="text-xs text-gray-400 mt-1 italic">
-                                  No log entry for today yet
-                                </p>
-                              )}
-                            </div>{" "}
-                            {isAdmin && (
-                              <div className="px-4 pb-3">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-full h-7 text-xs border-indigo-200 text-indigo-600 hover:bg-indigo-50"
-                                  onClick={() => handleUpdateTarget(task)}
-                                >
-                                  Update Target
-                                </Button>
-                              </div>
-                            )}{" "}
-                          </CardContent>
-                        </Card>
 
-                        {/* Card 2 — Yesterday's Progress */}
-                        <Card className="overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-1.5 mb-3">
-                              <div className="w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
-                                <TrendingUp className="w-2.5 h-2.5 text-white" />
-                              </div>
-                              <span className="text-xs font-semibold text-amber-700">
-                                Yesterday&apos;s Progress
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-gray-500">
-                                {yesterdayAchieved} / {yesterdayTarget}{" "}
-                                yesterday
-                              </span>
-                              <span
-                                className={`text-xs font-bold ${
-                                  yesterdayComplete
-                                    ? "text-green-600"
-                                    : "text-amber-600"
-                                }`}
-                              >
-                                {yesterdayPct}%
-                              </span>
-                            </div>
-                            <div className="w-full bg-amber-100 rounded-full h-2 mb-4">
-                              <div
-                                className={`h-2 rounded-full transition-all ${
-                                  yesterdayComplete
-                                    ? "bg-gradient-to-r from-green-400 to-green-600"
-                                    : "bg-gradient-to-r from-amber-400 to-amber-600"
-                                }`}
-                                style={{ width: `${yesterdayPct}%` }}
-                              />
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                              <div className="bg-amber-50 rounded p-1.5">
-                                <div className="text-xs text-gray-500">
-                                  Target
-                                </div>
-                                <div className="text-sm font-bold text-amber-600">
-                                  {yesterdayTarget}
-                                </div>
-                              </div>
-                              <div className="bg-yellow-50 rounded p-1.5">
-                                <div className="text-xs text-gray-500">
-                                  Achieved
-                                </div>
-                                <div className="text-sm font-bold text-yellow-600">
-                                  {yesterdayAchieved}
-                                </div>
-                              </div>
-                              <div
-                                className={`rounded p-1.5 ${
-                                  yesterdayComplete
-                                    ? "bg-green-50"
-                                    : "bg-orange-50"
-                                }`}
-                              >
-                                <div className="text-xs text-gray-500">Gap</div>
+                                {/* Yesterday */}
                                 <div
-                                  className={`text-sm font-bold ${
-                                    yesterdayComplete
-                                      ? "text-green-600"
-                                      : "text-orange-600"
-                                  }`}
+                                  className={`p-3 ${yestDone ? "bg-green-50/30" : ""}`}
                                 >
-                                  {yesterdayComplete ? (
-                                    <TrendingUp className="w-4 h-4 mx-auto" />
-                                  ) : (
-                                    yesterdayTarget - yesterdayAchieved
+                                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                                    Yesterday
+                                  </div>
+                                  <div className="flex items-end gap-1">
+                                    <span
+                                      className={`text-xl font-bold ${yestDone ? "text-green-600" : !yestLog ? "text-gray-300" : "text-amber-500"}`}
+                                    >
+                                      {yestAch}
+                                    </span>
+                                    <span className="text-xs text-gray-400 mb-0.5">
+                                      / {yestTgt}
+                                    </span>
+                                    <span
+                                      className={`text-xs font-bold ml-auto mb-0.5 ${yestDone ? "text-green-600" : "text-amber-500"}`}
+                                    >
+                                      {yestPct}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                                    <div
+                                      className={`h-1.5 rounded-full ${yestDone ? "bg-green-500" : "bg-amber-400"}`}
+                                      style={{ width: `${yestPct}%` }}
+                                    />
+                                  </div>
+                                  {!yestLog && (
+                                    <p className="text-[10px] text-gray-300 mt-1 italic">
+                                      No log
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* This Week */}
+                                <div
+                                  className={`p-3 ${weekDone ? "bg-green-50/30" : ""}`}
+                                >
+                                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                                    This Week
+                                  </div>
+                                  <div className="flex items-end gap-1">
+                                    <span
+                                      className={`text-xl font-bold ${weekDone ? "text-green-600" : "text-purple-600"}`}
+                                    >
+                                      {weekAch}
+                                    </span>
+                                    <span className="text-xs text-gray-400 mb-0.5">
+                                      / {weekTgt}
+                                    </span>
+                                    <span
+                                      className={`text-xs font-bold ml-auto mb-0.5 ${weekDone ? "text-green-600" : "text-purple-500"}`}
+                                    >
+                                      {weekPct}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                                    <div
+                                      className={`h-1.5 rounded-full ${weekDone ? "bg-green-500" : "bg-purple-400"}`}
+                                      style={{ width: `${weekPct}%` }}
+                                    />
+                                  </div>
+                                  <p className="text-[10px] text-gray-400 mt-1">
+                                    {weekLogs.length} log
+                                    {weekLogs.length !== 1 ? "s" : ""}
+                                  </p>
+                                </div>
+
+                                {/* This Month */}
+                                <div
+                                  className={`p-3 ${monthDone ? "bg-green-50/30" : ""}`}
+                                >
+                                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                                    This Month
+                                  </div>
+                                  <div className="flex items-end gap-1">
+                                    <span
+                                      className={`text-xl font-bold ${monthDone ? "text-green-600" : "text-teal-600"}`}
+                                    >
+                                      {monthAch}
+                                    </span>
+                                    <span className="text-xs text-gray-400 mb-0.5">
+                                      / {monthTgt}
+                                    </span>
+                                    <span
+                                      className={`text-xs font-bold ml-auto mb-0.5 ${monthDone ? "text-green-600" : "text-teal-500"}`}
+                                    >
+                                      {monthPct}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                                    <div
+                                      className={`h-1.5 rounded-full ${monthDone ? "bg-green-500" : "bg-teal-400"}`}
+                                      style={{ width: `${monthPct}%` }}
+                                    />
+                                  </div>
+                                  <p className="text-[10px] text-gray-400 mt-1">
+                                    {monthLogs.length} log
+                                    {monthLogs.length !== 1 ? "s" : ""} ·{" "}
+                                    {monthWorkDays} work days
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* last 7 days mini chart */}
+                              <div className="px-4 py-2.5 border-t border-border bg-muted/20">
+                                <div className="flex items-end gap-1.5 h-10">
+                                  {last7.map(
+                                    (
+                                      { d, ach, tgt, p, done, isToday, hasLog },
+                                      i,
+                                    ) => (
+                                      <div
+                                        key={i}
+                                        className="flex-1 flex flex-col items-center gap-0.5"
+                                        title={`${d.toLocaleDateString("default", { weekday: "short", month: "short", day: "numeric" })}: ${ach}/${tgt}`}
+                                      >
+                                        <div className="w-full flex flex-col justify-end h-7">
+                                          <div
+                                            className={`w-full rounded-sm transition-all ${
+                                              !hasLog
+                                                ? "bg-gray-200"
+                                                : done
+                                                  ? "bg-green-500"
+                                                  : "bg-blue-400"
+                                            } ${isToday ? "ring-1 ring-blue-500 ring-offset-1" : ""}`}
+                                            style={{
+                                              height: hasLog
+                                                ? `${Math.max(p, 8)}%`
+                                                : "8%",
+                                            }}
+                                          />
+                                        </div>
+                                        <span
+                                          className={`text-[9px] font-medium ${isToday ? "text-blue-600" : "text-gray-400"}`}
+                                        >
+                                          {d.toLocaleDateString("default", {
+                                            weekday: "narrow",
+                                          })}
+                                        </span>
+                                      </div>
+                                    ),
                                   )}
                                 </div>
                               </div>
-                            </div>
-                            {!yesterdayLog && (
-                              <p className="text-xs text-gray-400 mt-2 italic">
-                                No log entry for yesterday
-                              </p>
-                            )}
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
 
-                        {/* Card 4 — Weekly Progress */}
-                        <Card className="overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-1.5 mb-3">
-                              <div className="w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center">
-                                <TrendingUp className="w-2.5 h-2.5 text-white" />
-                              </div>
-                              <span className="text-xs font-semibold text-purple-700">
-                                This Week&apos;s Progress
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-gray-500">
-                                {weeklyAchieved} / {weeklyTarget} this week
-                              </span>
-                              <span
-                                className={`text-xs font-bold ${
-                                  weeklyComplete
-                                    ? "text-green-600"
-                                    : "text-purple-600"
-                                }`}
-                              >
-                                {weeklyPct}%
-                              </span>
-                            </div>
-                            <div className="w-full bg-purple-100 rounded-full h-2 mb-4">
-                              <div
-                                className={`h-2 rounded-full transition-all ${
-                                  weeklyComplete
-                                    ? "bg-gradient-to-r from-green-400 to-green-600"
-                                    : "bg-gradient-to-r from-purple-400 to-purple-600"
-                                }`}
-                                style={{ width: `${weeklyPct}%` }}
-                              />
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                              <div className="bg-purple-50 rounded p-1.5">
-                                <div className="text-xs text-gray-500">
-                                  W.Target
-                                </div>
-                                <div className="text-sm font-bold text-purple-600">
-                                  {weeklyTarget}
-                                </div>
-                              </div>
-                              <div className="bg-violet-50 rounded p-1.5">
-                                <div className="text-xs text-gray-500">
-                                  Achieved
-                                </div>
-                                <div className="text-sm font-bold text-violet-600">
-                                  {weeklyAchieved}
-                                </div>
-                              </div>
-                              <div
-                                className={`rounded p-1.5 ${
-                                  weeklyRemaining === 0
-                                    ? "bg-green-50"
-                                    : "bg-orange-50"
-                                }`}
-                              >
-                                <div className="text-xs text-gray-500">
-                                  Remaining
-                                </div>
-                                <div
-                                  className={`text-sm font-bold ${
-                                    weeklyRemaining === 0
-                                      ? "text-green-600"
-                                      : "text-orange-600"
-                                  }`}
-                                >
-                                  {weeklyRemaining === 0 ? (
-                                    <TrendingUp className="w-4 h-4 mx-auto" />
-                                  ) : (
-                                    weeklyRemaining
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-xs text-gray-400 mt-2">
-                              {weeklyLogs.length} log
-                              {weeklyLogs.length !== 1 ? "s" : ""} this week
-                            </p>
-                          </CardContent>
-                        </Card>
+            {/* ── CONTACT STATS DASHBOARD ── */}
+            {(() => {
+              const contacts = user.contacts || [];
+              const now = new Date();
 
-                        {/* Card 4 — Last 30 Days Progress */}
-                        <Card className="overflow-hidden">
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-1.5 mb-3">
-                              <div className="w-4 h-4 bg-teal-500 rounded-full flex items-center justify-center">
-                                <TrendingUp className="w-2.5 h-2.5 text-white" />
-                              </div>
-                              <span className="text-xs font-semibold text-teal-700">
-                                Last 30 Days
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="text-xs text-gray-500">
-                                {thirtyDayAchieved} / {thirtyDayTarget}
-                              </span>
-                              <span
-                                className={`text-xs font-bold ${
-                                  thirtyDayComplete
-                                    ? "text-green-600"
-                                    : "text-teal-600"
-                                }`}
-                              >
-                                {thirtyDayPct}%
-                              </span>
-                            </div>
-                            <div className="w-full bg-teal-100 rounded-full h-2 mb-4">
-                              <div
-                                className={`h-2 rounded-full transition-all ${
-                                  thirtyDayComplete
-                                    ? "bg-gradient-to-r from-green-400 to-green-600"
-                                    : "bg-gradient-to-r from-teal-400 to-teal-600"
-                                }`}
-                                style={{ width: `${thirtyDayPct}%` }}
-                              />
-                            </div>
-                            <div className="grid grid-cols-3 gap-2 text-center">
-                              <div className="bg-teal-50 rounded p-1.5">
-                                <div className="text-xs text-gray-500">
-                                  Target
-                                </div>
-                                <div className="text-sm font-bold text-teal-600">
-                                  {thirtyDayTarget}
-                                </div>
-                              </div>
-                              <div className="bg-cyan-50 rounded p-1.5">
-                                <div className="text-xs text-gray-500">
-                                  Achieved
-                                </div>
-                                <div className="text-sm font-bold text-cyan-600">
-                                  {thirtyDayAchieved}
-                                </div>
-                              </div>
-                              <div
-                                className={`rounded p-1.5 ${
-                                  thirtyDayRemaining === 0
-                                    ? "bg-green-50"
-                                    : "bg-orange-50"
-                                }`}
-                              >
-                                <div className="text-xs text-gray-500">
-                                  Remaining
-                                </div>
-                                <div
-                                  className={`text-sm font-bold ${
-                                    thirtyDayRemaining === 0
-                                      ? "text-green-600"
-                                      : "text-orange-600"
-                                  }`}
-                                >
-                                  {thirtyDayRemaining === 0 ? (
-                                    <TrendingUp className="w-4 h-4 mx-auto" />
-                                  ) : (
-                                    thirtyDayRemaining
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            <p className="text-xs text-gray-400 mt-2">
-                              {thirtyDayLogs.length} log
-                              {thirtyDayLogs.length !== 1 ? "s" : ""} ·{" "}
-                              {workingDaysIn30} working days (excl. Fri &amp;
-                              Sat)
-                            </p>
-                          </CardContent>
-                        </Card>
+              // ── date boundaries ──────────────────────────────────────────
+              const todayStr = now.toDateString();
+              const yest = new Date(now);
+              yest.setDate(now.getDate() - 1);
+              const yesterdayStr = yest.toDateString();
+
+              const dow = now.getDay();
+              const currSun = new Date(now);
+              currSun.setDate(now.getDate() - dow);
+              currSun.setHours(0, 0, 0, 0);
+              const currThu = new Date(currSun);
+              currThu.setDate(currSun.getDate() + 4);
+              currThu.setHours(23, 59, 59, 999);
+
+              const prevSun = new Date(currSun);
+              prevSun.setDate(currSun.getDate() - 7);
+              const prevThu = new Date(prevSun);
+              prevThu.setDate(prevSun.getDate() + 4);
+              prevThu.setHours(23, 59, 59, 999);
+
+              const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+              const prevMonthStart = new Date(
+                now.getFullYear(),
+                now.getMonth() - 1,
+                1,
+              );
+              const prevMonthEnd = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                0,
+                23,
+                59,
+                59,
+                999,
+              );
+              const yearStart = new Date(now.getFullYear(), 0, 1);
+
+              // ── volume buckets ────────────────────────────────────────────
+              const d = (s: string) => new Date(s);
+              const todayC = contacts.filter(
+                (c) => d(c.createdAt).toDateString() === todayStr,
+              );
+              const yesterdayC = contacts.filter(
+                (c) => d(c.createdAt).toDateString() === yesterdayStr,
+              );
+              const thisWeekC = contacts.filter((c) => {
+                const cd = d(c.createdAt);
+                return cd >= currSun && cd <= currThu;
+              });
+              const prevWeekC = contacts.filter((c) => {
+                const cd = d(c.createdAt);
+                return cd >= prevSun && cd <= prevThu;
+              });
+              const thisMonthC = contacts.filter(
+                (c) => d(c.createdAt) >= monthStart,
+              );
+              const prevMonthC = contacts.filter((c) => {
+                const cd = d(c.createdAt);
+                return cd >= prevMonthStart && cd <= prevMonthEnd;
+              });
+
+              // monthly avg
+              const earliest =
+                contacts.length > 0
+                  ? new Date(
+                      Math.min(
+                        ...contacts.map((c) => d(c.createdAt).getTime()),
+                      ),
+                    )
+                  : now;
+              const monthsDiff = Math.max(
+                1,
+                (now.getFullYear() - earliest.getFullYear()) * 12 +
+                  (now.getMonth() - earliest.getMonth()) +
+                  1,
+              );
+              const monthlyAvg = contacts.length / monthsDiff;
+
+              // ── deltas ───────────────────────────────────────────────────
+              const dayDelta = todayC.length - yesterdayC.length;
+              const weekDelta = thisWeekC.length - prevWeekC.length;
+              const monthDelta = thisMonthC.length - prevMonthC.length;
+
+              // ── status counts ─────────────────────────────────────────────
+              const sc = (s: string) =>
+                contacts.filter((c) => c.status === s).length;
+              const total = contacts.length;
+              const newCount = sc("NEW");
+              const contacted = sc("CONTACTED");
+              const responded = sc("RESPONDED");
+              const qualified = sc("QUALIFIED");
+              const negotiating = sc("NEGOTIATING");
+              const wonLifetime = sc("CLOSED_WON");
+              const lostLifetime = sc("CLOSED_LOST");
+              const activeDeals = responded + qualified + negotiating;
+              const responseRate =
+                total > 0
+                  ? Math.round(
+                      ((responded + qualified + negotiating + wonLifetime) /
+                        total) *
+                        100,
+                    )
+                  : 0;
+              const winRate =
+                responded + qualified + negotiating + wonLifetime > 0
+                  ? Math.round(
+                      (wonLifetime /
+                        (responded + qualified + negotiating + wonLifetime)) *
+                        100,
+                    )
+                  : 0;
+
+              // this month quality
+              const tmResponded = thisMonthC.filter(
+                (c) => c.status === "RESPONDED",
+              ).length;
+              const tmQualified = thisMonthC.filter(
+                (c) => c.status === "QUALIFIED",
+              ).length;
+              const tmNegotiating = thisMonthC.filter(
+                (c) => c.status === "NEGOTIATING",
+              ).length;
+              const tmWon = thisMonthC.filter(
+                (c) => c.status === "CLOSED_WON",
+              ).length;
+              const tmLost = thisMonthC.filter(
+                (c) => c.status === "CLOSED_LOST",
+              ).length;
+
+              // this year won
+              const thisYearWon = contacts.filter(
+                (c) => d(c.createdAt) >= yearStart && c.status === "CLOSED_WON",
+              ).length;
+
+              const pct = (n: number, den: number) =>
+                den > 0 ? Math.round((n / den) * 100) : 0;
+
+              const Delta = ({ v }: { v: number }) =>
+                v === 0 ? null : (
+                  <span
+                    className={`text-xs font-bold ${v > 0 ? "text-green-600" : "text-red-500"}`}
+                  >
+                    {v > 0 ? "↑" : "↓"}
+                    {Math.abs(v)}
+                  </span>
+                );
+
+              return (
+                <div className="space-y-3">
+                  {/* section header */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-emerald-600 rounded flex items-center justify-center">
+                      <Activity className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold">CONTACT STATS</h3>
+                  </div>
+
+                  {/* ── Volume Row ── */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {/* Today */}
+                    <Card>
+                      <CardContent className="pt-4 pb-3 px-3 text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {todayC.length}
+                        </div>
+                        <div className="text-xs font-medium text-gray-700 mt-0.5">
+                          Today
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1 h-4">
+                          <Delta v={dayDelta} />
+                          <span className="text-[10px] text-gray-400">
+                            vs yesterday
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Yesterday */}
+                    <Card>
+                      <CardContent className="pt-4 pb-3 px-3 text-center">
+                        <div className="text-2xl font-bold text-sky-600">
+                          {yesterdayC.length}
+                        </div>
+                        <div className="text-xs font-medium text-gray-700 mt-0.5">
+                          Yesterday
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1 h-4">
+                          <span className="text-[10px] text-gray-400">
+                            &nbsp;
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* This Week */}
+                    <Card>
+                      <CardContent className="pt-4 pb-3 px-3 text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {thisWeekC.length}
+                        </div>
+                        <div className="text-xs font-medium text-gray-700 mt-0.5">
+                          This Week
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1 h-4">
+                          <Delta v={weekDelta} />
+                          <span className="text-[10px] text-gray-400">
+                            vs prev wk
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Prev Week */}
+                    <Card>
+                      <CardContent className="pt-4 pb-3 px-3 text-center">
+                        <div className="text-2xl font-bold text-indigo-500">
+                          {prevWeekC.length}
+                        </div>
+                        <div className="text-xs font-medium text-gray-700 mt-0.5">
+                          Prev Week
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1 h-4">
+                          <span className="text-[10px] text-gray-400">
+                            Sun – Thu
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* This Month */}
+                    <Card>
+                      <CardContent className="pt-4 pb-3 px-3 text-center">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {thisMonthC.length}
+                        </div>
+                        <div className="text-xs font-medium text-gray-700 mt-0.5">
+                          This Month
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1 h-4">
+                          <Delta v={monthDelta} />
+                          <span className="text-[10px] text-gray-400">
+                            vs last mo
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* Lifetime */}
+                    <Card>
+                      <CardContent className="pt-4 pb-3 px-3 text-center">
+                        <div className="text-2xl font-bold text-slate-700">
+                          {total}
+                        </div>
+                        <div className="text-xs font-medium text-gray-700 mt-0.5">
+                          Lifetime
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1 h-4">
+                          <span className="text-[10px] text-gray-400">
+                            ~{monthlyAvg.toFixed(1)}/mo avg
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* ── KPI Cards ── */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {/* Response Rate */}
+                    <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-green-700">
+                            Response Rate
+                          </span>
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                        </div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {responseRate}%
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {responded + qualified + negotiating + wonLifetime} of{" "}
+                          {total} replied
+                        </div>
+                        <div className="w-full bg-green-100 rounded-full h-1.5 mt-2">
+                          <div
+                            className="h-1.5 rounded-full bg-green-500"
+                            style={{ width: `${responseRate}%` }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Win Rate */}
+                    <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-amber-700">
+                            Win Rate
+                          </span>
+                          <Target className="w-4 h-4 text-amber-500" />
+                        </div>
+                        <div className="text-2xl font-bold text-amber-600">
+                          {winRate}%
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          {wonLifetime} won · {thisYearWon} this year
+                        </div>
+                        <div className="w-full bg-amber-100 rounded-full h-1.5 mt-2">
+                          <div
+                            className="h-1.5 rounded-full bg-amber-500"
+                            style={{ width: `${winRate}%` }}
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Active Deals */}
+                    <Card className="bg-gradient-to-br from-blue-50 to-sky-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-blue-700">
+                            Active Deals
+                          </span>
+                          <Activity className="w-4 h-4 text-blue-500" />
+                        </div>
+                        <div className="text-2xl font-bold text-blue-600">
+                          {activeDeals}
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {responded > 0 && (
+                            <span className="text-[10px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded-full">
+                              {responded} resp
+                            </span>
+                          )}
+                          {qualified > 0 && (
+                            <span className="text-[10px] bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded-full">
+                              {qualified} qual
+                            </span>
+                          )}
+                          {negotiating > 0 && (
+                            <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                              {negotiating} neg
+                            </span>
+                          )}
+                          {activeDeals === 0 && (
+                            <span className="text-[10px] text-gray-400">
+                              No active deals
+                            </span>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Monthly Average */}
+                    <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-purple-700">
+                            Monthly Avg
+                          </span>
+                          <TrendingUp className="w-4 h-4 text-purple-500" />
+                        </div>
+                        <div className="text-2xl font-bold text-purple-600">
+                          {monthlyAvg.toFixed(1)}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          contacts / month
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Over {monthsDiff} month
+                          {monthsDiff !== 1 ? "s" : ""}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* ── Pipeline Funnel ── */}
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Shield className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-semibold text-gray-700">
+                          Lifetime Pipeline
+                        </span>
+                        <span className="ml-auto text-xs text-gray-400">
+                          {total} total contacts
+                        </span>
                       </div>
-                    );
-                  })}
+                      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                        {(
+                          [
+                            {
+                              label: "New",
+                              count: newCount,
+                              bg: "bg-gray-100",
+                              text: "text-gray-700",
+                              bar: "bg-gray-400",
+                            },
+                            {
+                              label: "Contacted",
+                              count: contacted,
+                              bg: "bg-blue-100",
+                              text: "text-blue-700",
+                              bar: "bg-blue-400",
+                            },
+                            {
+                              label: "Responded",
+                              count: responded,
+                              bg: "bg-sky-100",
+                              text: "text-sky-700",
+                              bar: "bg-sky-400",
+                            },
+                            {
+                              label: "Qualified",
+                              count: qualified,
+                              bg: "bg-violet-100",
+                              text: "text-violet-700",
+                              bar: "bg-violet-400",
+                            },
+                            {
+                              label: "Negotiating",
+                              count: negotiating,
+                              bg: "bg-orange-100",
+                              text: "text-orange-700",
+                              bar: "bg-orange-400",
+                            },
+                            {
+                              label: "Won",
+                              count: wonLifetime,
+                              bg: "bg-green-100",
+                              text: "text-green-700",
+                              bar: "bg-green-500",
+                            },
+                            {
+                              label: "Lost",
+                              count: lostLifetime,
+                              bg: "bg-red-100",
+                              text: "text-red-600",
+                              bar: "bg-red-400",
+                            },
+                          ] as {
+                            label: string;
+                            count: number;
+                            bg: string;
+                            text: string;
+                            bar: string;
+                          }[]
+                        ).map(({ label, count, bg, text, bar }) => (
+                          <div
+                            key={label}
+                            className={`${bg} rounded-lg p-2.5 text-center`}
+                          >
+                            <div className={`text-xl font-bold ${text}`}>
+                              {count}
+                            </div>
+                            <div
+                              className={`text-[11px] font-medium ${text} leading-tight`}
+                            >
+                              {label}
+                            </div>
+                            <div className="w-full bg-white/60 rounded-full h-1 mt-1.5">
+                              <div
+                                className={`h-1 rounded-full ${bar}`}
+                                style={{ width: `${pct(count, total)}%` }}
+                              />
+                            </div>
+                            <div className="text-[10px] text-gray-500 mt-0.5">
+                              {pct(count, total)}%
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* ── This Month Quality Breakdown ── */}
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-semibold text-gray-700">
+                          This Month Quality
+                        </span>
+                        <span className="ml-auto text-xs text-gray-400">
+                          {thisMonthC.length} added this month
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        {(
+                          [
+                            {
+                              label: "Responded",
+                              count: tmResponded,
+                              color: "text-sky-600",
+                              bg: "bg-sky-50",
+                            },
+                            {
+                              label: "Qualified",
+                              count: tmQualified,
+                              color: "text-violet-600",
+                              bg: "bg-violet-50",
+                            },
+                            {
+                              label: "Negotiating",
+                              count: tmNegotiating,
+                              color: "text-orange-600",
+                              bg: "bg-orange-50",
+                            },
+                            {
+                              label: "Won",
+                              count: tmWon,
+                              color: "text-green-600",
+                              bg: "bg-green-50",
+                            },
+                            {
+                              label: "Lost",
+                              count: tmLost,
+                              color: "text-red-500",
+                              bg: "bg-red-50",
+                            },
+                          ] as {
+                            label: string;
+                            count: number;
+                            color: string;
+                            bg: string;
+                          }[]
+                        ).map(({ label, count, color, bg }) => (
+                          <div
+                            key={label}
+                            className={`${bg} rounded-lg p-3 text-center`}
+                          >
+                            <div className={`text-xl font-bold ${color}`}>
+                              {count}
+                            </div>
+                            <div className="text-xs text-gray-600 mt-0.5">
+                              {label}
+                            </div>
+                            <div className="text-[10px] text-gray-400">
+                              {pct(count, thisMonthC.length)}% of month
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-            )}
-
-            <h3 className="text-xl font-bold"> STATS</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-9 gap-1">
-              {/* Today's Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {user.contacts?.filter((contact) => {
-                      const contactDate = new Date(contact.createdAt);
-                      const today = new Date();
-                      return (
-                        contactDate.toDateString() === today.toDateString()
-                      );
-                    }).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Today&apos;s Contacts
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* This Week's Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-green-600">
-                    {user.contacts?.filter((contact) => {
-                      const contactDate = new Date(contact.createdAt);
-                      const today = new Date();
-                      const weekAgo = new Date(
-                        today.getTime() - 7 * 24 * 60 * 60 * 1000,
-                      );
-                      return contactDate >= weekAgo;
-                    }).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    This Week Contacts
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* This Month's Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {user.contacts?.filter((contact) => {
-                      const contactDate = new Date(contact.createdAt);
-                      const today = new Date();
-                      const monthAgo = new Date(
-                        today.getFullYear(),
-                        today.getMonth(),
-                        1,
-                      );
-                      return contactDate >= monthAgo;
-                    }).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    This Month Contacts
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Monthly Average Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {(() => {
-                      const contacts = user.contacts || [];
-                      if (contacts.length === 0) return 0;
-
-                      const earliestDate = new Date(
-                        Math.min(
-                          ...contacts.map((c) =>
-                            new Date(c.createdAt).getTime(),
-                          ),
-                        ),
-                      );
-                      const today = new Date();
-                      const monthsDiff = Math.max(
-                        1,
-                        (today.getFullYear() - earliestDate.getFullYear()) *
-                          12 +
-                          (today.getMonth() - earliestDate.getMonth()) +
-                          1,
-                      );
-                      const average = contacts.length / monthsDiff;
-                      return average.toFixed(1);
-                    })()}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Monthly Average
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Lifetime Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-indigo-600">
-                    {user.contacts?.length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    Lifetime Contacts
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* This Month Responded Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-teal-600">
-                    {user.contacts?.filter((contact) => {
-                      const contactDate = new Date(contact.createdAt);
-                      const today = new Date();
-                      const monthAgo = new Date(
-                        today.getFullYear(),
-                        today.getMonth(),
-                        1,
-                      );
-                      return (
-                        contactDate >= monthAgo &&
-                        contact.status === "RESPONDED"
-                      );
-                    }).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    This Month Responded
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* This Month Negotiating Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-amber-600">
-                    {user.contacts?.filter((contact) => {
-                      const contactDate = new Date(contact.createdAt);
-                      const today = new Date();
-                      const monthAgo = new Date(
-                        today.getFullYear(),
-                        today.getMonth(),
-                        1,
-                      );
-                      return (
-                        contactDate >= monthAgo &&
-                        contact.status === "NEGOTIATING"
-                      );
-                    }).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    This Month Negotiating
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* This Year Won Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {user.contacts?.filter((contact) => {
-                      const contactDate = new Date(contact.createdAt);
-                      const today = new Date();
-                      const yearStart = new Date(today.getFullYear(), 0, 1);
-                      return (
-                        contactDate >= yearStart &&
-                        contact.status === "CLOSED_WON"
-                      );
-                    }).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">
-                    This Year Won
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Lifetime Won Contacts */}
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="text-2xl font-bold text-cyan-600">
-                    {user.contacts?.filter(
-                      (contact) => contact.status === "CLOSED_WON",
-                    ).length || 0}
-                  </div>
-                  <div className="text-sm text-gray-600 mt-1">Lifetime Won</div>
-                </CardContent>
-              </Card>
-            </div>
+              );
+            })()}
           </div>
         </div>
+
+        {/* ── PERIOD ANALYSIS ── */}
+        {user &&
+          (() => {
+            const contacts = user.contacts || [];
+
+            // ── helpers ────────────────────────────────────────────────────
+            const STATUS_LABELS: Record<
+              string,
+              { label: string; bg: string; text: string; bar: string }
+            > = {
+              NEW: {
+                label: "New",
+                bg: "bg-gray-100",
+                text: "text-gray-700",
+                bar: "bg-gray-400",
+              },
+              CONTACTED: {
+                label: "Contacted",
+                bg: "bg-blue-100",
+                text: "text-blue-700",
+                bar: "bg-blue-400",
+              },
+              RESPONDED: {
+                label: "Responded",
+                bg: "bg-sky-100",
+                text: "text-sky-700",
+                bar: "bg-sky-400",
+              },
+              QUALIFIED: {
+                label: "Qualified",
+                bg: "bg-violet-100",
+                text: "text-violet-700",
+                bar: "bg-violet-400",
+              },
+              NEGOTIATING: {
+                label: "Negotiating",
+                bg: "bg-orange-100",
+                text: "text-orange-700",
+                bar: "bg-orange-400",
+              },
+              CLOSED_WON: {
+                label: "Won",
+                bg: "bg-green-100",
+                text: "text-green-700",
+                bar: "bg-green-500",
+              },
+              CLOSED_LOST: {
+                label: "Lost",
+                bg: "bg-red-100",
+                text: "text-red-600",
+                bar: "bg-red-400",
+              },
+            };
+            const pct2 = (n: number, d: number) =>
+              d > 0 ? Math.round((n / d) * 100) : 0;
+
+            const monthName = (m: number) =>
+              new Date(2000, m).toLocaleString("default", { month: "short" });
+
+            // ── compute for selected period ────────────────────────────────
+            let rangeStart: Date | null = null;
+            let rangeEnd: Date | null = null;
+            let prevRangeStart: Date | null = null;
+            let prevRangeEnd: Date | null = null;
+            let rangeLabel = "";
+
+            if (periodMode === "monthly") {
+              const [y, m] = selectedMonth.split("-").map(Number);
+              rangeStart = new Date(y, m - 1, 1);
+              rangeEnd = new Date(y, m, 0, 23, 59, 59, 999);
+              prevRangeStart = new Date(y, m - 2, 1);
+              prevRangeEnd = new Date(y, m - 1, 0, 23, 59, 59, 999);
+              rangeLabel = new Date(y, m - 1).toLocaleString("default", {
+                month: "long",
+                year: "numeric",
+              });
+            } else if (periodMode === "yearly") {
+              rangeStart = new Date(selectedYear, 0, 1);
+              rangeEnd = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
+              prevRangeStart = new Date(selectedYear - 1, 0, 1);
+              prevRangeEnd = new Date(
+                selectedYear - 1,
+                11,
+                31,
+                23,
+                59,
+                59,
+                999,
+              );
+              rangeLabel = String(selectedYear);
+            } else {
+              if (customStart && customEnd) {
+                rangeStart = new Date(customStart);
+                rangeStart.setHours(0, 0, 0, 0);
+                rangeEnd = new Date(customEnd);
+                rangeEnd.setHours(23, 59, 59, 999);
+                rangeLabel = `${customStart} → ${customEnd}`;
+              }
+            }
+
+            const inRange = (
+              dateStr: string,
+              s: Date | null,
+              e: Date | null,
+            ) => {
+              if (!s || !e) return false;
+              const d = new Date(dateStr);
+              return d >= s && d <= e;
+            };
+
+            const rangeContacts = contacts.filter((c) =>
+              inRange(c.createdAt, rangeStart, rangeEnd),
+            );
+            const prevContacts = contacts.filter((c) =>
+              inRange(c.createdAt, prevRangeStart, prevRangeEnd),
+            );
+            const total = rangeContacts.length;
+            const prevTotal = prevContacts.length;
+            const delta = total - prevTotal;
+
+            // status breakdown for range
+            const statusCounts = Object.fromEntries(
+              Object.keys(STATUS_LABELS).map((s) => [
+                s,
+                rangeContacts.filter((c) => c.status === s).length,
+              ]),
+            );
+            const wonCount = statusCounts["CLOSED_WON"] || 0;
+            const respondedUp =
+              (statusCounts["RESPONDED"] || 0) +
+              (statusCounts["QUALIFIED"] || 0) +
+              (statusCounts["NEGOTIATING"] || 0) +
+              wonCount;
+            const respRate = pct2(respondedUp, total);
+            const winRate = pct2(wonCount, respondedUp);
+
+            // ── monthly buckets (for yearly view) ─────────────────────────
+            const monthlyBuckets = Array.from({ length: 12 }, (_, i) => {
+              const s = new Date(selectedYear, i, 1);
+              const e = new Date(selectedYear, i + 1, 0, 23, 59, 59, 999);
+              const c = contacts.filter((ct) => {
+                const d = new Date(ct.createdAt);
+                return d >= s && d <= e;
+              }).length;
+              return { month: i, count: c };
+            });
+            const maxMonthly = Math.max(
+              1,
+              ...monthlyBuckets.map((b) => b.count),
+            );
+
+            // ── weekly buckets (for monthly view) ─────────────────────────
+            const [selY, selM] = selectedMonth.split("-").map(Number);
+            const daysInMonth = new Date(selY, selM, 0).getDate();
+            const weekBuckets = [1, 2, 3, 4].map((wk) => {
+              const dayStart = (wk - 1) * 7 + 1;
+              const dayEnd = wk === 4 ? daysInMonth : wk * 7;
+              const s = new Date(selY, selM - 1, dayStart);
+              const e = new Date(selY, selM - 1, dayEnd, 23, 59, 59, 999);
+              const c = rangeContacts.filter((ct) => {
+                const d = new Date(ct.createdAt);
+                return d >= s && d <= e;
+              });
+              return {
+                wk,
+                label: `Wk ${wk}`,
+                days: `${dayStart}–${dayEnd}`,
+                count: c.length,
+                contacts: c,
+              };
+            });
+            const maxWeekly = Math.max(1, ...weekBuckets.map((b) => b.count));
+
+            // ── top countries ─────────────────────────────────────────────
+            // country might not be eager-loaded; fall back to countryId lookup
+            const countryIdMap = Object.fromEntries(
+              countries.map((ct) => [ct.id, ct.name]),
+            );
+            const countryMap: Record<string, number> = {};
+            rangeContacts.forEach((c) => {
+              const k =
+                c.country?.name || countryIdMap[c.countryId ?? -1] || "Unknown";
+              countryMap[k] = (countryMap[k] || 0) + 1;
+            });
+            const topCountries = Object.entries(countryMap)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5);
+
+            const showAnalysis =
+              periodMode !== "custom" || (!!customStart && !!customEnd);
+
+            return (
+              <div className="mt-8">
+                {/* header + controls */}
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+                      <BarChart2 className="w-4 h-4 text-white" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Period Analysis
+                    </h2>
+                  </div>
+
+                  {/* mode tabs */}
+                  <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
+                    {(["monthly", "yearly", "custom"] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setPeriodMode(m)}
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all capitalize ${
+                          periodMode === m
+                            ? "bg-white text-blue-700 shadow-sm"
+                            : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* period picker */}
+                  <div className="flex items-center gap-2">
+                    {periodMode === "monthly" && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="p-1 rounded hover:bg-gray-100"
+                          onClick={() => {
+                            const [y, mo] = selectedMonth
+                              .split("-")
+                              .map(Number);
+                            const d = new Date(y, mo - 2, 1);
+                            setSelectedMonth(
+                              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+                            );
+                          }}
+                        >
+                          <ChevronLeft className="w-4 h-4 text-gray-500" />
+                        </button>
+                        <input
+                          type="month"
+                          value={selectedMonth}
+                          onChange={(e) => setSelectedMonth(e.target.value)}
+                          className="text-sm border border-gray-200 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        />
+                        <button
+                          className="p-1 rounded hover:bg-gray-100"
+                          onClick={() => {
+                            const [y, mo] = selectedMonth
+                              .split("-")
+                              .map(Number);
+                            const d = new Date(y, mo, 1);
+                            setSelectedMonth(
+                              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+                            );
+                          }}
+                        >
+                          <ChevronRight className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </div>
+                    )}
+                    {periodMode === "yearly" && (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="p-1 rounded hover:bg-gray-100"
+                          onClick={() => setSelectedYear((y) => y - 1)}
+                        >
+                          <ChevronLeft className="w-4 h-4 text-gray-500" />
+                        </button>
+                        <span className="text-sm font-semibold px-3 py-1 bg-white border border-gray-200 rounded-md min-w-[64px] text-center">
+                          {selectedYear}
+                        </span>
+                        <button
+                          className="p-1 rounded hover:bg-gray-100"
+                          onClick={() => setSelectedYear((y) => y + 1)}
+                        >
+                          <ChevronRight className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </div>
+                    )}
+                    {periodMode === "custom" && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <input
+                          type="date"
+                          value={customStart}
+                          onChange={(e) => setCustomStart(e.target.value)}
+                          className="text-sm border border-gray-200 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        />
+                        <span className="text-gray-400 text-xs">to</span>
+                        <input
+                          type="date"
+                          value={customEnd}
+                          onChange={(e) => setCustomEnd(e.target.value)}
+                          className="text-sm border border-gray-200 rounded-md px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {!showAnalysis && (
+                  <div className="text-center py-10 text-gray-400 text-sm">
+                    Please select a start and end date to view analysis.
+                  </div>
+                )}
+
+                {showAnalysis && (
+                  <div className="space-y-4">
+                    {/* ── Top KPI row ── */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {/* Total */}
+                      <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-blue-100">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs font-semibold text-blue-700">
+                              Total Contacts
+                            </span>
+                            <Activity className="w-4 h-4 text-blue-400" />
+                          </div>
+                          <div className="text-3xl font-bold text-slate-800 mt-1">
+                            {total}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {rangeLabel}
+                          </div>
+                          {periodMode !== "custom" && (
+                            <div
+                              className={`text-xs font-semibold mt-1 ${delta > 0 ? "text-green-600" : delta < 0 ? "text-red-500" : "text-gray-400"}`}
+                            >
+                              {delta > 0 ? "↑" : delta < 0 ? "↓" : "="}{" "}
+                              {Math.abs(delta)} vs prev period ({prevTotal})
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Daily average */}
+                      <Card className="bg-gradient-to-br from-slate-50 to-purple-50 border-purple-100">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs font-semibold text-purple-700">
+                              Daily Avg
+                            </span>
+                            <TrendingUp className="w-4 h-4 text-purple-400" />
+                          </div>
+                          <div className="text-3xl font-bold text-slate-800 mt-1">
+                            {rangeStart && rangeEnd
+                              ? (
+                                  total /
+                                  Math.max(
+                                    1,
+                                    Math.round(
+                                      (rangeEnd.getTime() -
+                                        rangeStart.getTime()) /
+                                        86400000,
+                                    ) + 1,
+                                  )
+                                ).toFixed(1)
+                              : "—"}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            contacts / day
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Response rate */}
+                      <Card className="bg-gradient-to-br from-slate-50 to-green-50 border-green-100">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs font-semibold text-green-700">
+                              Response Rate
+                            </span>
+                            <CheckCircle className="w-4 h-4 text-green-400" />
+                          </div>
+                          <div className="text-3xl font-bold text-slate-800 mt-1">
+                            {respRate}%
+                          </div>
+                          <div className="w-full bg-green-100 rounded-full h-1.5 mt-2">
+                            <div
+                              className="h-1.5 rounded-full bg-green-500"
+                              style={{ width: `${respRate}%` }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {respondedUp} of {total} replied
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Win rate */}
+                      <Card className="bg-gradient-to-br from-slate-50 to-amber-50 border-amber-100">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <span className="text-xs font-semibold text-amber-700">
+                              Win Rate
+                            </span>
+                            <Target className="w-4 h-4 text-amber-400" />
+                          </div>
+                          <div className="text-3xl font-bold text-slate-800 mt-1">
+                            {winRate}%
+                          </div>
+                          <div className="w-full bg-amber-100 rounded-full h-1.5 mt-2">
+                            <div
+                              className="h-1.5 rounded-full bg-amber-500"
+                              style={{ width: `${winRate}%` }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {wonCount} won of {respondedUp} replied
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* ── Chart + status split row ── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Bar chart */}
+                      <Card className="lg:col-span-2">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm font-semibold text-gray-700">
+                              {periodMode === "yearly"
+                                ? `Month-by-Month — ${selectedYear}`
+                                : periodMode === "monthly"
+                                  ? `Week-by-Week — ${rangeLabel}`
+                                  : `Contacts — ${rangeLabel}`}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {total} total
+                            </span>
+                          </div>
+
+                          {/* yearly: month bars */}
+                          {periodMode === "yearly" && (
+                            <div className="flex items-end gap-1.5 h-36">
+                              {monthlyBuckets.map(({ month, count }) => (
+                                <div
+                                  key={month}
+                                  className="flex-1 flex flex-col items-center gap-1"
+                                >
+                                  <span className="text-[10px] font-bold text-gray-700">
+                                    {count > 0 ? count : ""}
+                                  </span>
+                                  <div className="w-full flex flex-col justify-end h-24">
+                                    <div
+                                      className="w-full rounded-t bg-gradient-to-t from-blue-500 to-indigo-400 transition-all"
+                                      style={{
+                                        height: `${Math.max(pct2(count, maxMonthly), count > 0 ? 4 : 0)}%`,
+                                      }}
+                                      title={`${monthName(month)}: ${count}`}
+                                    />
+                                  </div>
+                                  <span className="text-[10px] text-gray-400">
+                                    {monthName(month)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* monthly: week bars */}
+                          {periodMode === "monthly" && (
+                            <div className="flex items-end gap-3 h-36">
+                              {weekBuckets.map(({ wk, label, days, count }) => (
+                                <div
+                                  key={wk}
+                                  className="flex-1 flex flex-col items-center gap-1"
+                                >
+                                  <span className="text-[11px] font-bold text-gray-700">
+                                    {count > 0 ? count : ""}
+                                  </span>
+                                  <div className="w-full flex flex-col justify-end h-24">
+                                    <div
+                                      className="w-full rounded-t bg-gradient-to-t from-purple-500 to-violet-400 transition-all"
+                                      style={{
+                                        height: `${Math.max(pct2(count, maxWeekly), count > 0 ? 4 : 0)}%`,
+                                      }}
+                                      title={`${label}: ${count}`}
+                                    />
+                                  </div>
+                                  <span className="text-[10px] text-gray-500 font-medium">
+                                    {label}
+                                  </span>
+                                  <span className="text-[9px] text-gray-400">
+                                    {days}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* custom: single bar */}
+                          {periodMode === "custom" && (
+                            <div className="flex flex-col items-center justify-center h-32 gap-2">
+                              <div className="text-5xl font-bold text-blue-600">
+                                {total}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                contacts in selected range
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Status breakdown */}
+                      <Card>
+                        <CardContent className="p-4">
+                          <span className="text-sm font-semibold text-gray-700 block mb-3">
+                            Status Breakdown
+                          </span>
+                          {total === 0 ? (
+                            <div className="text-center py-8 text-gray-400 text-xs">
+                              No contacts in this period
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              {Object.entries(STATUS_LABELS).map(
+                                ([key, { label, text, bar }]) => {
+                                  const c = statusCounts[key] || 0;
+                                  if (c === 0) return null;
+                                  return (
+                                    <div key={key}>
+                                      <div className="flex justify-between text-xs mb-0.5">
+                                        <span className={`font-medium ${text}`}>
+                                          {label}
+                                        </span>
+                                        <span className="text-gray-500">
+                                          {c} ({pct2(c, total)}%)
+                                        </span>
+                                      </div>
+                                      <div className="w-full bg-gray-100 rounded-full h-2">
+                                        <div
+                                          className={`h-2 rounded-full ${bar}`}
+                                          style={{
+                                            width: `${pct2(c, total)}%`,
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  );
+                                },
+                              )}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* ── Top Countries + Comparison row ── */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Top Countries */}
+                      <Card>
+                        <CardContent className="p-4">
+                          <span className="text-sm font-semibold text-gray-700 block mb-3">
+                            Top Countries
+                          </span>
+                          {topCountries.length === 0 ? (
+                            <div className="text-center py-6 text-gray-400 text-xs">
+                              No data
+                            </div>
+                          ) : (
+                            <div className="space-y-2.5">
+                              {topCountries.map(([country, count], i) => (
+                                <div key={country}>
+                                  <div className="flex justify-between text-xs mb-0.5">
+                                    <span className="font-medium text-gray-700">
+                                      <span className="text-gray-400 mr-1">
+                                        #{i + 1}
+                                      </span>
+                                      {country}
+                                    </span>
+                                    <span className="text-gray-500">
+                                      {count} ({pct2(count, total)}%)
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-gray-100 rounded-full h-2">
+                                    <div
+                                      className="h-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
+                                      style={{
+                                        width: `${pct2(count, topCountries[0][1])}%`,
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      {/* Period vs Prev Period comparison */}
+                      {periodMode !== "custom" && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <span className="text-sm font-semibold text-gray-700 block mb-3">
+                              vs Previous Period
+                            </span>
+                            <div className="space-y-3">
+                              {[
+                                {
+                                  label: "Total Contacts",
+                                  curr: total,
+                                  prev: prevTotal,
+                                },
+                                {
+                                  label: "Responded+",
+                                  curr: respondedUp,
+                                  prev: prevContacts.filter(
+                                    (c) =>
+                                      c.status === "RESPONDED" ||
+                                      c.status === "QUALIFIED" ||
+                                      c.status === "NEGOTIATING" ||
+                                      c.status === "CLOSED_WON",
+                                  ).length,
+                                },
+                                {
+                                  label: "Won",
+                                  curr: wonCount,
+                                  prev: prevContacts.filter(
+                                    (c) => c.status === "CLOSED_WON",
+                                  ).length,
+                                },
+                                {
+                                  label: "Lost",
+                                  curr: statusCounts["CLOSED_LOST"] || 0,
+                                  prev: prevContacts.filter(
+                                    (c) => c.status === "CLOSED_LOST",
+                                  ).length,
+                                },
+                              ].map(({ label, curr, prev }) => {
+                                const diff = curr - prev;
+                                return (
+                                  <div
+                                    key={label}
+                                    className="flex items-center justify-between"
+                                  >
+                                    <span className="text-xs text-gray-600 w-28">
+                                      {label}
+                                    </span>
+                                    <div className="flex items-center gap-3 flex-1 justify-end">
+                                      <span className="text-xs text-gray-400">
+                                        prev: {prev}
+                                      </span>
+                                      <span className="text-sm font-bold text-gray-800 w-8 text-right">
+                                        {curr}
+                                      </span>
+                                      <span
+                                        className={`text-xs font-bold w-12 text-right ${diff > 0 ? "text-green-600" : diff < 0 ? "text-red-500" : "text-gray-400"}`}
+                                      >
+                                        {diff > 0 ? "↑" : diff < 0 ? "↓" : "="}
+                                        {diff !== 0 ? Math.abs(diff) : ""}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* custom: summary card */}
+                      {periodMode === "custom" && (
+                        <Card>
+                          <CardContent className="p-4">
+                            <span className="text-sm font-semibold text-gray-700 block mb-3">
+                              Quality Summary
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                              {Object.entries(STATUS_LABELS).map(
+                                ([key, { label, bg, text }]) => {
+                                  const c = statusCounts[key] || 0;
+                                  return (
+                                    <div
+                                      key={key}
+                                      className={`${bg} rounded-lg p-2.5 text-center`}
+                                    >
+                                      <div
+                                        className={`text-lg font-bold ${text}`}
+                                      >
+                                        {c}
+                                      </div>
+                                      <div
+                                        className={`text-[11px] font-medium ${text}`}
+                                      >
+                                        {label}
+                                      </div>
+                                    </div>
+                                  );
+                                },
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
         {/* Recent Contacts Table */}
         <div className="mt-8">
@@ -876,7 +1970,7 @@ const UserProfile = () => {
             <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg mb-2 shadow-md">
               <UserIcon className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-1">
+            <h2 className="text-xl font-semibold text-foreground mb-1">
               Recent Contacts
             </h2>
             <p className="text-gray-500 text-sm">
@@ -950,7 +2044,11 @@ const UserProfile = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                            {contact.country?.name || "N/A"}
+                            {contact.country?.name ||
+                              countries.find(
+                                (ct) => ct.id === contact.countryId,
+                              )?.name ||
+                              "N/A"}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                             {new Date(contact.createdAt).toLocaleDateString()}

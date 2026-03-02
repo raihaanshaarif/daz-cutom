@@ -70,7 +70,7 @@ export default function CreateUser() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-2 px-4">
+    <div className="min-h-screen bg-background py-2 px-4">
       <div className="w-full mx-auto">
         {/* Header */}
         <div className="mb-4 text-center">
