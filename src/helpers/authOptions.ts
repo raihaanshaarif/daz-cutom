@@ -98,8 +98,12 @@ export const authOptions: NextAuthOptions = {
       // Prevent redirect loop on /login
       const loginPath = "/login";
       const urlObj = new URL(url, baseUrl);
+      // If redirecting to /login with a callbackUrl that is also /login, strip the callbackUrl
       if (urlObj.pathname === loginPath) {
-        return baseUrl + loginPath;
+        if (urlObj.searchParams.get("callbackUrl") === baseUrl + loginPath) {
+          return baseUrl + loginPath;
+        }
+        return url;
       }
       return url;
     },
