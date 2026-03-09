@@ -94,6 +94,15 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      // Prevent redirect loop on /login
+      const loginPath = "/login";
+      const urlObj = new URL(url, baseUrl);
+      if (urlObj.pathname === loginPath) {
+        return baseUrl + loginPath;
+      }
+      return url;
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
