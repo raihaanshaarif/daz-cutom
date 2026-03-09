@@ -1,64 +1,74 @@
 "use client";
 
-import { Country } from "@/types";
+import { Buyer } from "@/types";
 import { useEffect, useState } from "react";
-import { CountryTable } from "./CountryTable";
-import { Database, Filter, Globe, X } from "lucide-react";
+import { BuyerTable } from "./BuyerTable";
+import { Database, Filter, ShoppingBag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function CountryList() {
-  const [countries, setCountries] = useState<Country[]>([]);
+export default function BuyerList() {
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [totalCountries, setTotalCountries] = useState(0);
+  const [totalBuyers, setTotalBuyers] = useState(0);
   const limit = 10;
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
-  // const [refreshTrigger, setRefreshTrigger] = useState(0); // For future edit functionality
 
   useEffect(() => {
-    const fetchCountries = async () => {
+    const fetchBuyers = async () => {
       setLoading(true);
       try {
-        // Build query parameters
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          limit: limit.toString(),
-        });
-
-        if (searchTerm) {
-          params.append("search", searchTerm);
-        }
-
-        const queryString = params.toString();
-        console.log("API call with params:", queryString);
-
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/country?${queryString}`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
           {
             cache: "no-store",
           },
         );
-        const { data, pagination } = await res.json();
-        console.log("API response data:", data);
-        console.log("Number of countries returned:", data?.length || 0);
+        const responseData = await res.json();
+        console.log("API response data:", responseData);
 
-        setCountries(data || []);
+        // Check if response is an array or object with data
+        let data = [];
+        let pagination = null;
+
+        if (Array.isArray(responseData)) {
+          data = responseData;
+          // For array response, assume all data is returned, no pagination
+          pagination = {
+            totalPages: 1,
+            total: responseData.length,
+          };
+        } else {
+          data = responseData.data || [];
+          pagination = responseData.pagination;
+        }
+
+        console.log("Number of buyers returned:", data?.length || 0);
+
+        setBuyers(data);
         setTotalPages(pagination?.totalPages || 1);
-        setTotalCountries(pagination?.total || 0);
+        setTotalBuyers(pagination?.total || data.length);
       } catch (error) {
-        console.error("Failed to fetch countries:", error);
+        console.error("Failed to fetch buyers:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCountries();
-  }, [currentPage, searchTerm]);
+    fetchBuyers();
+  }, []); // Remove dependencies since we're fetching all data once
+
+  // Filter buyers based on search term
+  const filteredBuyers = buyers.filter(
+    (buyer) =>
+      buyer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      buyer.brand.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -77,19 +87,19 @@ export default function CountryList() {
     setLoading(true);
   };
 
-  const handleEditCountry = (country: Country) => {
+  const handleEditBuyer = (buyer: Buyer) => {
     // TODO: Implement edit functionality
-    console.log("Edit country:", country);
+    console.log("Edit buyer:", buyer);
   };
 
-  const handleViewCountry = (country: Country) => {
+  const handleViewBuyer = (buyer: Buyer) => {
     // TODO: Implement view functionality
-    console.log("View country:", country);
+    console.log("View buyer:", buyer);
   };
 
-  const handleDeleteCountry = (country: Country) => {
+  const handleDeleteBuyer = (buyer: Buyer) => {
     // TODO: Implement delete functionality
-    console.log("Delete country:", country);
+    console.log("Delete buyer:", buyer);
   };
 
   if (loading) {
@@ -100,7 +110,7 @@ export default function CountryList() {
             <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-3">
               <Database className="w-4 h-4 text-white animate-pulse" />
             </div>
-            <p className="text-gray-500 text-sm">Loading countries...</p>
+            <p className="text-gray-500 text-sm">Loading buyers...</p>
           </div>
         </div>
       </div>
@@ -113,16 +123,16 @@ export default function CountryList() {
         {/* Header */}
         <div className="mb-3 text-center">
           <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-1 shadow-md">
-            <Globe className="w-4 h-4 text-white" />
+            <ShoppingBag className="w-4 h-4 text-white" />
           </div>
           <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            Countries
+            Buyers
           </h1>
           <p className="text-gray-500 text-xs">
-            Manage countries ({totalCountries} total)
+            Manage buyers ({totalBuyers} total)
             {searchTerm && (
               <span className="ml-2 text-blue-600 font-medium">
-                • Filtered by: &quot;{searchTerm}&quot;
+                • Showing {filteredBuyers.length} filtered results
               </span>
             )}
           </p>
@@ -142,13 +152,13 @@ export default function CountryList() {
               {/* Search Filter */}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5" />
-                  Search Countries
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  Search Buyers
                 </Label>
                 <div className="flex gap-2">
                   <Input
                     type="text"
-                    placeholder="Search by name or code..."
+                    placeholder="Search by name or brand..."
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
@@ -169,17 +179,17 @@ export default function CountryList() {
           </div>
         </div>
 
-        {/* Country Table */}
+        {/* Buyer Table */}
         <div className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
           <div className="p-3 lg:p-4">
-            <CountryTable
-              data={countries}
+            <BuyerTable
+              data={filteredBuyers}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
-              onEdit={handleEditCountry}
-              onView={handleViewCountry}
-              onDelete={handleDeleteCountry}
+              onEdit={handleEditBuyer}
+              onView={handleViewBuyer}
+              onDelete={handleDeleteBuyer}
             />
           </div>
         </div>

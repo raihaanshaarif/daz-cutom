@@ -48,7 +48,7 @@ export default function CreateTaskForm() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch("http://localhost:5001/api/v1/user");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
         if (res.ok) {
           const data = await res.json();
           setUsers(Array.isArray(data) ? data : data?.data || []);
@@ -77,7 +77,7 @@ export default function CreateTaskForm() {
         assignedById: Number(assignedById),
       };
       console.log(payload);
-      const res = await fetch("http://localhost:5001/api/v1/task", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/task`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

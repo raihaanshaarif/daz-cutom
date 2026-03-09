@@ -48,8 +48,11 @@ export function EditContactForm({
     country: undefined,
     companyLinkedin: "",
     personalLinkedin: "",
-    status: "NEW",
+    status: "NOT_CONTACTED",
     note: "",
+    lastContactedAt: undefined,
+    lastRepliedAt: undefined,
+    nextFollowUpAt: undefined,
   });
 
   const formatStatus = (status: string) => {
@@ -63,7 +66,7 @@ export function EditContactForm({
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const res = await fetch(`http://localhost:5001/api/v1/country`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country`);
         if (res.ok) {
           const data = await res.json();
           const countriesArray = Array.isArray(data) ? data : data?.data || [];
@@ -91,8 +94,11 @@ export function EditContactForm({
         country: contact.country?.id,
         companyLinkedin: contact.companyLinkedin || "",
         personalLinkedin: contact.personalLinkedin || "",
-        status: contact.status || "NEW",
+        status: contact.status || "NOT_CONTACTED",
         note: contact.note || "",
+        lastContactedAt: contact.lastContactedAt || undefined,
+        lastRepliedAt: contact.lastRepliedAt || undefined,
+        nextFollowUpAt: contact.nextFollowUpAt || undefined,
       });
     }
   }, [contact]);
@@ -108,8 +114,23 @@ export function EditContactForm({
 
       // Only send fields that have changed from the original contact
       Object.entries(formData).forEach(([key, value]) => {
+        // skip empty strings
+        if (typeof value === "string" && value.trim() === "") return;
+
         const originalValue = contact[key as keyof Contact];
         const originalCountryId = contact.country?.id;
+
+        // convert date inputs to ISO
+        if (/(lastContactedAt|lastRepliedAt|nextFollowUpAt)/i.test(key)) {
+          const dateVal = new Date(value as string);
+          if (!isNaN(dateVal.getTime())) {
+            // compare with original
+            if (originalValue !== dateVal.toISOString()) {
+              dataToSend[key] = dateVal.toISOString();
+            }
+          }
+          return;
+        }
 
         // Handle country field specially
         if (key === "country") {
@@ -117,7 +138,7 @@ export function EditContactForm({
             dataToSend[key] = value;
           }
         }
-        // For other fields, send if they've changed (including empty strings)
+        // For other fields, send if they've changed
         else if (value !== originalValue) {
           dataToSend[key] = value;
         }
@@ -349,7 +370,7 @@ export function EditContactForm({
               Status *
             </Label>
             <Select
-              value={formData.status || "NEW"}
+              value={formData.status || "NOT_CONTACTED"}
               onValueChange={(value) =>
                 handleInputChange("status", value as Contact["status"])
               }
@@ -360,27 +381,108 @@ export function EditContactForm({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NEW">{formatStatus("NEW")}</SelectItem>
+                <SelectItem value="NOT_CONTACTED">
+                  {formatStatus("NOT_CONTACTED")}
+                </SelectItem>
                 <SelectItem value="CONTACTED">
                   {formatStatus("CONTACTED")}
                 </SelectItem>
-                <SelectItem value="RESPONDED">
-                  {formatStatus("RESPONDED")}
+                <SelectItem value="FOLLOW_UP_SENT">
+                  {formatStatus("FOLLOW_UP_SENT")}
+                </SelectItem>
+                <SelectItem value="ENGAGED">
+                  {formatStatus("ENGAGED")}
+                </SelectItem>
+                <SelectItem value="INTERESTED">
+                  {formatStatus("INTERESTED")}
                 </SelectItem>
                 <SelectItem value="QUALIFIED">
                   {formatStatus("QUALIFIED")}
                 </SelectItem>
-                <SelectItem value="NEGOTIATING">
-                  {formatStatus("NEGOTIATING")}
+                <SelectItem value="CATALOG_SENT">
+                  {formatStatus("CATALOG_SENT")}
+                </SelectItem>
+                <SelectItem value="SAMPLE_REQUESTED">
+                  {formatStatus("SAMPLE_REQUESTED")}
+                </SelectItem>
+                <SelectItem value="SAMPLE_SENT">
+                  {formatStatus("SAMPLE_SENT")}
+                </SelectItem>
+                <SelectItem value="PRICE_NEGOTIATION">
+                  {formatStatus("PRICE_NEGOTIATION")}
                 </SelectItem>
                 <SelectItem value="CLOSED_WON">
                   {formatStatus("CLOSED_WON")}
                 </SelectItem>
-                <SelectItem value="CLOSED_LOST">
-                  {formatStatus("CLOSED_LOST")}
+                <SelectItem value="REPEAT_BUYER">
+                  {formatStatus("REPEAT_BUYER")}
+                </SelectItem>
+                <SelectItem value="NON_RESPONSIVE">
+                  {formatStatus("NON_RESPONSIVE")}
+                </SelectItem>
+                <SelectItem value="REENGAGED">
+                  {formatStatus("REENGAGED")}
+                </SelectItem>
+                <SelectItem value="DORMANT">
+                  {formatStatus("DORMANT")}
+                </SelectItem>
+                <SelectItem value="NOT_INTERESTED">
+                  {formatStatus("NOT_INTERESTED")}
+                </SelectItem>
+                <SelectItem value="INVALID">
+                  {formatStatus("INVALID")}
+                </SelectItem>
+                <SelectItem value="DO_NOT_CONTACT">
+                  {formatStatus("DO_NOT_CONTACT")}
                 </SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* History Dates */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="space-y-2">
+              <Label htmlFor="lastContactedAt" className="text-sm font-medium">
+                Last Contacted
+              </Label>
+              <Input
+                type="datetime-local"
+                id="lastContactedAt"
+                value={formData.lastContactedAt || ""}
+                onChange={(e) =>
+                  handleInputChange("lastContactedAt", e.target.value)
+                }
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lastRepliedAt" className="text-sm font-medium">
+                Last Replied
+              </Label>
+              <Input
+                type="datetime-local"
+                id="lastRepliedAt"
+                value={formData.lastRepliedAt || ""}
+                onChange={(e) =>
+                  handleInputChange("lastRepliedAt", e.target.value)
+                }
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nextFollowUpAt" className="text-sm font-medium">
+                Next Follow-up
+              </Label>
+              <Input
+                type="datetime-local"
+                id="nextFollowUpAt"
+                value={formData.nextFollowUpAt || ""}
+                onChange={(e) =>
+                  handleInputChange("nextFollowUpAt", e.target.value)
+                }
+                className="h-9"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">

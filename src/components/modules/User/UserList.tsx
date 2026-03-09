@@ -18,7 +18,7 @@ const UserList = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/v1/user`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
       if (!response.ok) {
         throw new Error("Failed to fetch users");
       }
@@ -53,7 +53,7 @@ const UserList = () => {
     if (confirm(`Are you sure you want to delete user "${user.name}"?`)) {
       try {
         const response = await fetch(
-          `http://localhost:5001/api/v1/user/${user.id}`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/user/${user.id}`,
           {
             method: "DELETE",
           },

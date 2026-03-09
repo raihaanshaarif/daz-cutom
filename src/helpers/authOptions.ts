@@ -41,16 +41,19 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const res = await fetch(`http://localhost:5001/api/v1/auth/login`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/auth/login`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
             },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+          );
           // console.log("Response From Backend:", res);
           if (!res?.ok) {
             console.error("Login Failed", await res.text());

@@ -48,12 +48,14 @@ const AdminDashboard = () => {
     const load = async () => {
       try {
         const [userData, contactData, countryData] = await Promise.all([
-          fetch("http://localhost:5001/api/v1/user").then((r) => r.json()),
-          fetch("http://localhost:5001/api/v1/contact?limit=10000").then((r) =>
+          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`).then((r) =>
             r.json(),
           ),
-          fetch("http://localhost:5001/api/v1/country?limit=1000").then((r) =>
-            r.json(),
+          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact?limit=10000`).then(
+            (r) => r.json(),
+          ),
+          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`).then(
+            (r) => r.json(),
           ),
         ]);
 
@@ -65,7 +67,7 @@ const AdminDashboard = () => {
         const taskResults = await Promise.all(
           userList.map((u) =>
             fetch(
-              `http://localhost:5001/api/v1/task/my?userId=${u.id}&limit=100`,
+              `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${u.id}&limit=100`,
             ).then((r) => r.json()),
           ),
         );
@@ -149,22 +151,32 @@ const AdminDashboard = () => {
   const weekDelta = weekContacts - prevWeekContacts;
 
   const STATUS_LABELS = [
-    "NEW",
+    "NOT_CONTACTED",
     "CONTACTED",
-    "RESPONDED",
+    "FOLLOW_UP_SENT",
+    "ENGAGED",
+    "INTERESTED",
     "QUALIFIED",
-    "NEGOTIATING",
+    "PRICE_NEGOTIATION",
     "CLOSED_WON",
-    "CLOSED_LOST",
+    "REPEAT_BUYER",
+    "NOT_INTERESTED",
+    "INVALID",
+    "DO_NOT_CONTACT",
   ];
   const statusBarColors: Record<string, string> = {
-    NEW: "bg-gray-400",
+    NOT_CONTACTED: "bg-gray-400",
     CONTACTED: "bg-blue-400",
-    RESPONDED: "bg-sky-400",
+    FOLLOW_UP_SENT: "bg-blue-300",
+    ENGAGED: "bg-green-400",
+    INTERESTED: "bg-indigo-400",
     QUALIFIED: "bg-violet-400",
-    NEGOTIATING: "bg-orange-400",
+    PRICE_NEGOTIATION: "bg-orange-400",
     CLOSED_WON: "bg-green-500/100/100",
-    CLOSED_LOST: "bg-red-400",
+    REPEAT_BUYER: "bg-green-600",
+    NOT_INTERESTED: "bg-red-400",
+    INVALID: "bg-rose-400",
+    DO_NOT_CONTACT: "bg-black text-white",
   };
   const pct = (n: number, denom: number) =>
     denom > 0 ? Math.round((n / denom) * 100) : 0;
@@ -297,7 +309,18 @@ const AdminDashboard = () => {
   const rTotal = rangeC.length;
   const rDelta = rTotal - prevRC.length;
   const rResponded = rangeC.filter((c) =>
-    ["RESPONDED", "QUALIFIED", "NEGOTIATING", "CLOSED_WON"].includes(c.status),
+    [
+      "ENGAGED",
+      "INTERESTED",
+      "QUALIFIED",
+      "CATALOG_SENT",
+      "SAMPLE_REQUESTED",
+      "SAMPLE_SENT",
+      "PRICE_NEGOTIATION",
+      "CLOSED_WON",
+      "REPEAT_BUYER",
+      "REENGAGED",
+    ].includes(c.status),
   ).length;
   const rWon = rangeC.filter((c) => c.status === "CLOSED_WON").length;
   const rRespRate = pct(rResponded, rTotal);
@@ -998,10 +1021,10 @@ const AdminDashboard = () => {
                             ).length,
                           },
                           {
-                            label: "Lost",
-                            curr: rStatusCounts["CLOSED_LOST"] || 0,
+                            label: "Not Interested",
+                            curr: rStatusCounts["NOT_INTERESTED"] || 0,
                             prev: prevRC.filter(
-                              (c) => c.status === "CLOSED_LOST",
+                              (c) => c.status === "NOT_INTERESTED",
                             ).length,
                           },
                         ].map(({ label, curr, prev }) => {

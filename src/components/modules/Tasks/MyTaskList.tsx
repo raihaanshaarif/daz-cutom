@@ -34,7 +34,7 @@ export default function MyTaskList() {
         });
 
         const res = await fetch(
-          `http://localhost:5001/api/v1/task/my?${params.toString()}`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/task/my?${params.toString()}`,
           { cache: "no-store" },
         );
         const json = await res.json();
@@ -66,11 +66,14 @@ export default function MyTaskList() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/v1/task/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetValue: newTarget }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetValue: newTarget }),
+        },
+      );
       if (!res.ok) throw new Error("Update failed");
       toast.success("Target updated successfully");
       setRefreshTrigger((p) => p + 1);
@@ -91,7 +94,7 @@ export default function MyTaskList() {
     }
     try {
       const res = await fetch(
-        `http://localhost:5001/api/v1/task/${task.id}/progress`,
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}/progress`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

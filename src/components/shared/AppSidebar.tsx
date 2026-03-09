@@ -12,6 +12,9 @@ import {
   ClipboardList,
   Globe,
   Command,
+  ShoppingBag,
+  Factory,
+  Package,
 } from "lucide-react";
 
 import {
@@ -83,7 +86,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       label: "Contacts",
       items: [
         {
-          title: "Buyer",
+          title: "Contact",
           icon: Users,
           children: [
             {
@@ -95,6 +98,27 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               title: "My Contacts",
               url: "/dashboard/contact/my-contacts",
               icon: Users,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      label: "Orders",
+      items: [
+        {
+          title: "Orders",
+          icon: Package,
+          children: [
+            {
+              title: "Create Order",
+              url: "/dashboard/order/create-order",
+              icon: PlusCircle,
+            },
+            {
+              title: "Orders List",
+              url: "/dashboard/order/order-list",
+              icon: Package,
             },
           ],
         },
@@ -133,22 +157,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     {
       label: "Settings",
       items: [
-        {
-          title: "Country",
-          icon: Globe,
-          children: [
-            {
-              title: "Create Country",
-              url: "/dashboard/country/create-country",
-              icon: PlusCircle,
-            },
-            {
-              title: "Country List",
-              url: "/dashboard/country/country-list",
-              icon: Globe,
-            },
-          ],
-        },
         ...(isAdmin
           ? [
               {
@@ -169,6 +177,59 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               },
             ]
           : []),
+      ],
+    },
+    {
+      label: "Others",
+      items: [
+        {
+          title: "Country",
+          icon: Globe,
+          children: [
+            {
+              title: "Create Country",
+              url: "/dashboard/country/create-country",
+              icon: PlusCircle,
+            },
+            {
+              title: "Country List",
+              url: "/dashboard/country/country-list",
+              icon: Globe,
+            },
+          ],
+        },
+        {
+          title: "Buyer",
+          icon: ShoppingBag,
+          children: [
+            {
+              title: "Create Buyer",
+              url: "/dashboard/buyer/create-buyer",
+              icon: PlusCircle,
+            },
+            {
+              title: "Buyers List",
+              url: "/dashboard/buyer/buyer-list",
+              icon: ShoppingBag,
+            },
+          ],
+        },
+        {
+          title: "Factory",
+          icon: Factory,
+          children: [
+            {
+              title: "Create Factory",
+              url: "/dashboard/factory/create-factory",
+              icon: PlusCircle,
+            },
+            {
+              title: "Factories List",
+              url: "/dashboard/factory/factory-list",
+              icon: Factory,
+            },
+          ],
+        },
       ],
     },
   ];

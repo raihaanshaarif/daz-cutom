@@ -30,7 +30,7 @@ export default function TaskList() {
         if (searchTerm) params.append("search", searchTerm);
 
         const res = await fetch(
-          `http://localhost:5001/api/v1/task/all?${params.toString()}`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/task/all?${params.toString()}`,
           { cache: "no-store" },
         );
         const json = await res.json();
@@ -54,9 +54,12 @@ export default function TaskList() {
   const handleDelete = async (task: Task) => {
     if (!confirm(`Delete task "${task.title}"?`)) return;
     try {
-      const res = await fetch(`http://localhost:5001/api/v1/task/${task.id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!res.ok) throw new Error("Delete failed");
       toast.success("Task deleted");
       setRefreshTrigger((p) => p + 1);
@@ -70,11 +73,14 @@ export default function TaskList() {
     if (!confirm(`Are you sure you want to ${action} task "${task.title}"?`))
       return;
     try {
-      const res = await fetch(`http://localhost:5001/api/v1/task/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !task.isActive }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: !task.isActive }),
+        },
+      );
       if (!res.ok) throw new Error("Toggle failed");
       toast.success(`Task ${action}d successfully`);
       setRefreshTrigger((p) => p + 1);
@@ -95,7 +101,7 @@ export default function TaskList() {
     }
     try {
       const res = await fetch(
-        `http://localhost:5001/api/v1/task/${task.id}/progress`,
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}/progress`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -121,11 +127,14 @@ export default function TaskList() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/v1/task/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetValue: newTarget }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetValue: newTarget }),
+        },
+      );
       if (!res.ok) throw new Error("Update failed");
       toast.success("Target updated successfully");
       setRefreshTrigger((p) => p + 1);

@@ -47,7 +47,7 @@ const UserDashboard = () => {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`http://localhost:5001/api/v1/user/${userId}`)
+    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
       .then((r) => r.json())
       .then((data) => {
         setUser(data);
@@ -61,7 +61,9 @@ const UserDashboard = () => {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`http://localhost:5001/api/v1/task/my?userId=${userId}&limit=100`)
+    fetch(
+      `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${userId}&limit=100`,
+    )
       .then((r) => r.json())
       .then((json) => {
         const data = json?.data || json || [];
@@ -71,7 +73,7 @@ const UserDashboard = () => {
   }, [userId]);
 
   useEffect(() => {
-    fetch("http://localhost:5001/api/v1/country?limit=1000")
+    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data)
@@ -220,8 +222,9 @@ const UserDashboard = () => {
       text: "text-green-700",
       bar: "bg-green-500/100/100",
     },
-    CLOSED_LOST: {
-      label: "Lost",
+    // legacy CLOSED_LOST replaced by NOT_INTERESTED status
+    NOT_INTERESTED: {
+      label: "Not Interested",
       bg: "bg-red-500/100/20",
       text: "text-red-600",
       bar: "bg-red-400",
@@ -279,10 +282,16 @@ const UserDashboard = () => {
     ]),
   );
   const rResponded =
-    (rStatusCounts["RESPONDED"] || 0) +
+    (rStatusCounts["ENGAGED"] || 0) +
+    (rStatusCounts["INTERESTED"] || 0) +
     (rStatusCounts["QUALIFIED"] || 0) +
-    (rStatusCounts["NEGOTIATING"] || 0) +
-    (rStatusCounts["CLOSED_WON"] || 0);
+    (rStatusCounts["CATALOG_SENT"] || 0) +
+    (rStatusCounts["SAMPLE_REQUESTED"] || 0) +
+    (rStatusCounts["SAMPLE_SENT"] || 0) +
+    (rStatusCounts["PRICE_NEGOTIATION"] || 0) +
+    (rStatusCounts["CLOSED_WON"] || 0) +
+    (rStatusCounts["REPEAT_BUYER"] || 0) +
+    (rStatusCounts["REENGAGED"] || 0);
   const rWon = rStatusCounts["CLOSED_WON"] || 0;
   const rRespRate = pct(rResponded, rTotal);
   const rWinRate = pct(rWon, rResponded);
@@ -483,7 +492,9 @@ const UserDashboard = () => {
                         <div className="flex items-center gap-2 min-w-0">
                           <span
                             className={`shrink-0 w-2 h-2 rounded-full ${
-                              task.isActive ? "bg-green-500/100/100" : "bg-gray-300"
+                              task.isActive
+                                ? "bg-green-500/100/100"
+                                : "bg-gray-300"
                             }`}
                           />
                           <span className="text-sm font-semibold text-gray-800 truncate">
@@ -760,7 +771,9 @@ const UserDashboard = () => {
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`w-2 h-2 rounded-full shrink-0 ${
-                                task.isActive ? "bg-green-500/100/100" : "bg-gray-300"
+                                task.isActive
+                                  ? "bg-green-500/100/100"
+                                  : "bg-gray-300"
                               }`}
                             />
                             <span className="text-sm font-semibold text-gray-800 truncate">
@@ -1468,9 +1481,9 @@ const UserDashboard = () => {
                           },
                           {
                             label: "Lost",
-                            curr: rStatusCounts["CLOSED_LOST"] || 0,
+                            curr: rStatusCounts["NOT_INTERESTED"] || 0,
                             prev: prevRC.filter(
-                              (c) => c.status === "CLOSED_LOST",
+                              (c) => c.status === "NOT_INTERESTED",
                             ).length,
                           },
                         ].map(({ label, curr, prev }) => {
@@ -1705,13 +1718,15 @@ const UserDashboard = () => {
                             className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                               contact.status === "CLOSED_WON"
                                 ? "bg-green-500/100/20 text-green-700 dark:text-green-400"
-                                : contact.status === "NEGOTIATING"
+                                : contact.status === "PRICE_NEGOTIATION"
                                   ? "bg-yellow-500/100/20 text-yellow-700 dark:text-yellow-400"
-                                  : contact.status === "RESPONDED"
+                                  : contact.status === "ENGAGED"
                                     ? "bg-blue-500/100/20 text-blue-700 dark:text-blue-400"
                                     : contact.status === "CONTACTED"
                                       ? "bg-purple-500/100/20 text-purple-700 dark:text-purple-400"
-                                      : "bg-muted text-foreground"
+                                      : contact.status === "NOT_INTERESTED"
+                                        ? "bg-red-500/100/20 text-red-700 dark:text-red-400"
+                                        : "bg-muted text-foreground"
                             }`}
                           >
                             {contact.status.replace("_", " ")}

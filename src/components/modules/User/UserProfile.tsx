@@ -69,7 +69,7 @@ const UserProfile = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:5001/api/v1/user/${userId}`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch user");
@@ -87,7 +87,7 @@ const UserProfile = () => {
   }, [userId]);
 
   useEffect(() => {
-    fetch("http://localhost:5001/api/v1/country?limit=1000")
+    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data)
@@ -104,7 +104,7 @@ const UserProfile = () => {
     const fetchTasks = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5001/api/v1/task/my?userId=${userId}&limit=100`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${userId}&limit=100`,
         );
         const json = await res.json();
         const data = json?.data || json || [];
@@ -127,11 +127,14 @@ const UserProfile = () => {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/api/v1/task/${task.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetValue: newTarget }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ targetValue: newTarget }),
+        },
+      );
       if (!res.ok) throw new Error("Failed");
       setTaskRefresh((p) => p + 1);
     } catch {
@@ -797,14 +800,27 @@ const UserProfile = () => {
               const monthDelta = thisMonthC.length - prevMonthC.length;
 
               // ── status counts ─────────────────────────────────────────────
-              const sc = (s: string) =>
-                contacts.filter((c) => c.status === s).length;
+              const sc = (s: string | string[]) =>
+                contacts.filter((c) =>
+                  Array.isArray(s) ? s.includes(c.status) : c.status === s,
+                ).length;
               const total = contacts.length;
-              const newCount = sc("NEW");
+              const newCount = sc("NOT_CONTACTED");
               const contacted = sc("CONTACTED");
-              const responded = sc("RESPONDED");
+              const responded = sc([
+                "ENGAGED",
+                "INTERESTED",
+                "QUALIFIED",
+                "CATALOG_SENT",
+                "SAMPLE_REQUESTED",
+                "SAMPLE_SENT",
+                "PRICE_NEGOTIATION",
+                "CLOSED_WON",
+                "REPEAT_BUYER",
+                "REENGAGED",
+              ]);
               const qualified = sc("QUALIFIED");
-              const negotiating = sc("NEGOTIATING");
+              const negotiating = sc("PRICE_NEGOTIATION");
               const wonLifetime = sc("CLOSED_WON");
               const lostLifetime = sc("CLOSED_LOST");
               const activeDeals = responded + qualified + negotiating;
@@ -826,20 +842,31 @@ const UserProfile = () => {
                   : 0;
 
               // this month quality
-              const tmResponded = thisMonthC.filter(
-                (c) => c.status === "RESPONDED",
+              const tmResponded = thisMonthC.filter((c) =>
+                [
+                  "ENGAGED",
+                  "INTERESTED",
+                  "QUALIFIED",
+                  "CATALOG_SENT",
+                  "SAMPLE_REQUESTED",
+                  "SAMPLE_SENT",
+                  "PRICE_NEGOTIATION",
+                  "CLOSED_WON",
+                  "REPEAT_BUYER",
+                  "REENGAGED",
+                ].includes(c.status),
               ).length;
               const tmQualified = thisMonthC.filter(
                 (c) => c.status === "QUALIFIED",
               ).length;
               const tmNegotiating = thisMonthC.filter(
-                (c) => c.status === "NEGOTIATING",
+                (c) => c.status === "PRICE_NEGOTIATION",
               ).length;
               const tmWon = thisMonthC.filter(
                 (c) => c.status === "CLOSED_WON",
               ).length;
               const tmLost = thisMonthC.filter(
-                (c) => c.status === "CLOSED_LOST",
+                (c) => c.status === "NOT_INTERESTED",
               ).length;
 
               // this year won
@@ -1114,7 +1141,7 @@ const UserProfile = () => {
                               bar: "bg-blue-400",
                             },
                             {
-                              label: "Responded",
+                              label: "Engaged+",
                               count: responded,
                               bg: "bg-sky-100",
                               text: "text-sky-700",
@@ -1199,7 +1226,7 @@ const UserProfile = () => {
                         {(
                           [
                             {
-                              label: "Responded",
+                              label: "Engaged+",
                               count: tmResponded,
                               color: "text-sky-600",
                               bg: "bg-sky-50",
@@ -1211,7 +1238,7 @@ const UserProfile = () => {
                               bg: "bg-violet-50",
                             },
                             {
-                              label: "Negotiating",
+                              label: "Price Negotiation",
                               count: tmNegotiating,
                               color: "text-orange-600",
                               bg: "bg-orange-50",
@@ -1223,7 +1250,7 @@ const UserProfile = () => {
                               bg: "bg-green-50",
                             },
                             {
-                              label: "Lost",
+                              label: "Not Interested",
                               count: tmLost,
                               color: "text-red-500",
                               bg: "bg-red-50",
@@ -1269,7 +1296,7 @@ const UserProfile = () => {
               string,
               { label: string; bg: string; text: string; bar: string }
             > = {
-              NEW: {
+              NOT_CONTACTED: {
                 label: "New",
                 bg: "bg-gray-100",
                 text: "text-gray-700",
@@ -1281,8 +1308,8 @@ const UserProfile = () => {
                 text: "text-blue-700",
                 bar: "bg-blue-400",
               },
-              RESPONDED: {
-                label: "Responded",
+              ENGAGED: {
+                label: "Engaged",
                 bg: "bg-sky-100",
                 text: "text-sky-700",
                 bar: "bg-sky-400",
@@ -1293,7 +1320,7 @@ const UserProfile = () => {
                 text: "text-violet-700",
                 bar: "bg-violet-400",
               },
-              NEGOTIATING: {
+              PRICE_NEGOTIATION: {
                 label: "Negotiating",
                 bg: "bg-orange-100",
                 text: "text-orange-700",
@@ -1305,8 +1332,8 @@ const UserProfile = () => {
                 text: "text-green-700",
                 bar: "bg-green-500",
               },
-              CLOSED_LOST: {
-                label: "Lost",
+              NOT_INTERESTED: {
+                label: "Not Interested",
                 bg: "bg-red-100",
                 text: "text-red-600",
                 bar: "bg-red-400",
@@ -1869,12 +1896,19 @@ const UserProfile = () => {
                                 {
                                   label: "Responded+",
                                   curr: respondedUp,
-                                  prev: prevContacts.filter(
-                                    (c) =>
-                                      c.status === "RESPONDED" ||
-                                      c.status === "QUALIFIED" ||
-                                      c.status === "NEGOTIATING" ||
-                                      c.status === "CLOSED_WON",
+                                  prev: prevContacts.filter((c) =>
+                                    [
+                                      "ENGAGED",
+                                      "INTERESTED",
+                                      "QUALIFIED",
+                                      "CATALOG_SENT",
+                                      "SAMPLE_REQUESTED",
+                                      "SAMPLE_SENT",
+                                      "PRICE_NEGOTIATION",
+                                      "CLOSED_WON",
+                                      "REPEAT_BUYER",
+                                      "REENGAGED",
+                                    ].includes(c.status),
                                   ).length,
                                 },
                                 {
@@ -1886,9 +1920,9 @@ const UserProfile = () => {
                                 },
                                 {
                                   label: "Lost",
-                                  curr: statusCounts["CLOSED_LOST"] || 0,
+                                  curr: statusCounts["NOT_INTERESTED"] || 0,
                                   prev: prevContacts.filter(
-                                    (c) => c.status === "CLOSED_LOST",
+                                    (c) => c.status === "NOT_INTERESTED",
                                   ).length,
                                 },
                               ].map(({ label, curr, prev }) => {
@@ -2031,13 +2065,15 @@ const UserProfile = () => {
                               className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                                 contact.status === "CLOSED_WON"
                                   ? "bg-green-100 text-green-800"
-                                  : contact.status === "NEGOTIATING"
+                                  : contact.status === "PRICE_NEGOTIATION"
                                     ? "bg-yellow-100 text-yellow-800"
-                                    : contact.status === "RESPONDED"
+                                    : contact.status === "ENGAGED"
                                       ? "bg-blue-100 text-blue-800"
                                       : contact.status === "CONTACTED"
                                         ? "bg-purple-100 text-purple-800"
-                                        : "bg-gray-100 text-gray-800"
+                                        : contact.status === "NOT_INTERESTED"
+                                          ? "bg-red-100 text-red-800"
+                                          : "bg-gray-100 text-gray-800"
                               }`}
                             >
                               {contact.status.replace("_", " ")}

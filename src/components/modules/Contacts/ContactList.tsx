@@ -4,6 +4,7 @@ import { Contact, Pagination } from "@/types";
 import { useEffect, useState } from "react";
 import { ContactTable } from "./ContactTable";
 import { EditContactForm } from "./EditContactForm";
+import { ViewContactModal } from "./ViewContactModal";
 import { Users, Database, Filter, Calendar, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,9 @@ export default function ContactList() {
 
   // Edit modal state
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  // View modal state
+  const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
@@ -63,7 +67,7 @@ export default function ContactList() {
         console.log("API call with params:", queryString);
 
         const res = await fetch(
-          `http://localhost:5001/api/v1/contact?${queryString}`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/contact?${queryString}`,
           {
             cache: "no-store",
           },
@@ -118,12 +122,12 @@ export default function ContactList() {
       try {
         // Try multiple possible endpoints
         const endpoints = [
-          `http://localhost:5001/api/v1/user`,
-          `http://localhost:5001/api/v1/users`,
-          `http://localhost:5001/api/v1/api/user`,
-          `http://localhost:5001/api/v1/api/users`,
-          `http://localhost:5001/api/v1/user/list`,
-          `http://localhost:5001/api/v1/users/list`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/user`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/users`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/api/user`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/api/users`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/user/list`,
+          `${process.env.NEXT_PUBLIC_BASE_API}/users/list`,
         ];
 
         let usersData = null;
@@ -165,7 +169,7 @@ export default function ContactList() {
           console.log("Trying to get users from contacts...");
           try {
             const contactsRes = await fetch(
-              `http://localhost:5001/api/v1/contact?page=1&limit=100`,
+              `${process.env.NEXT_PUBLIC_BASE_API}/contact?page=1&limit=100`,
               { cache: "no-store" },
             );
 
@@ -258,6 +262,11 @@ export default function ContactList() {
     setIsEditModalOpen(true);
   };
 
+  const handleViewContact = (contact: Contact) => {
+    setViewContact(contact);
+    setIsViewModalOpen(true);
+  };
+
   const handleEditSuccess = () => {
     // Refresh the contacts list by triggering a refetch
     setRefreshTrigger((prev) => prev + 1);
@@ -266,6 +275,11 @@ export default function ContactList() {
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setEditingContact(null);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setViewContact(null);
   };
 
   if (loading) {
@@ -423,6 +437,12 @@ export default function ContactList() {
               totalPages={totalPages}
               onPageChange={handlePageChange}
               onEdit={handleEditContact}
+              onView={handleViewContact}
+            />
+            <ViewContactModal
+              contact={viewContact}
+              isOpen={isViewModalOpen}
+              onClose={handleCloseViewModal}
             />
           </div>
         </div>

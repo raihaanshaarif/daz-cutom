@@ -20,6 +20,113 @@ export interface Country {
   updatedAt: string;
 }
 
+export interface Buyer {
+  id: number;
+  name: string;
+  brand: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Factory {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Order {
+  id: number;
+  orderNumber: string;
+  shipDate?: string;
+  dept?: string;
+  style?: string;
+  color?: string;
+  lot?: string;
+  quantity?: number;
+  price?: number;
+  totalPrice?: number;
+  factoryUnitPrice?: number;
+  totalFactoryPrice?: number;
+  dazCommission?: number;
+  discountFactory?: number | null;
+  discountFromDaz?: number | null;
+  discountRemark?: string | null;
+  finalDazCommission?: number;
+  paymentTerm?: string;
+  yarnBooking?: string | null;
+  labdipYarndip?: string | null;
+  printStrikeOff?: string | null;
+  ppSample?: string | null;
+  bulkFabric?: string | null;
+  cutting?: string | null;
+  printing?: string | null;
+  swing?: string | null;
+  finishing?: string | null;
+  shipmentSample?: string | null;
+  inspection?: string | null;
+  exFactory?: string | null;
+  overallRemarks?: string;
+  commissionStatus?: string;
+  commissionAmount?: number | null;
+  buyerId?: number;
+  buyer?: Buyer;
+  factoryId?: number;
+  factory?: Factory;
+  createdById?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrderItem {
+  id: number;
+  orderNumber?: string;
+  shipDate?: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  department?: string;
+  style?: string;
+  color?: string;
+  lot?: string;
+  factoryPrice?: number;
+  totalFactoryPrice?: number;
+  dazCommission?: number;
+  finalDazCommission?: number;
+  paymentTerm?: string;
+  buyerName?: string;
+  factoryName?: string;
+  yarnBooking?: string | null;
+  labYarn?: string | null;
+  printStrikeoff?: string | null;
+  pp?: string | null;
+  bulkFab?: string | null;
+  cutting?: string | null;
+  printing?: string | null;
+  swing?: string | null;
+  finishing?: string | null;
+  shipmentSample?: string | null;
+  inspection?: string | null;
+  exfactory?: string | null;
+  overallRemarks?: string;
+}
+
+export interface OrderStats {
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+  statusCounts: {
+    PENDING: number;
+    CONFIRMED: number;
+    PROCESSING: number;
+    SHIPPED: number;
+    DELIVERED: number;
+    CANCELLED: number;
+  };
+  recentOrders?: Order[];
+}
+
 export interface Contact {
   id: number;
   name: string;
@@ -32,16 +139,30 @@ export interface Contact {
   companyLinkedin?: string;
   personalLinkedin?: string;
   status:
-    | "NEW"
+    | "NOT_CONTACTED"
     | "CONTACTED"
-    | "RESPONDED"
+    | "FOLLOW_UP_SENT"
+    | "ENGAGED"
+    | "INTERESTED"
     | "QUALIFIED"
-    | "NEGOTIATING"
+    | "CATALOG_SENT"
+    | "SAMPLE_REQUESTED"
+    | "SAMPLE_SENT"
+    | "PRICE_NEGOTIATION"
     | "CLOSED_WON"
-    | "CLOSED_LOST";
+    | "REPEAT_BUYER"
+    | "NON_RESPONSIVE"
+    | "REENGAGED"
+    | "DORMANT"
+    | "NOT_INTERESTED"
+    | "INVALID"
+    | "DO_NOT_CONTACT";
   note?: string;
   authorId: number;
   author?: User;
+  lastContactedAt?: string;
+  lastRepliedAt?: string;
+  nextFollowUpAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +178,9 @@ export interface ContactFormData {
   personalLinkedin?: string;
   status: Contact["status"];
   note?: string;
+  lastContactedAt?: string;
+  lastRepliedAt?: string;
+  nextFollowUpAt?: string;
 }
 
 export interface Pagination {

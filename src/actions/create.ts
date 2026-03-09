@@ -12,7 +12,7 @@ export const create = async (data: FormData) => {
     authorId: session?.user?.id,
   };
 
-  const res = await fetch(`http://localhost:5001/api/v1/post`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -35,15 +35,34 @@ export const createContact = async (data: FormData) => {
   const contactInfo = Object.fromEntries(data.entries());
 
   // Convert string values to numbers where needed
-  const modifiedData = {
-    ...contactInfo,
+  // sanitize form values: remove empty strings and parse dates
+  const sanitized: Record<string, unknown> = {};
+  Object.entries(contactInfo).forEach(([key, value]) => {
+    if (typeof value === "string") {
+      if (value.trim() === "") return; // skip empty
+      // convert datetime-local values to ISO when detected
+      if (
+        /(LastContactedAt|LastRepliedAt|NextFollowUpAt|lastContactedAt|lastRepliedAt|nextFollowUpAt)/i.test(
+          key,
+        )
+      ) {
+        sanitized[key] = new Date(value).toISOString();
+        return;
+      }
+    }
+    sanitized[key] = value;
+  });
+
+  const modifiedData: Record<string, unknown> = {
+    ...sanitized,
     authorId: parseInt(session?.user?.id as string),
-    ...(contactInfo.countryId && {
-      countryId: parseInt(contactInfo.countryId as string),
-    }),
   };
 
-  const res = await fetch(`http://localhost:5001/api/v1/contact`, {
+  if (sanitized.countryId) {
+    modifiedData.countryId = parseInt(String(sanitized.countryId));
+  }
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,7 +82,7 @@ export const createContact = async (data: FormData) => {
 export const createCountry = async (data: FormData) => {
   const contactInfo = Object.fromEntries(data.entries());
 
-  const res = await fetch(`http://localhost:5001/api/v1/country`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -76,6 +95,220 @@ export const createCountry = async (data: FormData) => {
   if (result?.id) {
     revalidateTag("COUNTRY");
     revalidatePath("/dashboard/country-list");
+  }
+  return result;
+};
+
+export const createBuyer = async (data: FormData) => {
+  const buyerInfo = Object.fromEntries(data.entries());
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(buyerInfo),
+  });
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("BUYERS");
+    revalidatePath("/dashboard/buyer/buyer-list");
+  }
+  return result;
+};
+
+export const createFactory = async (data: FormData) => {
+  const factoryInfo = Object.fromEntries(data.entries());
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/order/factories`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(factoryInfo),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("FACTORIES");
+    revalidatePath("/dashboard/factory/factory-list");
+  }
+  return result;
+};
+
+export const createOrder = async (data: FormData) => {
+  const session = await getUserSession();
+  const o = Object.fromEntries(data.entries());
+
+  const toFloat = (v: unknown) => {
+    const n = parseFloat(v as string);
+    return isNaN(n) ? undefined : n;
+  };
+  const toInt = (v: unknown) => {
+    const n = parseInt(v as string);
+    return isNaN(n) ? undefined : n;
+  };
+
+  const quantity = toInt(o.quantity) ?? 0;
+  const price = toFloat(o.price) ?? 0;
+  const factoryUnitPrice = toFloat(o.factoryUnitPrice);
+
+  const processedData = {
+    orderNumber: o.orderNumber,
+    shipDate: o.shipDate
+      ? new Date(o.shipDate as string).toISOString()
+      : undefined,
+    dept: o.dept || undefined,
+    style: o.style || undefined,
+    color: o.color || undefined,
+    lot: o.lot || undefined,
+    quantity,
+    price,
+    totalPrice: quantity * price,
+    factoryUnitPrice,
+    totalFactoryPrice:
+      factoryUnitPrice != null ? quantity * factoryUnitPrice : undefined,
+    dazCommission: toFloat(o.dazCommission),
+    discountFactory: toFloat(o.discountFactory),
+    discountFromDaz: toFloat(o.discountFromDaz),
+    discountRemark: o.discountRemark || undefined,
+    finalDazCommission: toFloat(o.finalDazCommission),
+    paymentTerm: o.paymentTerm || undefined,
+    overallRemarks: o.overallRemarks || undefined,
+    commissionStatus: o.commissionStatus || "PENDING",
+    commissionAmount: toFloat(o.commissionAmount),
+    buyerId: toInt(o.buyerId),
+    factoryId: toInt(o.factoryId),
+    createdById: toInt(session?.user?.id as string),
+  };
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(processedData),
+  });
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("ORDERS");
+    revalidatePath("/dashboard/order/order-list");
+  }
+  return result;
+};
+
+export const updateOrder = async (id: number, data: FormData) => {
+  const o = Object.fromEntries(data.entries());
+
+  const toFloat = (v: unknown) => {
+    const n = parseFloat(v as string);
+    return isNaN(n) ? undefined : n;
+  };
+  const toInt = (v: unknown) => {
+    const n = parseInt(v as string);
+    return isNaN(n) ? undefined : n;
+  };
+  const quantity = toInt(o.quantity) ?? 0;
+  const price = toFloat(o.price) ?? 0;
+  const factoryUnitPrice = toFloat(o.factoryUnitPrice);
+
+  const processedData = {
+    orderNumber: o.orderNumber,
+    shipDate: o.shipDate
+      ? new Date(o.shipDate as string).toISOString()
+      : undefined,
+    dept: o.dept || undefined,
+    style: o.style || undefined,
+    color: o.color || undefined,
+    lot: o.lot || undefined,
+    quantity,
+    price,
+    totalPrice: quantity * price,
+    factoryUnitPrice,
+    totalFactoryPrice:
+      factoryUnitPrice != null ? quantity * factoryUnitPrice : undefined,
+    dazCommission: toFloat(o.dazCommission),
+    discountFactory: toFloat(o.discountFactory),
+    discountFromDaz: toFloat(o.discountFromDaz),
+    discountRemark: o.discountRemark || undefined,
+    finalDazCommission: toFloat(o.finalDazCommission),
+    paymentTerm: o.paymentTerm || undefined,
+    buyerId: toInt(o.buyerId),
+    factoryId: toInt(o.factoryId),
+    commissionStatus: o.commissionStatus || undefined,
+    commissionAmount: toFloat(o.commissionAmount),
+    overallRemarks: o.overallRemarks || undefined,
+    yarnBooking: o.yarnBooking
+      ? new Date(o.yarnBooking as string).toISOString()
+      : null,
+    labdipYarndip: o.labdipYarndip
+      ? new Date(o.labdipYarndip as string).toISOString()
+      : null,
+    printStrikeOff: o.printStrikeOff
+      ? new Date(o.printStrikeOff as string).toISOString()
+      : null,
+    ppSample: o.ppSample ? new Date(o.ppSample as string).toISOString() : null,
+    bulkFabric: o.bulkFabric
+      ? new Date(o.bulkFabric as string).toISOString()
+      : null,
+    cutting: o.cutting ? new Date(o.cutting as string).toISOString() : null,
+    printing: o.printing ? new Date(o.printing as string).toISOString() : null,
+    swing: o.swing ? new Date(o.swing as string).toISOString() : null,
+    finishing: o.finishing
+      ? new Date(o.finishing as string).toISOString()
+      : null,
+    shipmentSample: o.shipmentSample
+      ? new Date(o.shipmentSample as string).toISOString()
+      : null,
+    inspection: o.inspection
+      ? new Date(o.inspection as string).toISOString()
+      : null,
+    exFactory: o.exFactory
+      ? new Date(o.exFactory as string).toISOString()
+      : null,
+  };
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/order/orders/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(processedData),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("ORDERS");
+    revalidatePath("/dashboard/order/order-list");
+  }
+  return result;
+};
+
+export const deleteOrder = async (id: number) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/order/orders/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.success || res.ok) {
+    revalidateTag("ORDERS");
+    revalidatePath("/dashboard/order/order-list");
   }
   return result;
 };

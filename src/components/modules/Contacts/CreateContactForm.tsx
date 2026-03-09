@@ -34,50 +34,100 @@ import { Textarea } from "@/components/ui/textarea";
 import { Country } from "@/types";
 
 const statusConfig = {
-  NOT_SENT: {
+  NOT_CONTACTED: {
     icon: UserRoundPlus,
-    color: "bg-blue-500/10 text-blue-600 border-blue-200",
-    label: "Not Sent",
-  },
-  NEW: {
-    icon: UserRoundPlus,
-    color: "bg-blue-500/10 text-blue-600 border-blue-200",
-    label: "New Lead",
+    color: "bg-slate-500/10 text-slate-600 border-slate-200",
+    label: "Not Contacted",
   },
   CONTACTED: {
     icon: Mail,
     color: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
     label: "Contacted",
   },
-  RESPONDED: {
+  FOLLOW_UP_SENT: {
+    icon: Clock,
+    color: "bg-blue-500/10 text-blue-600 border-blue-200",
+    label: "Follow-up Sent",
+  },
+  ENGAGED: {
     icon: MessageSquare,
     color: "bg-green-500/10 text-green-600 border-green-200",
-    label: "Responded",
+    label: "Engaged",
+  },
+  INTERESTED: {
+    icon: Target,
+    color: "bg-indigo-500/10 text-indigo-600 border-indigo-200",
+    label: "Interested",
   },
   QUALIFIED: {
     icon: Target,
     color: "bg-purple-500/10 text-purple-600 border-purple-200",
     label: "Qualified",
   },
-  NEGOTIATING: {
-    icon: Clock,
+  CATALOG_SENT: {
+    icon: Globe,
+    color: "bg-cyan-500/10 text-cyan-600 border-cyan-200",
+    label: "Catalog Sent",
+  },
+  SAMPLE_REQUESTED: {
+    icon: Briefcase,
+    color: "bg-teal-500/10 text-teal-600 border-teal-200",
+    label: "Sample Requested",
+  },
+  SAMPLE_SENT: {
+    icon: Briefcase,
+    color: "bg-teal-200 text-teal-900 border-teal-200",
+    label: "Sample Sent",
+  },
+  PRICE_NEGOTIATION: {
+    icon: Trophy,
     color: "bg-orange-500/10 text-orange-600 border-orange-200",
-    label: "Negotiating",
+    label: "Price Negotiation",
   },
   CLOSED_WON: {
     icon: Trophy,
     color: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
     label: "Closed Won",
   },
-  CLOSED_LOST: {
+  REPEAT_BUYER: {
+    icon: CheckCircle,
+    color: "bg-green-200 text-green-900 border-green-200",
+    label: "Repeat Buyer",
+  },
+  NON_RESPONSIVE: {
+    icon: Clock,
+    color: "bg-gray-500/10 text-gray-600 border-gray-200",
+    label: "Non Responsive",
+  },
+  REENGAGED: {
+    icon: CheckCircle,
+    color: "bg-lime-500/10 text-lime-600 border-lime-200",
+    label: "Re-engaged",
+  },
+  DORMANT: {
+    icon: Clock,
+    color: "bg-gray-200 text-gray-700 border-gray-200",
+    label: "Dormant",
+  },
+  NOT_INTERESTED: {
     icon: XCircle,
     color: "bg-red-500/10 text-red-600 border-red-200",
-    label: "Closed Lost",
+    label: "Not Interested",
+  },
+  INVALID: {
+    icon: XCircle,
+    color: "bg-rose-500/10 text-rose-600 border-rose-200",
+    label: "Invalid",
+  },
+  DO_NOT_CONTACT: {
+    icon: XCircle,
+    color: "bg-black text-white border-black",
+    label: "Do Not Contact",
   },
 };
 
 export default function CreateContactForm() {
-  const [selectedStatus, setSelectedStatus] = useState<string>("NOT_SENT");
+  const [selectedStatus, setSelectedStatus] = useState<string>("NOT_CONTACTED");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
   const router = useRouter();
@@ -87,27 +137,27 @@ export default function CreateContactForm() {
     const fetchCountries = async () => {
       try {
         console.log("NEXT_PUBLIC_BASE_API:", process.env.NEXT_PUBLIC_BASE_API);
-        const apiUrl = `http://localhost:5001/api/v1/country`;
-        console.log("Fetching countries from:", apiUrl);
+        const apiUrl = `${process.env.NEXT_PUBLIC_BASE_API}/country`;
+        // console.log("Fetching countries from:", apiUrl);
 
         const response = await fetch(apiUrl);
-        console.log("Response status:", response.status);
+        // console.log("Response status:", response.status);
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Countries API response:", data);
+          // console.log("Countries API response:", data);
 
           // Handle different response structures
           const countriesArray = Array.isArray(data)
             ? data
             : data.data || data.countries || [];
 
-          console.log("Parsed countries array:", countriesArray);
-          console.log("Countries array length:", countriesArray.length);
+          // console.log("Parsed countries array:", countriesArray);
+          // console.log("Countries array length:", countriesArray.length);
 
           setCountries(countriesArray);
-          console.log("Countries state set successfully");
-          console.log("Setting countries to:", countriesArray);
+          // console.log("Countries state set successfully");
+          // console.log("Setting countries to:", countriesArray);
         } else {
           console.error("Failed to fetch countries:", response.status);
           const errorText = await response.text();
@@ -454,6 +504,63 @@ export default function CreateContactForm() {
                 </div>
               </div>
             </div>
+
+            {/* History Dates */}
+            {/* <div className="mb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 bg-gradient-to-r from-gray-500 to-gray-600 rounded-md flex items-center justify-center">
+                  <Clock className="w-3.5 h-3.5 text-white" />
+                </div>
+                <h2 className="text-sm font-medium text-gray-900">
+                  Contact History
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="lastContactedAt"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Last Contacted
+                  </Label>
+                  <Input
+                    type="datetime-local"
+                    id="lastContactedAt"
+                    name="lastContactedAt"
+                    className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="lastRepliedAt"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Last Replied
+                  </Label>
+                  <Input
+                    type="datetime-local"
+                    id="lastRepliedAt"
+                    name="lastRepliedAt"
+                    className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="nextFollowUpAt"
+                    className="text-xs font-medium text-gray-700"
+                  >
+                    Next Follow-up
+                  </Label>
+                  <Input
+                    type="datetime-local"
+                    id="nextFollowUpAt"
+                    name="nextFollowUpAt"
+                    className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+              </div>
+            </div> */}
 
             {/* Submit Button */}
             <div className="flex justify-end pt-3 border-t border-gray-100">

@@ -133,13 +133,24 @@ export function ContactTable({
         cell: ({ row }) => {
           const status = row.getValue("status") as string;
           const statusColors = {
-            NEW: "bg-blue-100 text-blue-800",
+            NOT_CONTACTED: "bg-slate-100 text-slate-600",
             CONTACTED: "bg-yellow-100 text-yellow-800",
-            RESPONDED: "bg-green-100 text-green-800",
+            FOLLOW_UP_SENT: "bg-blue-100 text-blue-800",
+            ENGAGED: "bg-green-100 text-green-800",
+            INTERESTED: "bg-indigo-100 text-indigo-800",
             QUALIFIED: "bg-purple-100 text-purple-800",
-            NEGOTIATING: "bg-orange-100 text-orange-800",
+            CATALOG_SENT: "bg-cyan-100 text-cyan-800",
+            SAMPLE_REQUESTED: "bg-teal-100 text-teal-800",
+            SAMPLE_SENT: "bg-teal-200 text-teal-900",
+            PRICE_NEGOTIATION: "bg-orange-100 text-orange-800",
             CLOSED_WON: "bg-emerald-100 text-emerald-800",
-            CLOSED_LOST: "bg-red-100 text-red-800",
+            REPEAT_BUYER: "bg-green-200 text-green-900",
+            NON_RESPONSIVE: "bg-gray-100 text-gray-600",
+            REENGAGED: "bg-lime-100 text-lime-800",
+            DORMANT: "bg-gray-200 text-gray-700",
+            NOT_INTERESTED: "bg-red-100 text-red-800",
+            INVALID: "bg-rose-100 text-rose-800",
+            DO_NOT_CONTACT: "bg-black text-white",
           };
 
           return (
@@ -171,6 +182,30 @@ export function ContactTable({
               {note || "-"}
             </div>
           );
+        },
+      },
+      {
+        accessorKey: "lastContactedAt",
+        header: "Last Contacted",
+        cell: ({ row }) => {
+          const date = row.getValue("lastContactedAt") as string | undefined;
+          return <div>{date ? new Date(date).toLocaleString() : "-"}</div>;
+        },
+      },
+      {
+        accessorKey: "lastRepliedAt",
+        header: "Last Replied",
+        cell: ({ row }) => {
+          const date = row.getValue("lastRepliedAt") as string | undefined;
+          return <div>{date ? new Date(date).toLocaleString() : "-"}</div>;
+        },
+      },
+      {
+        accessorKey: "nextFollowUpAt",
+        header: "Next Follow-up",
+        cell: ({ row }) => {
+          const date = row.getValue("nextFollowUpAt") as string | undefined;
+          return <div>{date ? new Date(date).toLocaleString() : "-"}</div>;
         },
       },
       {
@@ -283,6 +318,26 @@ export function ContactTable({
             value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("email")?.setFilterValue(event.target.value)
+            }
+            className="h-7 w-40 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+          />{" "}
+          <Input
+            placeholder="Search designation..."
+            value={
+              (table.getColumn("designation")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("designation")?.setFilterValue(event.target.value)
+            }
+            className="h-7 w-40 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+          />{" "}
+          <Input
+            placeholder="Search companies..."
+            value={
+              (table.getColumn("company")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("company")?.setFilterValue(event.target.value)
             }
             className="h-7 w-40 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
           />
