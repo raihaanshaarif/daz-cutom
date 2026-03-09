@@ -95,17 +95,39 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Prevent redirect loop on /login
       const loginPath = "/login";
-      const urlObj = new URL(url, baseUrl);
-      // If redirecting to /login with a callbackUrl that is also /login, strip the callbackUrl
-      if (urlObj.pathname === loginPath) {
-        if (urlObj.searchParams.get("callbackUrl") === baseUrl + loginPath) {
-          return baseUrl + loginPath;
+      const absoluteUrl = url.startsWith("/") ? `${baseUrl}${url}` : url;
+      try {
+        const urlObj = new URL(absoluteUrl);
+        if (urlObj.pathname === loginPath) {
+          const rawCallback = urlObj.searchParams.get("callbackUrl");
+          if (rawCallback) {
+            try {
+              const decoded = decodeURIComponent(rawCallback);
+              const absoluteCallback = decoded.startsWith("/")
+                ? `${baseUrl}${decoded}`
+                : decoded;
+              const callbackObj = new URL(absoluteCallback);
+              if (callbackObj.pathname === loginPath) {
+                return `${baseUrl}${loginPath}`;
+              }
+            } catch {
+              // if parsing fails, strip to be safe
+              return `${baseUrl}${loginPath}`;
+            }
+          }
         }
-        return url;
+      } catch {
+        // ignore malformed url
       }
-      return url;
+      // Default NextAuth behaviour
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      try {
+        if (new URL(url).origin === new URL(baseUrl).origin) return url;
+      } catch {
+        // ignore
+      }
+      return baseUrl;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
