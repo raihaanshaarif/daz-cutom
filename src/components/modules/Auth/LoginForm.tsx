@@ -37,8 +37,9 @@ export default function LoginForm() {
       // } else {
       //   toast.error("User Login Failed");
       // }
-      signIn("credentials", {
+      await signIn("credentials", {
         ...values,
+        redirect: true,
         callbackUrl: "/dashboard",
       });
     } catch (err) {
