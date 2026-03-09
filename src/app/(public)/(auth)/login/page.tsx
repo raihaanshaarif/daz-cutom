@@ -2,16 +2,22 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import LoginForm from "@/components/modules/Auth/LoginForm";
 
 const LoginPage = () => {
   const router = useRouter();
+  const { status } = useSession();
 
   useEffect(() => {
-    if (window.location.search.includes("callbackUrl")) {
-      router.replace("/login");
+    if (status === "authenticated") {
+      router.replace("/dashboard");
     }
-  }, [router]);
+  }, [status, router]);
+
+  if (status === "loading") {
+    return <div>Loading...</div>;
+  }
 
   return <LoginForm />;
 };
