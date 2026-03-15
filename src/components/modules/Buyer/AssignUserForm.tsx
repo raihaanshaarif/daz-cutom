@@ -55,7 +55,7 @@ const AssignUserForm = () => {
     setIsSubmitting(true);
     try {
       const res = await fetch(
-        "http://localhost:5001/api/v1/order/buyers/assign",
+        `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers/assign`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -89,7 +89,7 @@ const AssignUserForm = () => {
     setIsSubmitting(true);
     try {
       const res = await fetch(
-        "http://localhost:5001/api/v1/order/buyers/assign",
+        `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers/assign`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },

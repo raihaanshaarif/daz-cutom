@@ -28,7 +28,7 @@ export default function CreateCountryForm() {
           duration: 4000,
         });
         setTimeout(() => {
-          router.push("/dashboard/country-list");
+          router.push("/dashboard/country/country-list");
         }, 1500);
       } else {
         toast.error("Failed to create country", {
