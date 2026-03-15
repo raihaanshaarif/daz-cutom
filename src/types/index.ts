@@ -10,6 +10,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   contacts: Contact[];
+  assignedBuyers?: Buyer[];
 }
 
 export interface Country {
@@ -76,6 +77,59 @@ export interface Order {
   createdById?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CommercialOrder {
+  id: number;
+  commercialId: number;
+  orderId: number;
+  order: Order;
+}
+
+export interface Commercial {
+  id: number;
+  bookingReference: string;
+  invoiceNo: string;
+  quantity: number;
+  totalPrice: number;
+  bookingDate: string;
+  bookingHandoverDate: string;
+  handoverDate: string;
+  etd: string;
+  eta: string;
+  lacAmount: number;
+  documentStatus: string;
+  docCourierNo: string;
+  approximatePaymentDate?: string | null;
+  paymentStatus: string;
+  receivedAmount: number;
+  receivedDate: string;
+  balance: number;
+  remarks: string;
+  createdAt: string;
+  updatedAt: string;
+  orders: CommercialOrder[];
+}
+
+export interface CommercialFormData {
+  bookingReference: string;
+  invoiceNo: string;
+  quantity: number;
+  totalPrice: number;
+  bookingDate: string;
+  bookingHandoverDate: string;
+  handoverDate: string;
+  etd: string;
+  eta: string;
+  lacAmount: number;
+  documentStatus: string;
+  docCourierNo: string;
+  approximatePaymentDate?: string | null;
+  paymentStatus: string;
+  receivedAmount: number;
+  receivedDate: string;
+  balance: number;
+  remarks: string;
 }
 
 export interface OrderItem {

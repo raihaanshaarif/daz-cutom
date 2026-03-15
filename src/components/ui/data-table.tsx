@@ -112,6 +112,27 @@ export function DataTable({ data, onEdit, onView, onDelete }: DataTableProps) {
         ),
       },
       {
+        id: "assignedBuyers",
+        header: "Assigned Buyers",
+        cell: ({ row }) => {
+          const buyers = row.original.assignedBuyers;
+          if (!buyers || buyers.length === 0)
+            return <span className="text-gray-400 text-xs">None</span>;
+          return (
+            <div className="flex flex-col gap-1">
+              {buyers.map((buyer) => (
+                <span
+                  key={buyer.id}
+                  className="text-xs bg-blue-100 text-blue-800 rounded px-2 py-0.5 inline-block"
+                >
+                  {buyer.name}
+                </span>
+              ))}
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "createdAt",
         header: "Created At",
         cell: ({ row }) => {

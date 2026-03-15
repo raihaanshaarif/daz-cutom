@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { deleteOrder } from "@/actions/create";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 export default function OrderList() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -65,6 +66,12 @@ export default function OrderList() {
     };
   }, [searchTerm]);
 
+  // Access User from session for API calls
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
+  console.log(userId, userRole);
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
@@ -85,7 +92,13 @@ export default function OrderList() {
         const [ordersRes, buyersRes, factoriesRes] = await Promise.all([
           fetch(
             `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
-            { cache: "no-store" },
+            {
+              cache: "no-store",
+              headers: {
+                "user-id": userId, // Replace userId with your actual user id variable
+                "user-role": userRole, // Replace userRole with your actual user role variable
+              },
+            },
           ),
           buyers.length === 0
             ? fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)

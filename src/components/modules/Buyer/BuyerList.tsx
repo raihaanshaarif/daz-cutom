@@ -7,6 +7,7 @@ import { Database, Filter, ShoppingBag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSession } from "next-auth/react";
 
 export default function BuyerList() {
   const [buyers, setBuyers] = useState<Buyer[]>([]);
@@ -19,7 +20,14 @@ export default function BuyerList() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Access User from session for API calls
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
+  console.log(userId, userRole);
+
   useEffect(() => {
+    if (!userId || !userRole) return; // Wait for session to load
     const fetchBuyers = async () => {
       setLoading(true);
       try {
@@ -27,6 +35,10 @@ export default function BuyerList() {
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
           {
             cache: "no-store",
+            headers: {
+              "user-id": userId,
+              "user-role": userRole,
+            },
           },
         );
         const responseData = await res.json();
@@ -61,7 +73,7 @@ export default function BuyerList() {
     };
 
     fetchBuyers();
-  }, []); // Remove dependencies since we're fetching all data once
+  }, [userId, userRole]);
 
   // Filter buyers based on search term
   const filteredBuyers = buyers.filter(

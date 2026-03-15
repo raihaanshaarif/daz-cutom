@@ -125,6 +125,27 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       ],
     },
     {
+      label: "Commercials",
+      items: [
+        {
+          title: "Commercial",
+          icon: Command,
+          children: [
+            {
+              title: "Create Invoice",
+              url: "/dashboard/commercial/create-invoice",
+              icon: PlusCircle,
+            },
+            {
+              title: "Invoice List",
+              url: "/dashboard/commercial/invoice-list",
+              icon: Command,
+            },
+          ],
+        },
+      ],
+    },
+    {
       label: "Tasks",
       items: [
         {
@@ -211,6 +232,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               title: "Buyers List",
               url: "/dashboard/buyer/buyer-list",
               icon: ShoppingBag,
+            },
+            {
+              title: "Assign User",
+              url: "/dashboard//buyer/assign-user",
+              icon: PlusCircle,
             },
           ],
         },
