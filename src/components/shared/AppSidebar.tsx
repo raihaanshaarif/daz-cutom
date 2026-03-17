@@ -16,6 +16,7 @@ import {
   Factory,
   Package,
   Truck,
+  BarChart3,
 } from "lucide-react";
 
 import {
@@ -162,6 +163,33 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               title: "Parcel List",
               url: "/dashboard/parcel",
               icon: Package,
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      label: "Reports",
+      items: [
+        {
+          title: "Reports",
+          icon: BarChart3,
+          children: [
+            {
+              title: "Order Report",
+              url: "/dashboard/order/report",
+              icon: BarChart3,
+            },
+            {
+              title: "Commercial Report",
+              url: "/dashboard/commercial/report",
+              icon: BarChart3,
+            },
+            {
+              title: "Parcel Report",
+              url: "/dashboard/parcel/report",
+              icon: BarChart3,
             },
           ],
         },
