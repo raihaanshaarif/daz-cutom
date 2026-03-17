@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Factory,
   Package,
+  Truck,
 } from "lucide-react";
 
 import {
@@ -86,16 +87,16 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       label: "Contacts",
       items: [
         {
-          title: "Contact",
+          title: "Expression",
           icon: Users,
           children: [
             {
-              title: "Create Contact",
+              title: "Create Expression",
               url: "/dashboard/contact/create-contact",
               icon: PlusCircle,
             },
             {
-              title: "My Contacts",
+              title: "Expression List",
               url: "/dashboard/contact/my-contacts",
               icon: Users,
             },
@@ -145,6 +146,28 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         },
       ],
     },
+    {
+      label: "Parcels",
+      items: [
+        {
+          title: "Parcel",
+          icon: Package,
+          children: [
+            {
+              title: "Create Parcel",
+              url: "/dashboard/parcel/create",
+              icon: PlusCircle,
+            },
+            {
+              title: "Parcel List",
+              url: "/dashboard/parcel",
+              icon: Package,
+            },
+          ],
+        },
+      ],
+    },
+
     {
       label: "Tasks",
       items: [
@@ -253,6 +276,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               title: "Factories List",
               url: "/dashboard/factory/factory-list",
               icon: Factory,
+            },
+          ],
+        },
+        {
+          title: "Courier Company",
+          icon: Truck,
+          children: [
+            {
+              title: "Add Company",
+              url: "/dashboard/courier/create",
+              icon: PlusCircle,
+            },
+            {
+              title: "Company List",
+              url: "/dashboard/courier",
+              icon: Truck,
             },
           ],
         },

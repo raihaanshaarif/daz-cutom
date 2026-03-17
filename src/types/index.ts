@@ -221,6 +221,39 @@ export interface Contact {
   updatedAt: string;
 }
 
+export interface Courier {
+  id: number;
+  name: string;
+  address: string;
+  contactNumber: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Parcel {
+  id: number;
+  buyerId: number;
+  buyer?: Buyer;
+  courierCompanyId: number;
+  courierCompany?: Courier;
+  trackingNumber: string;
+  weight: number;
+  description: string;
+  createdById: number;
+  createdBy?: User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ParcelFormData {
+  buyerId: number;
+  courierCompanyId: number;
+  trackingNumber: string;
+  weight: number;
+  description: string;
+  createdById: number;
+}
+
 export interface ContactFormData {
   name: string;
   email: string;

@@ -119,6 +119,147 @@ export const createBuyer = async (data: FormData) => {
   return result;
 };
 
+export const createCourier = async (data: FormData) => {
+  const courierInfo = Object.fromEntries(data.entries());
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(courierInfo),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("COURIERS");
+    revalidatePath("/dashboard/courier");
+  }
+  return result;
+};
+
+export const updateCourier = async (id: number, data: FormData) => {
+  const courierInfo = Object.fromEntries(data.entries());
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(courierInfo),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.data?.id || result?.id) {
+    revalidateTag("COURIERS");
+    revalidatePath("/dashboard/courier");
+  }
+  return result;
+};
+
+export const deleteCourier = async (id: number) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.data || result?.success || res.ok) {
+    revalidateTag("COURIERS");
+    revalidatePath("/dashboard/courier");
+  }
+  return result;
+};
+
+export const createParcel = async (data: FormData) => {
+  const parcelInfo = Object.fromEntries(data.entries());
+
+  const payload = {
+    ...parcelInfo,
+    buyerId: parseInt(parcelInfo.buyerId as string),
+    courierCompanyId: parseInt(parcelInfo.courierCompanyId as string),
+    createdById: parseInt(parcelInfo.createdById as string),
+    weight: parseInt(parcelInfo.weight as string),
+  };
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.data?.id || result?.id) {
+    revalidateTag("PARCELS");
+    revalidatePath("/dashboard/parcel");
+  }
+  return result;
+};
+
+export const updateParcel = async (id: number, data: FormData) => {
+  const parcelInfo = Object.fromEntries(data.entries());
+
+  const payload = {
+    ...parcelInfo,
+    buyerId: parseInt(parcelInfo.buyerId as string),
+    courierCompanyId: parseInt(parcelInfo.courierCompanyId as string),
+    weight: parseInt(parcelInfo.weight as string),
+  };
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels/${id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.data?.id || result?.id) {
+    revalidateTag("PARCELS");
+    revalidatePath("/dashboard/parcel");
+  }
+  return result;
+};
+
+export const deleteParcel = async (id: number) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.data || result?.success || res.ok) {
+    revalidateTag("PARCELS");
+    revalidatePath("/dashboard/parcel");
+  }
+  return result;
+};
+
 export const createFactory = async (data: FormData) => {
   const factoryInfo = Object.fromEntries(data.entries());
 
