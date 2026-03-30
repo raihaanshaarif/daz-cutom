@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { deleteContact } from "@/actions/create";
+import { toast } from "sonner";
 
 export default function ContactList() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -267,6 +269,22 @@ export default function ContactList() {
     setIsViewModalOpen(true);
   };
 
+  const handleDeleteContact = async (contact: Contact) => {
+    if (confirm(`Are you sure you want to delete contact ${contact.name}?`)) {
+      try {
+        const result = await deleteContact(contact.id);
+        if (result?.success || result?.message) {
+          toast.success("Contact deleted successfully!");
+          setRefreshTrigger((prev) => prev + 1);
+        } else {
+          toast.error("Failed to delete contact");
+        }
+      } catch {
+        toast.error("An error occurred while deleting the contact");
+      }
+    }
+  };
+
   const handleEditSuccess = () => {
     // Refresh the contacts list by triggering a refetch
     setRefreshTrigger((prev) => prev + 1);
@@ -438,6 +456,7 @@ export default function ContactList() {
               onPageChange={handlePageChange}
               onEdit={handleEditContact}
               onView={handleViewContact}
+              onDelete={handleDeleteContact}
             />
             <ViewContactModal
               contact={viewContact}

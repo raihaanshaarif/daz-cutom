@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 export default function CommercialList() {
   const [commercials, setCommercials] = useState<Commercial[]>([]);
@@ -153,6 +154,33 @@ export default function CommercialList() {
   const handleViewCommercial = (commercial: Commercial) => {
     setViewCommercial(commercial);
     setIsViewModalOpen(true);
+  };
+
+  const handleDeleteCommercial = async (commercial: Commercial) => {
+    if (
+      confirm(
+        `Are you sure you want to delete commercial record for ${commercial.invoiceNo}?`,
+      )
+    ) {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/commercial/${commercial.id}`,
+          {
+            method: "DELETE",
+          },
+        );
+
+        if (res.ok) {
+          toast.success("Commercial record deleted successfully!");
+          setRefreshTrigger((prev) => prev + 1);
+        } else {
+          toast.error("Failed to delete commercial record");
+        }
+      } catch (error) {
+        console.error("Failed to delete commercial record:", error);
+        toast.error("An error occurred while deleting the record");
+      }
+    }
   };
 
   const handleEditSuccess = () => {
@@ -334,6 +362,7 @@ export default function CommercialList() {
               onPageChange={handlePageChange}
               onEdit={handleEditCommercial}
               onView={handleViewCommercial}
+              onDelete={handleDeleteCommercial}
             />
             <ViewCommercialModal
               commercial={viewCommercial}

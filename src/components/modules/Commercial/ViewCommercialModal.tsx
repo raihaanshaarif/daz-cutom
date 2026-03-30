@@ -270,7 +270,7 @@ export function ViewCommercialModal({
                       LAC Amount
                     </div>
                     <div className="text-sm font-semibold">
-                      ${commercial.lacAmount.toLocaleString()}
+                      ${commercial.lacAmount?.toLocaleString() || "0"}
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-2">
@@ -278,7 +278,7 @@ export function ViewCommercialModal({
                       Received Amount
                     </span>
                     <span className="text-lg font-bold text-green-600">
-                      ${commercial.receivedAmount.toLocaleString()}
+                      ${commercial.receivedAmount?.toLocaleString() || "0"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center py-2">

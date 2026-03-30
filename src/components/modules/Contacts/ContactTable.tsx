@@ -18,6 +18,9 @@ import {
   ChevronDown,
   MoreHorizontal,
   Database,
+  Eye,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -86,6 +89,45 @@ export function ContactTable({
         ),
         enableSorting: false,
         enableHiding: false,
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        enableHiding: false,
+        cell: ({ row }) => {
+          const item = row.original;
+          return (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                onClick={() => onView?.(item)}
+                title="View"
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                onClick={() => onEdit?.(item)}
+                title="Edit"
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => onDelete?.(item)}
+                title="Delete"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "name",
@@ -230,44 +272,6 @@ export function ContactTable({
         cell: ({ row }) => {
           const date = new Date(row.getValue("updatedAt"));
           return <div>{date.toLocaleDateString()}</div>;
-        },
-      },
-      {
-        id: "actions",
-        enableHiding: false,
-        cell: ({ row }) => {
-          const contact = row.original;
-
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={() =>
-                    navigator.clipboard.writeText(contact.id.toString())
-                  }
-                >
-                  Copy contact ID
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => onView?.(contact)}>
-                  View contact
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit?.(contact)}>
-                  Edit contact
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete?.(contact)}>
-                  Delete contact
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          );
         },
       },
     ],

@@ -453,3 +453,17 @@ export const deleteOrder = async (id: number) => {
   }
   return result;
 };
+
+export const deleteContact = async (id: number) => {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact/${id}`, {
+    method: "DELETE",
+  });
+
+  const result = await res.json();
+
+  if (result?.success || res.ok) {
+    revalidateTag("CONTACTS");
+    revalidatePath("/dashboard/my-contacts");
+  }
+  return result;
+};
