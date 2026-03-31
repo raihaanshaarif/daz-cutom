@@ -85,19 +85,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       ],
     },
     {
-      label: "Contacts",
+      label: "Leads",
       items: [
         {
-          title: "Expression",
+          title: "Leads",
           icon: Users,
           children: [
             {
-              title: "Create Expression",
+              title: "Create Lead",
               url: "/dashboard/contact/create-contact",
               icon: PlusCircle,
             },
             {
-              title: "Expression List",
+              title: "Lead List",
               url: "/dashboard/contact/my-contacts",
               icon: Users,
             },

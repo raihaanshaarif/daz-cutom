@@ -134,7 +134,7 @@ export function ViewCommercialModal({
                       Total Price
                     </div>
                     <div className="text-lg font-bold text-green-600">
-                      ${commercial.totalPrice.toLocaleString()}
+                      ${commercial.totalPrice?.toLocaleString() ?? "0"}
                     </div>
                   </div>
                 </div>
@@ -162,7 +162,7 @@ export function ViewCommercialModal({
                       Quantity
                     </div>
                     <div className="text-sm font-semibold text-gray-900">
-                      {commercial.quantity.toLocaleString()}
+                      {commercial.quantity?.toLocaleString() ?? "0"}
                     </div>
                     <Separator />
                   </div>
@@ -195,7 +195,9 @@ export function ViewCommercialModal({
                     Booking Date
                   </div>
                   <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(commercial.bookingDate).toLocaleDateString()}
+                    {commercial.bookingDate
+                      ? new Date(commercial.bookingDate).toLocaleDateString()
+                      : "-"}
                   </div>
                 </div>
                 <div className="bg-green-50 p-3 rounded-lg">
@@ -203,9 +205,11 @@ export function ViewCommercialModal({
                     Booking Handover
                   </div>
                   <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(
-                      commercial.bookingHandoverDate,
-                    ).toLocaleDateString()}
+                    {commercial.bookingHandoverDate
+                      ? new Date(
+                          commercial.bookingHandoverDate,
+                        ).toLocaleDateString()
+                      : "-"}
                   </div>
                 </div>
                 <div className="bg-purple-50 p-3 rounded-lg">
@@ -213,7 +217,9 @@ export function ViewCommercialModal({
                     Handover Date
                   </div>
                   <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(commercial.handoverDate).toLocaleDateString()}
+                    {commercial.handoverDate
+                      ? new Date(commercial.handoverDate).toLocaleDateString()
+                      : "-"}
                   </div>
                 </div>
                 <div className="bg-orange-50 p-3 rounded-lg">
@@ -221,7 +227,9 @@ export function ViewCommercialModal({
                     ETD
                   </div>
                   <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(commercial.etd).toLocaleDateString()}
+                    {commercial.etd
+                      ? new Date(commercial.etd).toLocaleDateString()
+                      : "-"}
                   </div>
                 </div>
                 <div className="bg-red-50 p-3 rounded-lg">
@@ -229,7 +237,9 @@ export function ViewCommercialModal({
                     ETA
                   </div>
                   <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(commercial.eta).toLocaleDateString()}
+                    {commercial.eta
+                      ? new Date(commercial.eta).toLocaleDateString()
+                      : "-"}
                   </div>
                 </div>
               </div>

@@ -219,6 +219,8 @@ export interface Contact {
   lastContactedAt?: string;
   lastRepliedAt?: string;
   nextFollowUpAt?: string;
+  modifiedById?: number;
+  modifiedBy?: User;
   createdAt: string;
   updatedAt: string;
 }

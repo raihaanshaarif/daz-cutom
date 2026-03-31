@@ -185,19 +185,23 @@ export function CommercialTable({
       {
         accessorKey: "quantity",
         header: "Quantity",
-        cell: ({ row }) => <div>{row.getValue("quantity")}</div>,
+        cell: ({ row }) => (
+          <div>{row.getValue("quantity")?.toLocaleString() ?? "0"}</div>
+        ),
       },
       {
         accessorKey: "totalPrice",
         header: "Total Price",
-        cell: ({ row }) => <div>${row.getValue("totalPrice")}</div>,
+        cell: ({ row }) => (
+          <div>${row.getValue("totalPrice")?.toLocaleString() ?? "0"}</div>
+        ),
       },
       {
         accessorKey: "bookingDate",
         header: "Booking Date",
         cell: ({ row }) => {
           const date = row.getValue("bookingDate") as string;
-          return <div>{new Date(date).toLocaleDateString()}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -205,7 +209,7 @@ export function CommercialTable({
         header: "Handover Date",
         cell: ({ row }) => {
           const date = row.getValue("handoverDate") as string;
-          return <div>{new Date(date).toLocaleDateString()}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -213,7 +217,7 @@ export function CommercialTable({
         header: "ETD",
         cell: ({ row }) => {
           const date = row.getValue("etd") as string;
-          return <div>{new Date(date).toLocaleDateString()}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -221,7 +225,7 @@ export function CommercialTable({
         header: "ETA",
         cell: ({ row }) => {
           const date = row.getValue("eta") as string;
-          return <div>{new Date(date).toLocaleDateString()}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -239,7 +243,9 @@ export function CommercialTable({
       {
         accessorKey: "lacAmount",
         header: "LAC Value",
-        cell: ({ row }) => <div>${row.getValue("lacAmount")}</div>,
+        cell: ({ row }) => (
+          <div>${row.getValue("lacAmount")?.toLocaleString() ?? "0"}</div>
+        ),
       },
       {
         accessorKey: "paymentStatus",
@@ -256,7 +262,9 @@ export function CommercialTable({
       {
         accessorKey: "balance",
         header: "Balance",
-        cell: ({ row }) => <div>${row.getValue("balance")}</div>,
+        cell: ({ row }) => (
+          <div>${row.getValue("balance")?.toLocaleString() ?? "0"}</div>
+        ),
       },
       {
         accessorKey: "remarks",
@@ -274,8 +282,12 @@ export function CommercialTable({
         accessorKey: "createdAt",
         header: "Created At",
         cell: ({ row }) => {
-          const date = new Date(row.getValue("createdAt"));
-          return <div>{date.toLocaleDateString()}</div>;
+          const rawDate = row.getValue("createdAt") as string;
+          if (!rawDate) return <div>-</div>;
+          const date = new Date(rawDate);
+          return (
+            <div>{isNaN(date.getTime()) ? "-" : date.toLocaleDateString()}</div>
+          );
         },
       },
     ],

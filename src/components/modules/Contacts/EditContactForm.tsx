@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Contact, Country, ContactFormData } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ export function EditContactForm({
   onClose,
   onSuccess,
 }: EditContactFormProps) {
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
   const [formData, setFormData] = useState<ContactFormData>({
@@ -153,6 +155,11 @@ export function EditContactForm({
         toast.error("No changes to update");
         setLoading(false);
         return;
+      }
+
+      // Add modifiedById from current session
+      if (session?.user?.id) {
+        dataToSend.modifiedById = parseInt(session.user.id);
       }
 
       console.log("Updating contact with data:", dataToSend);
