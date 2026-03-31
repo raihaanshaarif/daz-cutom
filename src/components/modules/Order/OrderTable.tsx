@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, Eye, Edit, Trash2 } from "lucide-react";
+import { ChevronDown, Eye, Edit, Trash2, FileDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -122,8 +122,15 @@ export function OrderTable({
         accessorKey: "orderNumber",
         header: "Order No",
         cell: ({ row }) => (
-          <div className="font-medium">
-            {row.getValue("orderNumber") || `#${row.original.id}`}
+          <div className="flex flex-col gap-1">
+            <div className="font-medium">
+              {row.getValue("orderNumber") || `#${row.original.id}`}
+            </div>
+            {row.original.isShipped && (
+              <div className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded w-fit font-bold uppercase">
+                Shipped
+              </div>
+            )}
           </div>
         ),
       },
@@ -454,6 +461,21 @@ export function OrderTable({
           </div>
         ),
       },
+      {
+        accessorKey: "isShipped",
+        header: "Is Shipped",
+        cell: ({ row }) => (
+          <div className="flex items-center">
+            {row.original.isShipped ? (
+              <span className="text-green-600 font-bold text-xs uppercase bg-green-50 px-2 py-0.5 rounded">
+                Shipped
+              </span>
+            ) : (
+              <span className="text-gray-400 text-xs">Pending</span>
+            )}
+          </div>
+        ),
+      },
     ],
     [onEdit, onView, onDelete],
   );
@@ -485,6 +507,63 @@ export function OrderTable({
     },
   });
 
+  const exportToExcel = () => {
+    // Get visible columns
+    const visibleColumns = table
+      .getAllColumns()
+      .filter(
+        (col) =>
+          col.getIsVisible() && col.id !== "select" && col.id !== "actions",
+      );
+
+    // Create header row
+    const headers = visibleColumns.map((col) => {
+      const header = col.columnDef.header;
+      if (typeof header === "string") return header;
+      return col.id;
+    });
+
+    // Get filtered rows
+    const rows = table.getFilteredRowModel().rows;
+
+    // Create data rows
+    const dataRows = rows.map((row) => {
+      return visibleColumns.map((col) => {
+        const cellValue = row.getValue(col.id);
+        // Format dates and handle nulls
+        if (cellValue === null || cellValue === undefined) return "";
+        if (cellValue instanceof Date) {
+          return cellValue.toLocaleDateString();
+        }
+        return String(cellValue);
+      });
+    });
+
+    // Combine headers and data
+    const csvContent = [
+      headers.join(","),
+      ...dataRows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      ),
+    ].join("\n");
+
+    // Create blob and download
+    const blob = new Blob(["\ufeff" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `orders_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4">
@@ -498,9 +577,18 @@ export function OrderTable({
           }
           className="max-w-sm"
         />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={exportToExcel}
+          className="ml-auto mr-2"
+        >
+          <FileDown className="mr-2 h-4 w-4" />
+          Export
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button variant="outline" className="">
               Columns <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

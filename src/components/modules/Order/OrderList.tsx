@@ -5,7 +5,9 @@ import { useEffect, useState, useRef } from "react";
 import { OrderTable } from "./OrderTable";
 import EditOrderForm from "./EditOrderForm";
 import OrderDetails from "./OrderDetails";
-import { Package, Filter, User, TrendingUp } from "lucide-react";
+import { Package, Filter, User, TrendingUp, X, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -43,6 +45,9 @@ export default function OrderList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const router = useRouter();
 
   // Modal states
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -53,6 +58,25 @@ export default function OrderList() {
   // Data for filters
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    selectedStatus !== "all" ||
+    selectedBuyer !== "all" ||
+    selectedFactory !== "all" ||
+    searchTerm !== "";
+
+  const handleCreateOrder = () => {
+    router.push("/dashboard/order/create-order");
+  };
+
+  const clearAllFilters = () => {
+    setSelectedStatus("all");
+    setSelectedBuyer("all");
+    setSelectedFactory("all");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
 
   // Debounce search — only fire fetch after 400 ms of no typing
   useEffect(() => {
@@ -152,6 +176,7 @@ export default function OrderList() {
           inspection: order.inspection ?? null,
           exfactory: order.exFactory ?? null,
           overallRemarks: order.overallRemarks,
+          isShipped: order.isShipped,
         }));
         setOrderItems(mappedItems);
         setTotalPages(pagination?.totalPages || 1);
@@ -263,9 +288,9 @@ export default function OrderList() {
           </h1>
           <p className="text-gray-500 text-xs">
             Manage orders ({totalOrders} total)
-            {searchTerm && (
+            {hasActiveFilters && (
               <span className="ml-2 text-blue-600 font-medium">
-                • Filtered by: &quot;{searchTerm}&quot;
+                • Showing {orders.length} filtered results
               </span>
             )}
           </p>
@@ -279,98 +304,134 @@ export default function OrderList() {
         {/* Filters */}
         <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
           <div className="p-3 lg:p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                <Filter className="w-3 h-3 text-white" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
+                  <Filter className="w-3 h-3 text-white" />
+                </div>
+                <h2 className="text-xs font-medium text-gray-900">Filters</h2>
+                {hasActiveFilters && (
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Clear All
+                  </Button>
+                )}
               </div>
-              <h2 className="text-xs font-medium text-gray-900">Filters</h2>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowFilters(!showFilters)}
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-3 text-xs"
+                >
+                  <Filter className="w-3 h-3 mr-1" />
+                  {showFilters ? "Hide" : "Show"} Filters
+                </Button>
+                <Button
+                  onClick={handleCreateOrder}
+                  className="h-7 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Order
+                </Button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Search Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5" />
-                  Search Orders
-                </Label>
-                <Input
-                  type="text"
-                  placeholder="Search by order number..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
+                {/* Search Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5" />
+                    Search Orders
+                  </Label>
+                  <Input
+                    type="text"
+                    placeholder="Search by order number..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
 
-              {/* Commission Status Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <TrendingUp className="w-3.5 h-3.5" />
-                  Commission Status
-                </Label>
-                <Select
-                  value={selectedStatus}
-                  onValueChange={setSelectedStatus}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="PAID">Paid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* Commission Status Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Commission Status
+                  </Label>
+                  <Select
+                    value={selectedStatus}
+                    onValueChange={setSelectedStatus}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="PAID">Paid</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Buyer Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  Buyer
-                </Label>
-                <Select value={selectedBuyer} onValueChange={setSelectedBuyer}>
-                  <SelectTrigger className="h-7 text-xs border-gray-200">
-                    <SelectValue placeholder="All Buyers" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Buyers</SelectItem>
-                    {buyers.map((buyer) => (
-                      <SelectItem key={buyer.id} value={buyer.id.toString()}>
-                        {buyer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* Buyer Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    Buyer
+                  </Label>
+                  <Select
+                    value={selectedBuyer}
+                    onValueChange={setSelectedBuyer}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200">
+                      <SelectValue placeholder="All Buyers" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Buyers</SelectItem>
+                      {buyers.map((buyer) => (
+                        <SelectItem key={buyer.id} value={buyer.id.toString()}>
+                          {buyer.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              {/* Factory Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Package className="w-3.5 h-3.5" />
-                  Factory
-                </Label>
-                <Select
-                  value={selectedFactory}
-                  onValueChange={setSelectedFactory}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200">
-                    <SelectValue placeholder="All Factories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Factories</SelectItem>
-                    {factories.map((factory) => (
-                      <SelectItem
-                        key={factory.id}
-                        value={factory.id.toString()}
-                      >
-                        {factory.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Factory Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <Package className="w-3.5 h-3.5" />
+                    Factory
+                  </Label>
+                  <Select
+                    value={selectedFactory}
+                    onValueChange={setSelectedFactory}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200">
+                      <SelectValue placeholder="All Factories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Factories</SelectItem>
+                      {factories.map((factory) => (
+                        <SelectItem
+                          key={factory.id}
+                          value={factory.id.toString()}
+                        >
+                          {factory.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 

@@ -10,47 +10,117 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { BarChart3 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { BarChart3, Package, Weight, TrendingUp, X } from "lucide-react";
 import { useState, useEffect } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { ParcelTable } from "@/components/modules/Parcel/ParcelTable";
+import { Parcel, Buyer, Courier } from "@/types";
 
 export default function ParcelReportPage() {
-  const [dateRange, setDateRange] = useState("");
-  const [courier, setCourier] = useState("");
+  const [selectedBuyer, setSelectedBuyer] = useState<string>("all");
+  const [selectedCourier, setSelectedCourier] = useState<string>("all");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+
+  const [buyers, setBuyers] = useState<Buyer[]>([]);
+  const [couriers, setCouriers] = useState<Courier[]>([]);
+  const [parcels, setParcels] = useState<Parcel[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [metrics, setMetrics] = useState({
     totalParcels: 0,
     totalWeight: 0,
-    averageWeight: 0,
-    parcelsByCompany: [],
-    parcelsByBuyer: [],
-    lastWeekParcels: 0,
-    lastMonthParcels: 0,
-    topCompanies: [],
-    topBuyers: [],
+    monthlyAverage: 0,
   });
 
+  // Fetch buyers and couriers for filters
   useEffect(() => {
-    fetch("/api/parcel/stats")
-      .then((res) => res.json())
-      .then((data) => setMetrics(data));
+    const fetchFilterData = async () => {
+      try {
+        const [buyersRes, couriersRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
+          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies`),
+        ]);
+        const buyersData = await buyersRes.json();
+        const couriersData = await couriersRes.json();
+        setBuyers(
+          Array.isArray(buyersData) ? buyersData : buyersData.data || [],
+        );
+        setCouriers(
+          Array.isArray(couriersData) ? couriersData : couriersData.data || [],
+        );
+      } catch (err) {
+        console.error("Failed to fetch filter data:", err);
+      }
+    };
+    fetchFilterData();
   }, []);
 
-  // Chart data from actual metrics
-  const chartData = [
-    { name: "Last Week", parcels: metrics.lastWeekParcels },
-    { name: "Last Month", parcels: metrics.lastMonthParcels },
-  ];
+  // Fetch parcels based on filters
+  useEffect(() => {
+    const fetchParcels = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.append("limit", "1000"); // Get all for report
+        if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
+        if (selectedCourier !== "all")
+          params.append("courierCompanyId", selectedCourier);
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels?${params.toString()}`,
+        );
+        const response = await res.json();
+        const parcelsData = response.data?.data || response.data || [];
+        setParcels(parcelsData);
+
+        // Calculate metrics
+        const totalParcels = parcelsData.length;
+        const totalWeight = parcelsData.reduce(
+          (sum: number, parcel: Parcel) => sum + (parcel.weight || 0),
+          0,
+        );
+
+        // Calculate monthly average based on date range or all-time
+        let monthlyAverage = 0;
+        if (parcelsData.length > 0) {
+          const dates = parcelsData.map((p: Parcel) => new Date(p.createdAt));
+          const minDate = new Date(
+            Math.min(...dates.map((d: Date) => d.getTime())),
+          );
+          const maxDate = new Date(
+            Math.max(...dates.map((d: Date) => d.getTime())),
+          );
+          const monthsDiff =
+            (maxDate.getFullYear() - minDate.getFullYear()) * 12 +
+            (maxDate.getMonth() - minDate.getMonth()) +
+            1;
+          monthlyAverage = Math.round(totalParcels / Math.max(monthsDiff, 1));
+        }
+
+        setMetrics({
+          totalParcels,
+          totalWeight,
+          monthlyAverage,
+        });
+      } catch (err) {
+        console.error("Failed to fetch parcels:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchParcels();
+  }, [selectedBuyer, selectedCourier, startDate, endDate]);
+
+  const clearDateRange = () => {
+    setStartDate("");
+    setEndDate("");
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mx-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Parcel Report</h1>
         <Button variant="outline">
@@ -60,131 +130,143 @@ export default function ParcelReportPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
-        <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Select date range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="last7days">Last 7 days</SelectItem>
-            <SelectItem value="last30days">Last 30 days</SelectItem>
-            <SelectItem value="last3months">Last 3 months</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={courier} onValueChange={setCourier}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Select courier" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="fedex">FedEx</SelectItem>
-            <SelectItem value="ups">UPS</SelectItem>
-            <SelectItem value="dhl">DHL</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input placeholder="Search parcels..." className="w-64" />
-      </div>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="buyer-select" className="mb-2 block text-sm">
+                Buyer
+              </Label>
+              <Select value={selectedBuyer} onValueChange={setSelectedBuyer}>
+                <SelectTrigger id="buyer-select">
+                  <SelectValue placeholder="All Buyers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Buyers</SelectItem>
+                  {buyers.map((buyer) => (
+                    <SelectItem key={buyer.id} value={buyer.id.toString()}>
+                      {buyer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="courier-select" className="mb-2 block text-sm">
+                Courier Company
+              </Label>
+              <Select
+                value={selectedCourier}
+                onValueChange={setSelectedCourier}
+              >
+                <SelectTrigger id="courier-select">
+                  <SelectValue placeholder="All Couriers" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Couriers</SelectItem>
+                  {couriers.map((courier) => (
+                    <SelectItem key={courier.id} value={courier.id.toString()}>
+                      {courier.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="start-date" className="mb-2 block text-sm">
+                From Date
+              </Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="end-date" className="text-sm">
+                  To Date
+                </Label>
+                {(startDate || endDate) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearDateRange}
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Clear
+                  </Button>
+                )}
+              </div>
+              <Input
+                id="end-date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Parcels</CardTitle>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Package className="h-4 w-4 text-blue-600" />
+              Total Parcels
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalParcels}</div>
+            <div className="text-3xl font-bold text-blue-600">
+              {metrics.totalParcels}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Weight className="h-4 w-4 text-green-600" />
               Total Weight (kg)
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalWeight}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Average Weight (kg)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.averageWeight}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Last Week Parcels
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.lastWeekParcels}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Last Month Parcels
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.lastMonthParcels}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Top Companies Count
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics.topCompanies.length}
+            <div className="text-3xl font-bold text-green-600">
+              {metrics.totalWeight.toLocaleString()}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Top Buyers Count
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-purple-600" />
+              Monthly Average
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.topBuyers.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
-              Parcels by Company Count
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {metrics.parcelsByCompany.length}
+            <div className="text-3xl font-bold text-purple-600">
+              {metrics.monthlyAverage}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Chart */}
+      {/* Parcels Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Parcel Trends</CardTitle>
+          <CardTitle>Parcels</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="parcels" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">
+              Loading parcels...
+            </div>
+          ) : (
+            <ParcelTable data={parcels} />
+          )}
         </CardContent>
       </Card>
     </div>

@@ -145,10 +145,26 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
             <h3 className="text-lg font-bold text-gray-900 leading-none">
               Order {order.orderNumber}
             </h3>
-            <p className="text-xs text-gray-500 mt-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3 h-3" />
-              Placed on {fmtFull(order.createdAt)}
-            </p>
+            <div className="mt-2">
+              {order.isShipped ? (
+                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-[10px] h-5 px-1.5 uppercase font-bold">
+                  Shipped
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className="text-gray-400 border-gray-200 text-[10px] h-5 px-1.5 uppercase font-bold"
+                >
+                  Pending Shipment
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <p className="text-xs text-gray-500 flex items-center gap-1.5">
+                <Calendar className="w-3 h-3" />
+                Placed on {fmtFull(order.createdAt)}
+              </p>
+            </div>
           </div>
         </div>
         <div className="flex items-baseline gap-2 bg-white px-3 py-1.5 rounded-lg border border-blue-100 shadow-sm">

@@ -5,7 +5,16 @@ import { useEffect, useState } from "react";
 import { ContactTable } from "./ContactTable";
 import { EditContactForm } from "./EditContactForm";
 import { ViewContactModal } from "./ViewContactModal";
-import { Users, Database, Filter, Calendar, User, X } from "lucide-react";
+import {
+  Users,
+  Database,
+  Filter,
+  Calendar,
+  User,
+  X,
+  UserPlus,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -37,6 +46,9 @@ export default function ContactList() {
     useState<Pagination | null>(null);
   const [users, setUsers] = useState<{ id: number; name: string }[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const router = useRouter();
 
   // Edit modal state
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
@@ -44,6 +56,18 @@ export default function ContactList() {
   // View modal state
   const [viewContact, setViewContact] = useState<Contact | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    selectedDate || selectedUser !== "all" || selectedPeriod !== "all";
+
+  const handleCreateContact = () => {
+    router.push("/dashboard/contact/create-contact");
+  };
+
+  const clearAllFilters = () => {
+    clearFilters();
+  };
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -328,11 +352,9 @@ export default function ContactList() {
           </h1>
           <p className="text-gray-500 text-xs">
             Manage your leads ({totalContacts} total)
-            {selectedUser !== "all" && users && users.length > 0 && (
+            {hasActiveFilters && (
               <span className="ml-2 text-blue-600 font-medium">
-                • Filtered by:{" "}
-                {users.find((u) => u.id.toString() === selectedUser)?.name ||
-                  selectedUser}
+                • Showing {contacts.length} filtered results
               </span>
             )}
           </p>
@@ -341,108 +363,125 @@ export default function ContactList() {
         {/* Filters */}
         <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
           <div className="p-3 lg:p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                <Filter className="w-3 h-3 text-white" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
+                  <Filter className="w-3 h-3 text-white" />
+                </div>
+                <h2 className="text-xs font-medium text-gray-900">Filters</h2>
+                {hasActiveFilters && (
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Clear All
+                  </Button>
+                )}
               </div>
-              <h2 className="text-xs font-medium text-gray-900">Filters</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              {/* Date Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Date
-                </Label>
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value);
-                    handleFilterChange();
-                  }}
-                  className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Created By Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  Created By
-                </Label>
-                <Select
-                  value={selectedUser}
-                  onValueChange={(value) => {
-                    console.log("Selected user:", value);
-                    setSelectedUser(value);
-                    handleFilterChange();
-                  }}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                    <SelectValue placeholder="All users" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All users</SelectItem>
-                    {users.length > 0 &&
-                    !users.some((u) => u.name === "John Doe") ? (
-                      users.map((user) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.name}
-                        </SelectItem>
-                      ))
-                    ) : usersLoading ? null : (
-                      <>
-                        <SelectItem value="1">Abid</SelectItem>
-                        <SelectItem value="2">John Doe</SelectItem>
-                        <SelectItem value="3">Jane Smith</SelectItem>
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Period Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Period
-                </Label>
-                <Select
-                  value={selectedPeriod}
-                  onValueChange={(value) => {
-                    setSelectedPeriod(value);
-                    handleFilterChange();
-                  }}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                    <SelectValue placeholder="All time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All time</SelectItem>
-                    <SelectItem value="week">This week</SelectItem>
-                    <SelectItem value="month">This month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Clear Filters */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 opacity-0">
-                  Clear
-                </Label>
+              <div className="flex gap-2">
                 <Button
-                  onClick={clearFilters}
+                  onClick={() => setShowFilters(!showFilters)}
                   variant="outline"
                   size="sm"
-                  className="h-7 w-full text-xs border-gray-200 hover:border-red-500 hover:text-red-600"
+                  className="h-7 px-3 text-xs"
                 >
-                  <X className="w-3 h-3 mr-1" />
-                  Clear Filters
+                  <Filter className="w-3 h-3 mr-1" />
+                  {showFilters ? "Hide" : "Show"} Filters
+                </Button>
+                <Button
+                  onClick={handleCreateContact}
+                  className="h-7 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
+                >
+                  <UserPlus className="w-3 h-3 mr-1" />
+                  Add Contact
                 </Button>
               </div>
             </div>
+
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+                {/* Date Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Date
+                  </Label>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      handleFilterChange();
+                    }}
+                    className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* Created By Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5" />
+                    Created By
+                  </Label>
+                  <Select
+                    value={selectedUser}
+                    onValueChange={(value) => {
+                      console.log("Selected user:", value);
+                      setSelectedUser(value);
+                      handleFilterChange();
+                    }}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
+                      <SelectValue placeholder="All users" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All users</SelectItem>
+                      {users.length > 0 &&
+                      !users.some((u) => u.name === "John Doe") ? (
+                        users.map((user) => (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            {user.name}
+                          </SelectItem>
+                        ))
+                      ) : usersLoading ? null : (
+                        <>
+                          <SelectItem value="1">Abid</SelectItem>
+                          <SelectItem value="2">John Doe</SelectItem>
+                          <SelectItem value="3">Jane Smith</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Period Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Period
+                  </Label>
+                  <Select
+                    value={selectedPeriod}
+                    onValueChange={(value) => {
+                      setSelectedPeriod(value);
+                      handleFilterChange();
+                    }}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
+                      <SelectValue placeholder="All time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All time</SelectItem>
+                      <SelectItem value="week">This week</SelectItem>
+                      <SelectItem value="month">This month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

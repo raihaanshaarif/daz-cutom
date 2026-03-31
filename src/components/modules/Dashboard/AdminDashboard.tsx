@@ -456,10 +456,10 @@ const AdminDashboard = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Admin Dashboard
+              Expression Admin Dashboard
             </h1>
             <p className="text-sm text-gray-500">
-              System-wide activity overview
+              System-wide Expression activity overview
             </p>
           </div>
         </div>

@@ -67,6 +67,7 @@ export interface Order {
   shipmentSample?: string | null;
   inspection?: string | null;
   exFactory?: string | null;
+  isShipped?: boolean;
   overallRemarks?: string;
   commissionStatus?: string;
   commissionAmount?: number | null;
@@ -164,6 +165,7 @@ export interface OrderItem {
   inspection?: string | null;
   exfactory?: string | null;
   overallRemarks?: string;
+  isShipped?: boolean;
 }
 
 export interface OrderStats {

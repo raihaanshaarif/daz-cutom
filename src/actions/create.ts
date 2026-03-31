@@ -326,6 +326,7 @@ export const createOrder = async (data: FormData) => {
     commissionAmount: toFloat(o.commissionAmount),
     buyerId: toInt(o.buyerId),
     factoryId: toInt(o.factoryId),
+    isShipped: o.isShipped === "true",
     createdById: toInt(session?.user?.id as string),
   };
 
@@ -384,6 +385,7 @@ export const updateOrder = async (id: number, data: FormData) => {
     paymentTerm: o.paymentTerm || undefined,
     buyerId: toInt(o.buyerId),
     factoryId: toInt(o.factoryId),
+    isShipped: o.isShipped === "true",
     commissionStatus: o.commissionStatus || undefined,
     commissionAmount: toFloat(o.commissionAmount),
     overallRemarks: o.overallRemarks || undefined,

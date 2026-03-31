@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ export default function CreateOrderForm() {
   const [selectedFactoryId, setSelectedFactoryId] = useState("");
   const [selectedCommissionStatus, setSelectedCommissionStatus] =
     useState("PENDING");
+  const [isShipped, setIsShipped] = useState(false);
   const [quantity, setQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
   const [factoryUnitPrice, setFactoryUnitPrice] = useState<number | "">("");
@@ -95,6 +97,7 @@ export default function CreateOrderForm() {
       formData.set("buyerId", selectedBuyerId);
       formData.set("factoryId", selectedFactoryId);
       formData.set("commissionStatus", selectedCommissionStatus);
+      formData.set("isShipped", String(isShipped));
       formData.set("totalPrice", totalPrice.toString());
       if (totalFactoryPrice != null)
         formData.set("totalFactoryPrice", totalFactoryPrice.toString());
@@ -419,6 +422,19 @@ export default function CreateOrderForm() {
                 color="from-orange-500 to-orange-600"
                 title="Remarks"
               />
+              <div className="flex items-center space-x-2 mb-4">
+                <Checkbox
+                  id="isShipped"
+                  checked={isShipped}
+                  onCheckedChange={(checked) => setIsShipped(!!checked)}
+                />
+                <Label
+                  htmlFor="isShipped"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  Has this order been shipped?
+                </Label>
+              </div>
               <Field label="Overall Remarks">
                 <Textarea
                   name="overallRemarks"

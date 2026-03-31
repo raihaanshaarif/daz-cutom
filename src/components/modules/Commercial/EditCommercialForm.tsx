@@ -136,51 +136,29 @@ export function EditCommercialForm({
 
     setLoading(true);
     try {
-      // Prepare data object for JSON request
-      const dataToSend: Record<string, unknown> = {};
-
-      // Only send fields that have changed from the original commercial
-      Object.entries(formData).forEach(([key, value]) => {
-        const originalValue = commercial[key as keyof Commercial];
-
-        // Handle date fields
-        if (/(Date|At)$/i.test(key) && typeof value === "string") {
-          const dateVal = new Date(value);
-          if (!isNaN(dateVal.getTime())) {
-            const isoString = dateVal.toISOString();
-            if (originalValue !== isoString) {
-              dataToSend[key] = isoString;
-            }
-          }
-          return;
-        }
-
-        // For other fields, send if they've changed
-        if (value !== originalValue) {
-          dataToSend[key] = value;
-        }
-      });
-
-      // Check if orders changed
-      const originalOrderIds =
-        commercial.orders?.map((co) => co.orderId).sort() || [];
-      const currentOrderIds = selectedOrderIds.sort();
-      if (
-        JSON.stringify(originalOrderIds) !== JSON.stringify(currentOrderIds)
-      ) {
-        dataToSend.orderIds = currentOrderIds;
-      }
-
-      console.log("Original order IDs:", originalOrderIds);
-      console.log("Current order IDs:", currentOrderIds);
-      console.log("Data to send:", dataToSend);
-
-      // Ensure we have at least some data to update
-      if (Object.keys(dataToSend).length === 0) {
-        toast.error("No changes to update");
-        setLoading(false);
-        return;
-      }
+      // Direct updates based on formData
+      const dataToSend = {
+        ...formData,
+        // Ensure date fields are sent as ISO strings or null
+        bookingDate: formData.bookingDate
+          ? new Date(formData.bookingDate).toISOString()
+          : null,
+        bookingHandoverDate: formData.bookingHandoverDate
+          ? new Date(formData.bookingHandoverDate).toISOString()
+          : null,
+        handoverDate: formData.handoverDate
+          ? new Date(formData.handoverDate).toISOString()
+          : null,
+        etd: formData.etd ? new Date(formData.etd).toISOString() : null,
+        eta: formData.eta ? new Date(formData.eta).toISOString() : null,
+        approximatePaymentDate: formData.approximatePaymentDate
+          ? new Date(formData.approximatePaymentDate).toISOString()
+          : null,
+        receivedDate: formData.receivedDate
+          ? new Date(formData.receivedDate).toISOString()
+          : null,
+        orderIds: selectedOrderIds,
+      };
 
       console.log("Updating commercial with data:", dataToSend);
 
@@ -200,21 +178,8 @@ export function EditCommercialForm({
         onSuccess();
         onClose();
       } else {
-        let errorMessage = "Failed to update commercial";
-        try {
-          const contentType = res.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-            const errorData = await res.json();
-            errorMessage = errorData.message || errorMessage;
-          } else {
-            const textResponse = await res.text();
-            console.error("Non-JSON error response:", textResponse);
-          }
-        } catch (parseError) {
-          console.error("Error parsing error response:", parseError);
-          errorMessage = `Failed to update commercial (${res.status})`;
-        }
-        toast.error(errorMessage);
+        const errorData = await res.json();
+        toast.error(errorData.message || "Failed to update commercial");
       }
     } catch (error) {
       console.error("Error updating commercial:", error);

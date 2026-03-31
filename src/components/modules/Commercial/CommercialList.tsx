@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CommercialTable } from "./CommercialTable";
 import { EditCommercialForm } from "./EditCommercialForm";
 import { ViewCommercialModal } from "./ViewCommercialModal";
-import { Users, Database, Filter, Calendar, X } from "lucide-react";
+import { Users, Database, Filter, Calendar, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function CommercialList() {
   const [commercials, setCommercials] = useState<Commercial[]>([]);
@@ -39,6 +40,9 @@ export default function CommercialList() {
   );
   const [allCommercialsPagination, setAllCommercialsPagination] =
     useState<Pagination | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const router = useRouter();
 
   // Edit modal state
   const [editingCommercial, setEditingCommercial] = useState<Commercial | null>(
@@ -48,6 +52,17 @@ export default function CommercialList() {
   // View modal state
   const [viewCommercial, setViewCommercial] = useState<Commercial | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    selectedDate ||
+    selectedPeriod !== "all" ||
+    selectedPaymentStatus !== "all" ||
+    selectedDocumentStatus !== "all";
+
+  const handleCreateCommercial = () => {
+    router.push("/dashboard/commercial/create-invoice");
+  };
 
   useEffect(() => {
     const fetchCommercials = async () => {
@@ -146,6 +161,10 @@ export default function CommercialList() {
     }
   };
 
+  const clearAllFilters = () => {
+    clearFilters();
+  };
+
   const handleEditCommercial = (commercial: Commercial) => {
     setEditingCommercial(commercial);
     setIsEditModalOpen(true);
@@ -226,129 +245,151 @@ export default function CommercialList() {
           </h1>
           <p className="text-gray-500 text-xs">
             Manage your commercial records ({totalCommercials} total)
+            {hasActiveFilters && (
+              <span className="ml-2 text-blue-600 font-medium">
+                • Showing {commercials.length} filtered results
+              </span>
+            )}
           </p>
         </div>
 
         {/* Filters */}
         <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
           <div className="p-3 lg:p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                <Filter className="w-3 h-3 text-white" />
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
+                  <Filter className="w-3 h-3 text-white" />
+                </div>
+                <h2 className="text-xs font-medium text-gray-900">Filters</h2>
+                {hasActiveFilters && (
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Clear All
+                  </Button>
+                )}
               </div>
-              <h2 className="text-xs font-medium text-gray-900">Filters</h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              {/* Date Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Booking Date
-                </Label>
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value);
-                    handleFilterChange();
-                  }}
-                  className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Period Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Period
-                </Label>
-                <Select
-                  value={selectedPeriod}
-                  onValueChange={(value) => {
-                    setSelectedPeriod(value);
-                    handleFilterChange();
-                  }}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                    <SelectValue placeholder="All time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All time</SelectItem>
-                    <SelectItem value="week">This week</SelectItem>
-                    <SelectItem value="month">This month</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Payment Status Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  Payment Status
-                </Label>
-                <Select
-                  value={selectedPaymentStatus}
-                  onValueChange={(value) => {
-                    setSelectedPaymentStatus(value);
-                    handleFilterChange();
-                  }}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="PAID">Paid</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="PARTIAL">Partial</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Document Status Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  Document Status
-                </Label>
-                <Select
-                  value={selectedDocumentStatus}
-                  onValueChange={(value) => {
-                    setSelectedDocumentStatus(value);
-                    handleFilterChange();
-                  }}
-                >
-                  <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="PREPARING">Preparing</SelectItem>
-                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                    <SelectItem value="REVISED">Revised</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Clear Filters */}
-              <div className="space-y-1.5 md:col-span-4">
-                <Label className="text-xs font-medium text-gray-700 opacity-0">
-                  Clear
-                </Label>
+              <div className="flex gap-2">
                 <Button
-                  onClick={clearFilters}
+                  onClick={() => setShowFilters(!showFilters)}
                   variant="outline"
                   size="sm"
-                  className="h-7 w-full text-xs border-gray-200 hover:border-red-500 hover:text-red-600"
+                  className="h-7 px-3 text-xs"
                 >
-                  <X className="w-3 h-3 mr-1" />
-                  Clear Filters
+                  <Filter className="w-3 h-3 mr-1" />
+                  {showFilters ? "Hide" : "Show"} Filters
+                </Button>
+                <Button
+                  onClick={handleCreateCommercial}
+                  className="h-7 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
+                >
+                  <FileText className="w-3 h-3 mr-1" />
+                  Add Commercial
                 </Button>
               </div>
             </div>
+
+            {showFilters && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
+                {/* Date Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Booking Date
+                  </Label>
+                  <Input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      handleFilterChange();
+                    }}
+                    className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* Period Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    Period
+                  </Label>
+                  <Select
+                    value={selectedPeriod}
+                    onValueChange={(value) => {
+                      setSelectedPeriod(value);
+                      handleFilterChange();
+                    }}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
+                      <SelectValue placeholder="All time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All time</SelectItem>
+                      <SelectItem value="week">This week</SelectItem>
+                      <SelectItem value="month">This month</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Payment Status Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    Payment Status
+                  </Label>
+                  <Select
+                    value={selectedPaymentStatus}
+                    onValueChange={(value) => {
+                      setSelectedPaymentStatus(value);
+                      handleFilterChange();
+                    }}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="PAID">Paid</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="PARTIAL">Partial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Document Status Filter */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
+                    Document Status
+                  </Label>
+                  <Select
+                    value={selectedDocumentStatus}
+                    onValueChange={(value) => {
+                      setSelectedDocumentStatus(value);
+                      handleFilterChange();
+                    }}
+                  >
+                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="PREPARING">Preparing</SelectItem>
+                      <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="REVISED">Revised</SelectItem>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

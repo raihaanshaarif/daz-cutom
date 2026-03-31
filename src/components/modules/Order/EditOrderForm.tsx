@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -11,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Package, User, Building, DollarSign } from "lucide-react";
+import { Package, User, Building, DollarSign, Truck } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Buyer, Factory, Order } from "@/types";
@@ -85,6 +86,7 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
   const [selectedCommissionStatus, setSelectedCommissionStatus] = useState(
     order.commissionStatus ?? "",
   );
+  const [isShipped, setIsShipped] = useState(order.isShipped ?? false);
   const [stages, setStages] = useState<Record<string, string>>(
     Object.fromEntries(
       DATE_STAGES.map(({ key }) => [key, (order[key] as string | null) ?? ""]),
@@ -119,6 +121,7 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
       formData.set("buyerId", selectedBuyerId);
       formData.set("factoryId", selectedFactoryId);
       formData.set("commissionStatus", selectedCommissionStatus);
+      formData.set("isShipped", String(isShipped));
 
       const result = await updateOrder(order.id, formData);
 
@@ -163,6 +166,13 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
               defaultValue={order.orderNumber}
               className="h-8"
             />
+            {order.isShipped && (
+              <div className="mt-2.5">
+                <span className="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded font-bold uppercase border border-green-200">
+                  Currently Shipped
+                </span>
+              </div>
+            )}
           </Field>
           <Field label="Ship Date">
             <Input
@@ -386,7 +396,20 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
       </section>
 
       {/* Overall Remarks */}
-      <section>
+      <section className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="isShipped"
+            checked={isShipped}
+            onCheckedChange={(checked) => setIsShipped(!!checked)}
+          />
+          <Label
+            htmlFor="isShipped"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Has this order been shipped?
+          </Label>
+        </div>
         <Field label="Overall Remarks">
           <Textarea
             name="overallRemarks"

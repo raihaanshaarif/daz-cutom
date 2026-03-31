@@ -22,6 +22,7 @@ import {
   Eye,
   Edit,
   Trash2,
+  FileDown,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -312,6 +313,58 @@ export function CommercialTable({
     },
   });
 
+  const exportToExcel = () => {
+    // Get visible columns (exclude select and actions)
+    const visibleColumns = table
+      .getAllColumns()
+      .filter(
+        (col) =>
+          col.getIsVisible() && col.id !== "select" && col.id !== "actions",
+      );
+
+    // Get headers
+    const headers = visibleColumns.map((col) => col.id);
+
+    // Get filtered rows
+    const rows = table.getFilteredRowModel().rows.map((row) => {
+      return visibleColumns.map((col) => {
+        const value = row.getValue(col.id);
+        // Handle null/undefined
+        if (value === null || value === undefined) return "";
+        // Format dates
+        if (col.id.toLowerCase().includes("date") && value instanceof Date) {
+          return value.toLocaleDateString();
+        }
+        // Handle objects (like nested buyer/factory)
+        if (typeof value === "object") return JSON.stringify(value);
+        // Escape quotes for CSV
+        return String(value).replace(/"/g, '""');
+      });
+    });
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    // Create blob and download
+    const blob = new Blob(["\ufeff" + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `commercials_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="w-full">
       {/* Search and Filters */}
@@ -348,6 +401,15 @@ export function CommercialTable({
             }
             className="h-7 w-40 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
           />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToExcel}
+            className="h-7 px-2 text-xs border-gray-200 hover:border-blue-500 mr-1.5"
+          >
+            <FileDown className="mr-1 h-3 w-3" />
+            Export
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
