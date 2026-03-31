@@ -160,17 +160,14 @@ const AdminCommandCenter = () => {
           ? usersRes
           : usersRes?.data || [];
 
-        // 3. Enrich Users with Tasks for Performance Tracking
-        const taskResults = await Promise.all(
-          userList.map((u) =>
-            fetch(`${baseUrl}/task/my?userId=${u.id}&limit=100`).then((r) =>
-              r.json(),
-            ),
-          ),
-        );
-        userList.forEach((u, i) => {
-          const json = taskResults[i];
-          u.tasks = Array.isArray(json) ? json : json?.data || [];
+        // 3. Enrich Users with Tasks for Performance Tracking (single batch call)
+        const userIds = userList.map((u) => u.id).join(",");
+        const batchTaskRes = await fetch(
+          `${baseUrl}/task/batch?userIds=${userIds}`,
+        ).then((r) => r.json());
+        userList.forEach((u) => {
+          const userTasks = batchTaskRes[u.id];
+          u.tasks = Array.isArray(userTasks) ? userTasks : [];
         });
 
         // 4. Calculate User Performance Metrics (Leads & Tasks)

@@ -63,21 +63,14 @@ const AdminDashboard = () => {
           ? userData
           : [];
 
-        // Fetch tasks for every user in parallel
-        const taskResults = await Promise.all(
-          userList.map((u) =>
-            fetch(
-              `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${u.id}&limit=100`,
-            ).then((r) => r.json()),
-          ),
-        );
-        userList.forEach((u, i) => {
-          const json = taskResults[i];
-          u.tasks = Array.isArray(json)
-            ? json
-            : Array.isArray(json?.data)
-              ? json.data
-              : [];
+        // Fetch tasks for all users in a single batch call
+        const userIds = userList.map((u) => u.id).join(",");
+        const batchTaskRes = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/task/batch?userIds=${userIds}`,
+        ).then((r) => r.json());
+        userList.forEach((u) => {
+          const userTasks = batchTaskRes[u.id];
+          u.tasks = Array.isArray(userTasks) ? userTasks : [];
         });
 
         setUsers(userList);
