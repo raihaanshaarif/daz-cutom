@@ -4,7 +4,6 @@ import React from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
 import {
   Form,
   FormControl,
@@ -45,10 +44,6 @@ export default function LoginForm() {
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const handleSocialLogin = (provider: "google" | "github") => {
-    console.log(`Login with ${provider}`);
   };
 
   return (

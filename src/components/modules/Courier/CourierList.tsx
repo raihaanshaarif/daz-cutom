@@ -1,7 +1,7 @@
 "use client";
 
 import { Courier } from "@/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import { Database, Filter, Truck, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ export default function CourierList() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Extract fetchCouriers as a separate function
-  const fetchCouriers = async () => {
+  const fetchCouriers = useCallback(async () => {
     if (!userId || !userRole) return;
     setLoading(true);
     try {
@@ -76,11 +76,11 @@ export default function CourierList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, userRole, currentPage, searchTerm, limit]);
 
   useEffect(() => {
     fetchCouriers();
-  }, [userId, userRole, currentPage, searchTerm]);
+  }, [fetchCouriers]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

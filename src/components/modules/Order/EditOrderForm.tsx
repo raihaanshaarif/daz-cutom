@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Package, User, Building, DollarSign, Truck } from "lucide-react";
+import { Package, User, Building, DollarSign } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Buyer, Factory, Order } from "@/types";

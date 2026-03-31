@@ -35,7 +35,7 @@ export default function CreateCountryForm() {
           description: "Please check your information and try again.",
         });
       }
-    } catch (e) {
+    } catch {
       toast.error("An error occurred", {
         description: "Please try again later.",
       });

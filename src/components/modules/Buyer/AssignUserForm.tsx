@@ -73,7 +73,7 @@ const AssignUserForm = () => {
       } else {
         toast.error(result?.message || "Failed to assign user.");
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -102,7 +102,7 @@ const AssignUserForm = () => {
       let result = null;
       try {
         result = await res.json();
-      } catch (jsonErr) {
+      } catch {
         // If response is not JSON, log the raw text
         const text = await res.text();
         console.error("Deassign response not JSON:", text);

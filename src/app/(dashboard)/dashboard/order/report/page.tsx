@@ -22,7 +22,6 @@ export default function OrderReportPage() {
 
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,7 +71,6 @@ export default function OrderReportPage() {
         );
         const { data } = await res.json();
         const ordersData = data || [];
-        setOrders(ordersData);
 
         // Map to OrderItem format for table
         const mappedItems: OrderItem[] = ordersData.map((order: Order) => ({

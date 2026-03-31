@@ -24,8 +24,6 @@ export default function CreateParcelForm() {
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [loadingBuyers, setLoadingBuyers] = useState(false);
   const [loadingCouriers, setLoadingCouriers] = useState(false);
-  const [buyerSearch, setBuyerSearch] = useState("");
-  const [courierSearch, setCourierSearch] = useState("");
   const router = useRouter();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
@@ -39,7 +37,6 @@ export default function CreateParcelForm() {
         const params = new URLSearchParams({
           page: "1",
           limit: "100",
-          ...(buyerSearch && { search: buyerSearch }),
         });
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers?${params}`,
@@ -62,9 +59,8 @@ export default function CreateParcelForm() {
       }
     };
 
-    const debounceTimer = setTimeout(fetchBuyers, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [buyerSearch, userId, session?.user?.role]);
+    fetchBuyers();
+  }, [userId, session?.user?.role]);
 
   // Fetch couriers
   useEffect(() => {
@@ -75,7 +71,6 @@ export default function CreateParcelForm() {
         const params = new URLSearchParams({
           page: "1",
           limit: "100",
-          ...(courierSearch && { search: courierSearch }),
         });
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?${params}`,
@@ -98,9 +93,8 @@ export default function CreateParcelForm() {
       }
     };
 
-    const debounceTimer = setTimeout(fetchCouriers, 300);
-    return () => clearTimeout(debounceTimer);
-  }, [courierSearch, userId, session?.user?.role]);
+    fetchCouriers();
+  }, [userId, session?.user?.role]);
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);

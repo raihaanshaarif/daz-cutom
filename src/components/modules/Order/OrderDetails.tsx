@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Package,
@@ -14,10 +13,10 @@ import {
   CircleDollarSign,
   Info,
   Layers,
-  Truck,
   Hash,
   FileText,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Order } from "@/types";
 
 interface OrderDetailsProps {
@@ -31,7 +30,7 @@ function Section({
   children,
 }: {
   title: string;
-  icon: any;
+  icon: LucideIcon;
   children: React.ReactNode;
 }) {
   return (
@@ -57,7 +56,7 @@ function Row({
 }: {
   label: string;
   value?: React.ReactNode;
-  icon?: any;
+  icon?: LucideIcon;
   children?: React.ReactNode;
 }) {
   return (

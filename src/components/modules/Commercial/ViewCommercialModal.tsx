@@ -13,14 +13,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
-  DollarSign,
   FileText,
   Package,
-  Truck,
   CreditCard,
   Clock,
-  User,
-  Building,
   ArrowLeft,
   CheckCircle,
   AlertCircle,

@@ -15,7 +15,6 @@ export default function BuyerList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalBuyers, setTotalBuyers] = useState(0);
-  const limit = 10;
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");

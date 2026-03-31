@@ -14,7 +14,6 @@ export default function FactoryList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalFactories, setTotalFactories] = useState(0);
-  const limit = 10;
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");

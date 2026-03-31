@@ -2,7 +2,6 @@ import { getUserSession } from "@/helpers/getUserSession";
 
 import UserDashboard from "@/components/modules/Dashboard/UserDashboard";
 import AdminCommandCenter from "@/components/modules/Dashboard/AdminCommandCenter";
-import AdminDashboard from "@/components/modules/Dashboard/AdminDashboard";
 
 export default async function DashboardHome() {
   const session = await getUserSession();
@@ -10,5 +9,4 @@ export default async function DashboardHome() {
   const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
 
   return isAdmin ? <AdminCommandCenter /> : <UserDashboard />;
-  // return isAdmin ? <AdminDashboard /> : <UserDashboard />;
 }
