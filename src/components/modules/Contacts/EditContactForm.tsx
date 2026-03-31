@@ -149,6 +149,13 @@ export function EditContactForm({
       console.log("Original contact:", contact);
       console.log("Form data:", formData);
       console.log("Data to send:", dataToSend);
+      console.log("Session:", session);
+
+      // Add modifiedById from current session
+      if (session?.user?.id) {
+        dataToSend.modifiedById = Number(session.user.id);
+        console.log("Added modifiedById:", dataToSend.modifiedById);
+      }
 
       // Ensure we have at least some data to update
       if (Object.keys(dataToSend).length === 0) {
@@ -157,12 +164,7 @@ export function EditContactForm({
         return;
       }
 
-      // Add modifiedById from current session
-      if (session?.user?.id) {
-        dataToSend.modifiedById = parseInt(session.user.id);
-      }
-
-      console.log("Updating contact with data:", dataToSend);
+      console.log("Final data to send:", dataToSend);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/contact/${contact.id}`,
