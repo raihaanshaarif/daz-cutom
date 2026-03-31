@@ -22,8 +22,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Maximize2, Minimize2 } from "lucide-react";
 import { ColorThemeSelector } from "@/components/shared/ColorThemeSelector";
+import { Button } from "@/components/ui/button";
 
 const ROUTE_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -48,6 +49,40 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  // Load and apply initial state only after mount
+  React.useEffect(() => {
+    const savedState = localStorage.getItem("isFullscreen") === "true";
+    // Important: We only set the state, we don't trigger the actual fullscreen
+    // here because browsers require a user gesture to enter fullscreen.
+    // However, if the user was already in fullscreen (e.g. reload),
+    // the document.fullscreenElement check is more reliable.
+    setIsFullscreen(!!document.fullscreenElement);
+
+    const handleFullscreenChange = () => {
+      const current = !!document.fullscreenElement;
+      setIsFullscreen(current);
+      localStorage.setItem("isFullscreen", String(current));
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   // Build breadcrumb segments from path
   const segments = pathname.split("/").filter(Boolean);
@@ -85,6 +120,20 @@ export function SiteHeader() {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground transition-colors hover:text-foreground"
+        onClick={toggleFullscreen}
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+      >
+        {isFullscreen ? (
+          <Minimize2 className="size-4" />
+        ) : (
+          <Maximize2 className="size-4" />
+        )}
+      </Button>
 
       <ColorThemeSelector />
 
