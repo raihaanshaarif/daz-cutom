@@ -348,7 +348,7 @@ export default function ContactList() {
             <Users className="w-4 h-4 text-white" />
           </div>
           <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            My Contacts
+            All Leads
           </h1>
           <p className="text-gray-500 text-xs">
             Manage your leads ({totalContacts} total)

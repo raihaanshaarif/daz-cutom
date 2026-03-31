@@ -255,6 +255,16 @@ export function ContactTable({
         },
       },
       {
+        accessorKey: "modifiedBy",
+        header: "Modified By",
+        cell: ({ row }) => {
+          const modifiedBy = row.getValue("modifiedBy") as
+            | { name: string }
+            | undefined;
+          return <div className="capitalize">{modifiedBy?.name || "-"}</div>;
+        },
+      },
+      {
         accessorKey: "createdAt",
         header: "Created At",
         cell: ({ row }) => {

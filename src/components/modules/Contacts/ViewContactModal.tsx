@@ -211,17 +211,23 @@ export function ViewContactModal({
               <div className="pt-4 mt-4 border-t grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest leading-none mb-1">
-                    Created
+                    Created By
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-700 font-medium">
+                    {contact.author?.name || "—"}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
                     {formatDate(contact.createdAt as string)}
                   </p>
                 </div>
                 <div>
                   <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest leading-none mb-1">
-                    Last Modified
+                    Modified By
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-700 font-medium">
+                    {contact.modifiedBy?.name || "—"}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
                     {formatDate(contact.updatedAt as string)}
                   </p>
                 </div>
