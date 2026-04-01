@@ -12,7 +12,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, ChevronLeft, Tag } from "lucide-react";
+import {
+  Package,
+  ChevronLeft,
+  Tag,
+  Info,
+  CheckCircle2,
+  Calendar,
+} from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -369,6 +376,93 @@ export default function CreateSampleForm() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Sidebar - Right Column */}
+          <div className="lg:col-span-3 space-y-6">
+            <Card className="rounded-2xl border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden bg-white dark:bg-zinc-900 h-fit">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  Quick Start
+                </h2>
+                <p className="text-xs text-zinc-500">
+                  Step-by-step sample creation process
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {[
+                    {
+                      title: "Define Basics",
+                      desc: "Style, buyer & factory details",
+                      icon: "Tag",
+                      completed: true,
+                    },
+                    {
+                      title: "Product Details",
+                      desc: "Season, color, fabric & sizing",
+                      icon: "Package",
+                      completed: true,
+                    },
+                    {
+                      title: "Quality Standards",
+                      desc: "Fabric quality & composition",
+                      icon: "CheckCircle2",
+                      completed: true,
+                    },
+                    {
+                      title: "Tracking Setup",
+                      desc: "Deadlines & milestones",
+                      icon: "Calendar",
+                      completed: false,
+                    },
+                  ].map((step, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div
+                        className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-semibold transition-colors ${
+                          step.completed
+                            ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
+                        }`}
+                      >
+                        {step.completed ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                          <span>{index + 1}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 text-sm">
+                          {step.title}
+                        </h4>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
+              <div className="flex items-start gap-4 text-sm leading-relaxed">
+                <div className="h-10 w-10 rounded-full bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center shrink-0">
+                  <Info className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                    Sample Creation Guidelines
+                  </h4>
+                  <p className="text-zinc-500 dark:text-zinc-400">
+                    Ensure all required fields are completed. Style numbers
+                    should be unique and follow your brand&apos;s naming
+                    convention. Track all quality parameters for successful
+                    production.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </div>

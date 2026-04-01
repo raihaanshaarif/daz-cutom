@@ -251,7 +251,7 @@ export default function DevelopmentList() {
           </div>
         </div>
 
-        <DevelopmentStats />
+        {/* <DevelopmentStats /> */}
 
         <div className="space-y-8">
           {/* Header for Filter Section */}
