@@ -54,7 +54,6 @@ export function SiteHeader() {
 
   // Load and apply initial state only after mount
   React.useEffect(() => {
-    const savedState = localStorage.getItem("isFullscreen") === "true";
     // Important: We only set the state, we don't trigger the actual fullscreen
     // here because browsers require a user gesture to enter fullscreen.
     // However, if the user was already in fullscreen (e.g. reload),

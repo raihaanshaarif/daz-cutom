@@ -5,9 +5,16 @@ import { useEffect, useState, useRef } from "react";
 import { OrderTable } from "./OrderTable";
 import EditOrderForm from "./EditOrderForm";
 import OrderDetails from "./OrderDetails";
-import { Package, Filter, User, TrendingUp, X, Plus } from "lucide-react";
+import { Package, Plus, ShoppingCart, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -15,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -45,7 +51,6 @@ export default function OrderList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [showFilters, setShowFilters] = useState(false);
 
   const router = useRouter();
 
@@ -58,13 +63,6 @@ export default function OrderList() {
   // Data for filters
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
-
-  // Check if any filters are active
-  const hasActiveFilters =
-    selectedStatus !== "all" ||
-    selectedBuyer !== "all" ||
-    selectedFactory !== "all" ||
-    searchTerm !== "";
 
   const handleCreateOrder = () => {
     router.push("/dashboard/order/create-order");
@@ -276,185 +274,188 @@ export default function OrderList() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-2 px-4">
-      <div className="w-full mx-auto">
-        {/* Header */}
-        <div className="mb-3 text-center">
-          <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-1 shadow-md">
-            <Package className="w-4 h-4 text-white" />
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-4 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto space-y-6">
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+              <ShoppingCart className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Order List
+              </h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Manage and track order fulfillment across {totalOrders} records
+              </p>
+            </div>
           </div>
-          <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            Orders
-          </h1>
-          <p className="text-gray-500 text-xs">
-            Manage orders ({totalOrders} total)
-            {hasActiveFilters && (
-              <span className="ml-2 text-blue-600 font-medium">
-                • Showing {orders.length} filtered results
-              </span>
-            )}
-          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-10 px-4 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <Button
+              onClick={handleCreateOrder}
+              className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 group"
+            >
+              <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
+              Add Order
+            </Button>
+          </div>
         </div>
 
-        {/* Stats */}
-        {/* <div className="mb-4">
-          <OrderStats />
-        </div> */}
-
-        {/* Filters */}
-        <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                  <Filter className="w-3 h-3 text-white" />
-                </div>
-                <h2 className="text-xs font-medium text-gray-900">Filters</h2>
-                {hasActiveFilters && (
-                  <Button
-                    onClick={clearAllFilters}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Clear All
-                  </Button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowFilters(!showFilters)}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                >
-                  <Filter className="w-3 h-3 mr-1" />
-                  {showFilters ? "Hide" : "Show"} Filters
-                </Button>
-                <Button
-                  onClick={handleCreateOrder}
-                  className="h-7 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
-                >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Add Order
-                </Button>
-              </div>
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <div className="w-48 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Status
+              </Label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All Status
+                  </SelectItem>
+                  <SelectItem value="PENDING" className="rounded-lg">
+                    Not Shipped
+                  </SelectItem>
+                  <SelectItem value="PAID" className="rounded-lg">
+                    Shipped
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-3">
-                {/* Search Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Package className="w-3.5 h-3.5" />
-                    Search Orders
-                  </Label>
-                  <Input
-                    type="text"
-                    placeholder="Search by order number..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+            <div className="w-56 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Buyer
+              </Label>
+              <Select value={selectedBuyer} onValueChange={setSelectedBuyer}>
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
+                  <SelectValue placeholder="Buyer" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All Buyers
+                  </SelectItem>
+                  {buyers.map((buyer) => (
+                    <SelectItem
+                      key={buyer.id}
+                      value={buyer.id.toString()}
+                      className="rounded-lg"
+                    >
+                      {buyer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Commission Status Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    Commission Status
-                  </Label>
-                  <Select
-                    value={selectedStatus}
-                    onValueChange={setSelectedStatus}
-                  >
-                    <SelectTrigger className="h-7 text-xs border-gray-200">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="PAID">Paid</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="w-56 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Factory
+              </Label>
+              <Select
+                value={selectedFactory}
+                onValueChange={setSelectedFactory}
+              >
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
+                  <SelectValue placeholder="Factory" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All Factories
+                  </SelectItem>
+                  {factories.map((factory) => (
+                    <SelectItem
+                      key={factory.id}
+                      value={factory.id.toString()}
+                      className="rounded-lg"
+                    >
+                      {factory.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Buyer Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" />
-                    Buyer
-                  </Label>
-                  <Select
-                    value={selectedBuyer}
-                    onValueChange={setSelectedBuyer}
-                  >
-                    <SelectTrigger className="h-7 text-xs border-gray-200">
-                      <SelectValue placeholder="All Buyers" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Buyers</SelectItem>
-                      {buyers.map((buyer) => (
-                        <SelectItem key={buyer.id} value={buyer.id.toString()}>
-                          {buyer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Factory Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Package className="w-3.5 h-3.5" />
-                    Factory
-                  </Label>
-                  <Select
-                    value={selectedFactory}
-                    onValueChange={setSelectedFactory}
-                  >
-                    <SelectTrigger className="h-7 text-xs border-gray-200">
-                      <SelectValue placeholder="All Factories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Factories</SelectItem>
-                      {factories.map((factory) => (
-                        <SelectItem
-                          key={factory.id}
-                          value={factory.id.toString()}
-                        >
-                          {factory.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            {(selectedStatus !== "all" ||
+              selectedBuyer !== "all" ||
+              selectedFactory !== "all") && (
+              <div className="space-y-2">
+                <div className="h-4" /> {/* Spacer to align with labels */}
+                <Button
+                  onClick={clearAllFilters}
+                  variant="ghost"
+                  size="sm"
+                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
+                >
+                  Reset Filters
+                </Button>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Order Table */}
-        <div className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <OrderTable
-              data={orderItems}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              onEdit={handleEditOrder}
-              onView={handleViewOrder}
-              onDelete={handleDeleteOrder}
-            />
+            <div className="ml-auto space-y-2 min-w-[140px]">
+              <div className="h-4" /> {/* Spacer to align with labels */}
+              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                  {orders.length} / {totalOrders} Records
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full">
+            {/* Main Table Content */}
+            <div className="w-full">
+              <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">
+                <CardHeader className="pb-4 pt-8 px-8 border-b border-zinc-50 dark:border-zinc-800">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                        Order Listings
+                      </CardTitle>
+                      <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
+                        Browse and manage all registered procurement records
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-8 pb-8 pt-6">
+                  <OrderTable
+                    data={orderItems}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    onEdit={handleEditOrder}
+                    onView={handleViewOrder}
+                    onDelete={handleDeleteOrder}
+                  />
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
 
         {/* Edit Order Modal */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
             <DialogHeader>
-              <DialogTitle>Edit Order</DialogTitle>
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5" />
+                </div>
+                Edit Order: {editingOrder?.orderNumber}
+              </DialogTitle>
             </DialogHeader>
             {editingOrder && (
               <EditOrderForm
@@ -467,9 +468,14 @@ export default function OrderList() {
 
         {/* View Order Modal */}
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Order Details</DialogTitle>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
+            <DialogHeader className="pb-4 border-b border-zinc-100">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                  <ShoppingCart className="w-5 h-5" />
+                </div>
+                Order Summary: {viewingOrder?.orderNumber}
+              </DialogTitle>
             </DialogHeader>
             {viewingOrder && (
               <OrderDetails

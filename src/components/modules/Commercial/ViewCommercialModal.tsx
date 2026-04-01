@@ -314,7 +314,7 @@ export function ViewCommercialModal({
                       Balance
                     </span>
                     <span className="text-lg font-bold text-red-600">
-                      ${commercial.balance.toLocaleString()}
+                      ${commercial.balance?.toLocaleString() ?? "0"}
                     </span>
                   </div>
                 </div>

@@ -5,7 +5,11 @@ import { useEffect, useState } from "react";
 import { CommercialTable } from "./CommercialTable";
 import { EditCommercialForm } from "./EditCommercialForm";
 import { ViewCommercialModal } from "./ViewCommercialModal";
-import { FileText, Plus, ChevronLeft } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  ChevronLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -48,11 +52,6 @@ export default function CommercialList() {
   const [selectedDocumentStatus, setSelectedDocumentStatus] =
     useState<string>("all");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [allCommercialsCache, setAllCommercialsCache] = useState<Commercial[]>(
-    [],
-  );
-  const [allCommercialsPagination, setAllCommercialsPagination] =
-    useState<Pagination | null>(null);
   const router = useRouter();
 
   // Edit modal state
@@ -132,17 +131,7 @@ export default function CommercialList() {
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchCommercials();
-  }, [
-    currentPage,
-    selectedPaymentStatus,
-    selectedDocumentStatus,
-    selectedDate,
-    selectedPeriod,
-    refreshTrigger,
-  ]);
+    }, [freshTrigger]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -201,15 +190,7 @@ export default function CommercialList() {
 
   const handleEditSuccess = () => {
     // Refresh the commercials list by triggering a refetch
-    setRefreshTrigger((prev) => prev + 1);
-  };
-
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditingCommercial(null);
-  };
-
-  const handleCloseViewModal = () => {
+    setRhandleCloseViewModal = () => {
     setIsViewModalOpen(false);
     setViewCommercial(null);
   };

@@ -3,9 +3,8 @@
 import { Parcel, Courier } from "@/types";
 import { useEffect, useState, useCallback } from "react";
 
-import { Database, Filter, Package, X, Calendar, Truck } from "lucide-react";
+import { Package, Truck, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -21,6 +20,20 @@ import { ParcelTable } from "./ParcelTable";
 import { toast } from "sonner";
 import { ViewParcelModal } from "./ViewParcelModal";
 import { EditParcelModal } from "./EditParcelModal";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ParcelList() {
   // Demo data for development
@@ -31,7 +44,7 @@ export default function ParcelList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalParcels, setTotalParcels] = useState(demoParcels.length);
-  const [limit, setLimit] = useState(10);
+  const limit = 10;
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,7 +53,6 @@ export default function ParcelList() {
   const [dateTo, setDateTo] = useState("");
   const [selectedCourier, setSelectedCourier] = useState("");
   const [couriers, setCouriers] = useState<Courier[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
 
   // Access User from session for API calls
   const { data: session } = useSession();
@@ -182,31 +194,20 @@ export default function ParcelList() {
     setCurrentPage(page);
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page when search changes
-  };
-
   const clearAllFilters = () => {
     setSearchTerm("");
     setSelectedMonth("");
     setDateFrom("");
     setDateTo("");
     setSelectedCourier("");
-    setLimit(10);
     setCurrentPage(1);
   };
 
   const hasActiveFilters =
-    searchTerm ||
-    selectedMonth ||
-    dateFrom ||
-    dateTo ||
-    selectedCourier ||
-    limit !== 10;
+    searchTerm || selectedMonth || dateFrom || dateTo || selectedCourier;
 
   const handleCreateParcel = () => {
-    router.push("/dashboard/parcel/create");
+    router.push("/dashboard/parcel/create-parcel");
   };
 
   const handleEditParcel = (parcel: Parcel) => {
@@ -268,325 +269,227 @@ export default function ParcelList() {
     setViewParcel(null);
   };
 
-  if (loading) {
+  if (loading && parcels.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-2 px-4">
-        <div className="w-full mx-auto">
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-3">
-              <Database className="w-4 h-4 text-white animate-pulse" />
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-[1600px] mx-auto space-y-6">
+          <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <Skeleton className="h-12 w-12 rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
             </div>
-            <p className="text-gray-500 text-sm">Loading parcels...</p>
           </div>
+          <Skeleton className="h-[600px] w-full rounded-[32px]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-2 px-4">
-      <div className="w-full mx-auto">
-        {/* Header */}
-        <div className="mb-3 text-center">
-          <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-1 shadow-md">
-            <Package className="w-4 h-4 text-white" />
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-orange-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+              <Package className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Parcel List
+              </h1>
+              <p className="text-base text-zinc-500 dark:text-zinc-400">
+                Manage and track all logistics parcels across {totalParcels}{" "}
+                records
+              </p>
+            </div>
           </div>
-          <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            Parcels
-          </h1>
-          <p className="text-gray-500 text-xs">
-            Manage parcels ({totalParcels} total)
-            {hasActiveFilters && (
-              <span className="ml-2 text-blue-600 font-medium">
-                • Showing {parcels.length} filtered results
-              </span>
-            )}
-          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-11 px-5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all rounded-xl"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <Button
+              onClick={handleCreateParcel}
+              className="h-11 px-6 bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-500/20 transition-all active:scale-95 group rounded-xl"
+            >
+              <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
+              New Parcel
+            </Button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                  <Filter className="w-3 h-3 text-white" />
-                </div>
-                <h2 className="text-xs font-medium text-gray-900">Filters</h2>
-                {hasActiveFilters && (
-                  <Button
-                    onClick={clearAllFilters}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Clear All
-                  </Button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowFilters(!showFilters)}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                >
-                  <Filter className="w-3 h-3 mr-1" />
-                  {showFilters ? "Hide" : "Show"} Filters
-                </Button>
-                <Button
-                  onClick={handleCreateParcel}
-                  className="h-7 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
-                >
-                  <Package className="w-3 h-3 mr-1" />
-                  Add Parcel
-                </Button>
-              </div>
+        <div className="space-y-8">
+          {/* Quick Filters Card */}
+          <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <div className="w-64 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Courier Company
+              </Label>
+              <Select
+                value={selectedCourier}
+                onValueChange={setSelectedCourier}
+              >
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-orange-500/20">
+                  <SelectValue placeholder="Select Courier" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All Couriers
+                  </SelectItem>
+                  {couriers.map((courier) => (
+                    <SelectItem
+                      key={courier.id}
+                      value={courier.id.toString()}
+                      className="rounded-lg"
+                    >
+                      {courier.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-3">
-                {/* Items Per Page Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Database className="w-3.5 h-3.5" />
-                    Items Per Page
-                  </Label>
-                  <Select
-                    value={limit.toString()}
-                    onValueChange={(value) => {
-                      setLimit(parseInt(value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5" className="text-xs">
-                        5 items
-                      </SelectItem>
-                      <SelectItem value="10" className="text-xs">
-                        10 items
-                      </SelectItem>
-                      <SelectItem value="25" className="text-xs">
-                        25 items
-                      </SelectItem>
-                      <SelectItem value="50" className="text-xs">
-                        50 items
-                      </SelectItem>
-                      <SelectItem value="100" className="text-xs">
-                        100 items
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Search Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Package className="w-3.5 h-3.5" />
-                    Search Parcels
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Search by tracking number..."
-                      value={searchTerm}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                    />
-                    {searchTerm && (
-                      <Button
-                        onClick={() => setSearchTerm("")}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 border-gray-200 hover:border-red-500 hover:text-red-600"
+            <div className="w-48 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Inward Month
+              </Label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
+                  <SelectValue placeholder="Month" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All Months
+                  </SelectItem>
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    let label = "";
+                    try {
+                      label = d.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      });
+                    } catch (error) {
+                      label = `${d.getFullYear()} ${d.toLocaleString("default", { month: "long" })}`;
+                    }
+                    const value = `${d.getFullYear()}-${(d.getMonth() + 1)
+                      .toString()
+                      .padStart(2, "0")}`;
+                    return (
+                      <SelectItem
+                        key={value}
+                        value={value}
+                        className="rounded-lg"
                       >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                        {label}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Month Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Month
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="month"
-                      value={selectedMonth}
-                      onChange={(e) => {
-                        setSelectedMonth(e.target.value);
-                        // Clear date range when month is selected
-                        if (e.target.value) {
-                          setDateFrom("");
-                          setDateTo("");
-                        }
-                        setCurrentPage(1);
-                      }}
-                      className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                    />
-                    {selectedMonth && (
-                      <Button
-                        onClick={() => setSelectedMonth("")}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 border-gray-200 hover:border-red-500 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Courier Company Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Truck className="w-3.5 h-3.5" />
-                    Courier Company
-                  </Label>
-                  <div className="flex gap-2">
-                    <Select
-                      value={selectedCourier}
-                      onValueChange={(value) => {
-                        setSelectedCourier(value);
-                        setCurrentPage(1);
-                      }}
-                    >
-                      <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                        <SelectValue placeholder="Select courier..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {couriers.map((courier) => (
-                          <SelectItem
-                            key={courier.id}
-                            value={courier.id.toString()}
-                            className="text-xs"
-                          >
-                            {courier.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {selectedCourier && (
-                      <Button
-                        onClick={() => setSelectedCourier("")}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 border-gray-200 hover:border-red-500 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Date From Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Date From
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => {
-                        setDateFrom(e.target.value);
-                        // Clear month filter when date range is used
-                        if (e.target.value) {
-                          setSelectedMonth("");
-                        }
-                        setCurrentPage(1);
-                      }}
-                      className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                      disabled={!!selectedMonth}
-                    />
-                    {dateFrom && (
-                      <Button
-                        onClick={() => setDateFrom("")}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 border-gray-200 hover:border-red-500 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Date To Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Date To
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => {
-                        setDateTo(e.target.value);
-                        // Clear month filter when date range is used
-                        if (e.target.value) {
-                          setSelectedMonth("");
-                        }
-                        setCurrentPage(1);
-                      }}
-                      className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                      disabled={!!selectedMonth}
-                    />
-                    {dateTo && (
-                      <Button
-                        onClick={() => setDateTo("")}
-                        variant="outline"
-                        size="sm"
-                        className="h-7 px-2 border-gray-200 hover:border-red-500 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
+            {hasActiveFilters && (
+              <div className="space-y-2">
+                <div className="h-4" />
+                <Button
+                  onClick={clearAllFilters}
+                  variant="ghost"
+                  size="sm"
+                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
+                >
+                  Reset Filters
+                </Button>
               </div>
             )}
+
+            <div className="ml-auto space-y-2 min-w-[140px]">
+              <div className="h-4" />
+              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                  {parcels.length} / {totalParcels} Records
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* Main Table Content */}
+          <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">
+            <CardHeader className="pb-4 pt-8 px-8 border-b border-zinc-50 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Parcel Logistics
+                  </CardTitle>
+                  <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
+                    Browse and manage all registered logistics information
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-8 pb-8 pt-6">
+              <ParcelTable
+                data={parcels}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                onEdit={handleEditParcel}
+                onView={handleViewParcel}
+                onDelete={handleDeleteParcel}
+              />
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Parcel Table */}
-        <div className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <ParcelTable
-              data={parcels}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              onEdit={handleEditParcel}
-              onView={handleViewParcel}
-              onDelete={handleDeleteParcel}
-            />
-          </div>
-        </div>
+        {/* Modals handled by state in ParcelTable or similar, but adding Dialogs here for consistency */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="w-8 h-8 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center">
+                  <Truck className="w-5 h-5" />
+                </div>
+                Edit Parcel: {editingParcel?.trackingNumber}
+              </DialogTitle>
+            </DialogHeader>
+            {editingParcel && (
+              <EditParcelModal
+                parcel={editingParcel}
+                onClose={handleCloseEditModal}
+                isOpen={isEditModalOpen}
+                onSuccess={handleEditSuccess}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
-        {/* View Parcel Modal */}
-        <ViewParcelModal
-          parcel={viewParcel}
-          isOpen={isViewModalOpen}
-          onClose={handleCloseViewModal}
-        />
-
-        {/* Edit Parcel Modal */}
-        <EditParcelModal
-          parcel={editingParcel}
-          isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          onSuccess={handleEditSuccess}
-        />
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
+            <DialogHeader className="pb-4 border-b border-zinc-100">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5" />
+                </div>
+                Parcel Tracking: {viewParcel?.trackingNumber}
+              </DialogTitle>
+            </DialogHeader>
+            {viewParcel && (
+              <ViewParcelModal
+                parcel={viewParcel}
+                onClose={handleCloseViewModal}
+                isOpen={isViewModalOpen}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

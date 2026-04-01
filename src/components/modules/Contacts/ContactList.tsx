@@ -13,9 +13,12 @@ import {
   User,
   X,
   UserPlus,
+  Plus,
+  ChevronLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,10 +26,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deleteContact } from "@/actions/create";
 import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function ContactList() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -40,6 +56,7 @@ export default function ContactList() {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [allContactsCache, setAllContactsCache] = useState<Contact[]>([]);
   const [allContactsPagination, setAllContactsPagination] =
@@ -63,10 +80,6 @@ export default function ContactList() {
 
   const handleCreateContact = () => {
     router.push("/dashboard/contact/create-contact");
-  };
-
-  const clearAllFilters = () => {
-    clearFilters();
   };
 
   useEffect(() => {
@@ -265,22 +278,13 @@ export default function ContactList() {
     setLoading(true);
   };
 
-  const clearFilters = () => {
+  const clearAllFilters = () => {
     setSelectedDate("");
     setSelectedUser("all");
     setSelectedPeriod("all");
+    setSelectedType("all");
     setCurrentPage(1);
-
-    // Immediately show cached all contacts data if available
-    if (allContactsCache.length > 0) {
-      setContacts(allContactsCache);
-      setTotalPages(allContactsPagination?.totalPages || 1);
-      setTotalContacts(allContactsPagination?.total || 0);
-      setLoading(false);
-    } else {
-      // Fallback to triggering refetch if no cache
-      setLoading(true);
-    }
+    setLoading(true);
   };
 
   const handleEditContact = (contact: Contact) => {
@@ -324,194 +328,231 @@ export default function ContactList() {
     setViewContact(null);
   };
 
-  if (loading) {
+  if (loading && contacts.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-2 px-4">
-        <div className="w-full mx-auto">
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-3">
-              <Database className="w-4 h-4 text-white animate-pulse" />
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-[1600px] mx-auto space-y-6">
+          <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md">
+            <Skeleton className="h-12 w-12 rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
             </div>
-            <p className="text-gray-500 text-sm">Loading your contacts...</p>
           </div>
+          <Skeleton className="h-[600px] w-full rounded-[32px]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-2 px-4">
-      <div className="w-full mx-auto">
-        {/* Header */}
-        <div className="mb-3 text-center">
-          <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-1 shadow-md">
-            <Users className="w-4 h-4 text-white" />
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto space-y-8">
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all hover:shadow-md">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 transition-all hover:scale-110">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 ">
+                Contact Directory
+              </h1>
+              <p className="text-base text-zinc-500 dark:text-zinc-400">
+                Manage your network of {totalContacts} professional contacts
+              </p>
+            </div>
           </div>
-          <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            All Leads
-          </h1>
-          <p className="text-gray-500 text-xs">
-            Manage your leads ({totalContacts} total)
-            {hasActiveFilters && (
-              <span className="ml-2 text-blue-600 font-medium">
-                • Showing {contacts.length} filtered results
-              </span>
-            )}
-          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-11 px-5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all rounded-xl"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <Button
+              onClick={handleCreateContact}
+              className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 group rounded-xl"
+            >
+              <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
+              New Contact
+            </Button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                  <Filter className="w-3 h-3 text-white" />
-                </div>
-                <h2 className="text-xs font-medium text-gray-900">Filters</h2>
-                {hasActiveFilters && (
-                  <Button
-                    onClick={clearAllFilters}
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Clear All
-                  </Button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => setShowFilters(!showFilters)}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-3 text-xs"
-                >
-                  <Filter className="w-3 h-3 mr-1" />
-                  {showFilters ? "Hide" : "Show"} Filters
-                </Button>
-                <Button
-                  onClick={handleCreateContact}
-                  className="h-7 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs"
-                >
-                  <UserPlus className="w-3 h-3 mr-1" />
-                  Add Contact
-                </Button>
-              </div>
+        <div className="space-y-8">
+          {/* Enhanced Filter Bar */}
+          <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800/50">
+            <div className="w-64 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Follow-up Date
+              </Label>
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  handleFilterChange();
+                }}
+                className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20"
+              />
             </div>
 
-            {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-3">
-                {/* Date Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Date
-                  </Label>
-                  <Input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => {
-                      setSelectedDate(e.target.value);
-                      handleFilterChange();
-                    }}
-                    className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                  />
-                </div>
+            <div className="w-56 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Contact Type
+              </Label>
+              <Select
+                value={selectedType}
+                onValueChange={(val) => {
+                  setSelectedType(val);
+                  handleFilterChange();
+                }}
+              >
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
+                  <SelectValue placeholder="Type" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All Types
+                  </SelectItem>
+                  <SelectItem value="Buyer" className="rounded-lg">
+                    Buyer
+                  </SelectItem>
+                  <SelectItem value="Factory" className="rounded-lg">
+                    Factory
+                  </SelectItem>
+                  <SelectItem value="Courier" className="rounded-lg">
+                    Courier
+                  </SelectItem>
+                  <SelectItem value="Other" className="rounded-lg">
+                    Other
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Created By Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" />
-                    Created By
-                  </Label>
-                  <Select
-                    value={selectedUser}
-                    onValueChange={(value) => {
-                      console.log("Selected user:", value);
-                      setSelectedUser(value);
-                      handleFilterChange();
-                    }}
-                  >
-                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                      <SelectValue placeholder="All users" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All users</SelectItem>
-                      {users.length > 0 &&
-                      !users.some((u) => u.name === "John Doe") ? (
-                        users.map((user) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.name}
-                          </SelectItem>
-                        ))
-                      ) : usersLoading ? null : (
-                        <>
-                          <SelectItem value="1">Abid</SelectItem>
-                          <SelectItem value="2">John Doe</SelectItem>
-                          <SelectItem value="3">Jane Smith</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="w-64 space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Created By
+              </Label>
+              <Select
+                value={selectedUser}
+                onValueChange={(value) => {
+                  setSelectedUser(value);
+                  handleFilterChange();
+                }}
+              >
+                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
+                  <SelectValue placeholder="All users" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                  <SelectItem value="all" className="rounded-lg">
+                    All users
+                  </SelectItem>
+                  {users.map((user) => (
+                    <SelectItem
+                      key={user.id}
+                      value={user.id.toString()}
+                      className="rounded-lg"
+                    >
+                      {user.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Period Filter */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Period
-                  </Label>
-                  <Select
-                    value={selectedPeriod}
-                    onValueChange={(value) => {
-                      setSelectedPeriod(value);
-                      handleFilterChange();
-                    }}
-                  >
-                    <SelectTrigger className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                      <SelectValue placeholder="All time" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All time</SelectItem>
-                      <SelectItem value="week">This week</SelectItem>
-                      <SelectItem value="month">This month</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            {hasActiveFilters && (
+              <div className="space-y-2">
+                <div className="h-4" />
+                <Button
+                  onClick={clearAllFilters}
+                  variant="ghost"
+                  size="sm"
+                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl shadow-sm hover:shadow-md"
+                >
+                  Clear Filters
+                </Button>
               </div>
             )}
+
+            <div className="ml-auto space-y-2 min-w-[140px]">
+              <div className="h-4" />
+              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                  {contacts.length} / {totalContacts} Records
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* Main Table Content */}
+          <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">
+            <CardHeader className="pb-4 pt-8 px-8 border-b border-zinc-50 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Contact Database
+                  </CardTitle>
+                  <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
+                    Search and manage your business contact information
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-8 pb-8 pt-6">
+              <ContactTable
+                data={contacts}
+                currentPage={currentPage}
+                totalPages={allContactsPagination?.totalPages || 1}
+                onPageChange={handlePageChange}
+                onEdit={handleEditContact}
+                onView={handleViewContact}
+                onDelete={handleDeleteContact}
+              />
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Contact Table */}
-        <div className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <ContactTable
-              data={contacts}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              onEdit={handleEditContact}
-              onView={handleViewContact}
-              onDelete={handleDeleteContact}
-            />
-            <ViewContactModal
-              contact={viewContact}
-              isOpen={isViewModalOpen}
-              onClose={handleCloseViewModal}
-            />
-          </div>
-        </div>
+        {/* Modals and Dialogs */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl p-0">
+            {editingContact && (
+              <EditContactForm
+                contact={editingContact}
+                onClose={handleCloseEditModal}
+                onSuccess={handleEditSuccess}
+                isOpen={isEditModalOpen}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
 
-        {/* Edit Contact Modal */}
-        <EditContactForm
-          contact={editingContact}
-          isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          onSuccess={handleEditSuccess}
-        />
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
+            <DialogHeader className="pb-4 border-b border-zinc-100">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Users className="w-5 h-5" />
+                </div>
+                Contact Profile: {viewContact?.name}
+              </DialogTitle>
+            </DialogHeader>
+            {viewContact && (
+              <div className="py-6 min-h-[400px]">
+                <ViewContactModal
+                  contact={viewContact}
+                  onClose={handleCloseViewModal}
+                  isOpen={isViewModalOpen}
+                />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

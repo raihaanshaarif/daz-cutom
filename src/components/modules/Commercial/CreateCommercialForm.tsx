@@ -12,8 +12,14 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
   FileText,
-  Package,
   Calendar,
   DollarSign,
   ClipboardList,
@@ -21,11 +27,16 @@ import {
   ShoppingBag,
   Search,
   X,
+  Truck,
+  ArrowLeft,
+  BadgeDollarSign,
+  Info,
 } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Order } from "@/types";
+import { cn } from "@/lib/utils";
 
 const documentStatusOptions = [
   { value: "PENDING", label: "Pending" },
@@ -173,532 +184,447 @@ export default function CreateCommercialForm() {
       const result = await res.json();
 
       if (res.ok && result?.id) {
-        toast.success("Commercial created successfully!", {
-          description: "The new commercial record has been saved.",
-          duration: 4000,
-        });
+        toast.success("Commercial created successfully!");
         setTimeout(() => {
           router.push("/dashboard/commercial/invoice-list");
         }, 1500);
       } else {
         toast.error("Failed to create commercial", {
-          description:
-            result?.message || "Please check your information and try again.",
+          description: result?.message || "Please check your information.",
         });
       }
     } catch {
-      toast.error("An error occurred", {
-        description: "Please try again later.",
-      });
+      toast.error("An error occurred. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background py-2 px-4">
-      <div className="w-full mx-auto">
-        {/* Header */}
-        <div className="mb-4 text-center">
-          <div className="inline-flex items-center justify-center w-10 h-10 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-lg mb-2 shadow-md">
-            <FileText className="w-5 h-5 text-white" />
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-4 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Create Commercial
+              </h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Manage your commercial invoices and shipping documents
+              </p>
+            </div>
           </div>
-          <h1 className="text-xl font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-1">
-            Create Commercial
-          </h1>
-          <p className="text-gray-500 text-xs">
-            Add a new commercial / invoice record
-          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-10 px-4 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <Button
+              form="commercial-form"
+              type="submit"
+              disabled={isSubmitting}
+              className="h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 text-sm font-semibold"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                  Processing...
+                </>
+              ) : (
+                "Create Record"
+              )}
+            </Button>
+          </div>
         </div>
 
         <form
+          id="commercial-form"
           onSubmit={handleSubmit}
-          className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden"
+          className="grid grid-cols-1 lg:grid-cols-7 gap-6"
         >
-          <div className="p-4 lg:p-6 space-y-4">
-            {/* Reference & Invoice */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-md flex items-center justify-center">
-                  <FileText className="w-3.5 h-3.5 text-white" />
+          {/* Main Info - Left Column */}
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="h-8 w-8 rounded-lg bg-indigo-100 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-sm">
+                  <FileText className="w-4 h-4" />
                 </div>
-                <h2 className="text-sm font-medium text-gray-900">
-                  Reference & Invoice
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  Shipment Details
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="bookingReference"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Booking Reference
-                  </Label>
-                  <Input
-                    id="bookingReference"
-                    name="bookingReference"
-                    placeholder="e.g.: BK-2026-001"
-                    className="h-8 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="invoiceNo"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Invoice No
-                  </Label>
-                  <Input
-                    id="invoiceNo"
-                    name="invoiceNo"
-                    placeholder="e.g.: INV-2026-001"
-                    className="h-8 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Orders */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
-                  <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                </div>
-                <h2 className="text-sm font-medium text-gray-900">
-                  Link Orders
-                </h2>
-              </div>
-
-              {/* Selected order tags */}
-              {selectedOrders.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {selectedOrders.map((order) => (
-                    <span
-                      key={order.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200"
+              <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="bookingReference"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
                     >
-                      {order.orderNumber}
-                      <button
-                        type="button"
-                        onClick={() => removeOrder(order.id)}
-                        className="ml-0.5 hover:text-blue-600 focus:outline-none"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
+                      Booking Reference
+                    </Label>
+                    <Input
+                      id="bookingReference"
+                      name="bookingReference"
+                      placeholder="BK-2026-001"
+                      className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="invoiceNo"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Invoice Number
+                    </Label>
+                    <Input
+                      id="invoiceNo"
+                      name="invoiceNo"
+                      placeholder="INV-2026-001"
+                      className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                    />
+                  </div>
                 </div>
-              )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="bookingDate"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Booking Date
+                    </Label>
+                    <div className="relative group">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-indigo-500 transition-colors" />
+                      <Input
+                        type="date"
+                        id="bookingDate"
+                        name="bookingDate"
+                        className="pl-10 h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="bookingHandoverDate"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Booking Handover Date
+                    </Label>
+                    <div className="relative group">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-indigo-500 transition-colors" />
+                      <Input
+                        type="date"
+                        id="bookingHandoverDate"
+                        name="bookingHandoverDate"
+                        className="pl-10 h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Search input with dropdown */}
-              <div ref={searchRef} className="relative">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <Card className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
+                  <BadgeDollarSign className="w-4 h-4" />
+                </div>
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  Financial Information
+                </h2>
+              </div>
+              <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="quantity"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Quantity
+                    </Label>
+                    <Input
+                      id="quantity"
+                      name="quantity"
+                      type="number"
+                      placeholder="0"
+                      className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800"
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label
+                      htmlFor="totalPrice"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Total Price
+                    </Label>
+                    <div className="relative group">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <Input
+                        id="totalPrice"
+                        name="totalPrice"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-10 h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="receivedAmount"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Received Amount
+                    </Label>
+                    <div className="relative group">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors" />
+                      <Input
+                        id="receivedAmount"
+                        name="receivedAmount"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-10 h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="balance"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Outstanding Balance
+                    </Label>
+                    <div className="relative group">
+                      <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-orange-500 transition-colors" />
+                      <Input
+                        id="balance"
+                        name="balance"
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        className="pl-10 h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 font-semibold text-sm">
+                  <ShoppingBag className="w-4 h-4" />
+                </div>
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  Linked Orders
+                </h2>
+              </div>
+              <CardContent className="p-6 space-y-4">
+                <div ref={searchRef} className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-500 transition-colors" />
                   <Input
                     value={orderSearch}
                     onChange={handleOrderSearchChange}
                     onFocus={() =>
                       searchResults.length > 0 && setShowDropdown(true)
                     }
-                    placeholder="e.g.: ORD-2026-001"
-                    className="h-8 pl-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    placeholder="Search order number..."
+                    className="pl-10 h-11 bg-zinc-50/50 dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-blue-500/20 rounded-xl transition-all"
                   />
                   {isSearching && (
-                    <div className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 size-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                   )}
-                </div>
-
-                {showDropdown && searchResults.length > 0 && (
-                  <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg">
-                    {searchResults.map((order) => {
-                      const already = selectedOrders.some(
-                        (o) => o.id === order.id,
-                      );
-                      return (
-                        <button
-                          key={order.id}
-                          type="button"
-                          onClick={() => !already && addOrder(order)}
-                          className={`w-full text-left px-3 py-2 text-xs hover:bg-blue-50 flex items-center justify-between ${
-                            already
-                              ? "opacity-40 cursor-not-allowed"
-                              : "cursor-pointer"
-                          }`}
-                        >
-                          <span className="font-medium text-gray-800">
-                            {order.orderNumber}
-                          </span>
-                          <span className="text-gray-400 ml-2 truncate max-w-[60%]">
-                            {[order.buyer?.name, order.style, order.color]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {showDropdown &&
-                  !isSearching &&
-                  orderSearch &&
-                  searchResults.length === 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs text-gray-400">
-                      No orders found
+                  {showDropdown && searchResults.length > 0 && (
+                    <div className="absolute z-50 mt-2 w-full max-h-60 overflow-y-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-popover-foreground shadow-xl">
+                      {searchResults.map((order) => {
+                        const isSelected = selectedOrders.some(
+                          (o) => o.id === order.id,
+                        );
+                        return (
+                          <div
+                            key={order.id}
+                            onClick={() => !isSelected && addOrder(order)}
+                            className={cn(
+                              "flex items-center justify-between p-4 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors border-b last:border-0 border-zinc-100 dark:border-zinc-800",
+                              isSelected &&
+                                "pointer-events-none opacity-50 bg-zinc-50 dark:bg-zinc-800/50",
+                            )}
+                          >
+                            <div>
+                              <p className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                {order.orderNumber}
+                              </p>
+                              <p className="text-xs text-zinc-500">
+                                {order.buyer?.name} • {order.style}
+                              </p>
+                            </div>
+                            {isSelected && (
+                              <span className="text-[10px] uppercase font-bold text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-sm">
+                                Linked
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
-              </div>
-
-              {selectedOrders.length > 0 && (
-                <p className="text-xs text-blue-600 mt-1">
-                  {selectedOrders.length} order
-                  {selectedOrders.length > 1 ? "s" : ""} linked
-                </p>
-              )}
-            </div>
-
-            {/* Quantity & Pricing */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-md flex items-center justify-center">
-                  <Package className="w-3.5 h-3.5 text-white" />
                 </div>
-                <h2 className="text-sm font-medium text-gray-900">
-                  Quantity & Pricing
+
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {selectedOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center gap-2 rounded-full border border-blue-200/50 bg-blue-50/50 px-3 py-1.5 text-xs font-medium text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 transition-all hover:bg-blue-100 dark:hover:bg-blue-900/60"
+                    >
+                      <ShoppingBag className="w-3 h-3" />
+                      {order.orderNumber}
+                      <button
+                        type="button"
+                        onClick={() => removeOrder(order.id)}
+                        className="rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {selectedOrders.length === 0 && (
+                    <div className="flex h-24 w-full items-center justify-center rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-sm text-zinc-500 bg-zinc-50/30 dark:bg-zinc-900/10">
+                      No orders linked to this commercial record
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Sidebar - Right Column */}
+          <div className="lg:col-span-3 space-y-6">
+            <Card className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="h-8 w-8 rounded-lg bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-sm">
+                  <ClipboardList className="w-4 h-4" />
+                </div>
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  Status & Logistics
                 </h2>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="quantity"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Quantity
-                  </Label>
-                  <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    min="0"
-                    placeholder="e.g.: 12000"
-                    className="h-8 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="totalPrice"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Total Price ($)
-                  </Label>
-                  <Input
-                    id="totalPrice"
-                    name="totalPrice"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g.: 85000"
-                    className="h-8 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="lacAmount"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    LAC Amount ($)
-                  </Label>
-                  <Input
-                    id="lacAmount"
-                    name="lacAmount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g.: 40000"
-                    className="h-8 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20"
-                  />
-                </div>
-              </div>
-            </div>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      Document Status
+                    </Label>
+                    <Select
+                      value={documentStatus}
+                      onValueChange={setDocumentStatus}
+                    >
+                      <SelectTrigger className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {documentStatusOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            {/* Dates */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-md flex items-center justify-center">
-                  <Calendar className="w-3.5 h-3.5 text-white" />
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                      Payment Status
+                    </Label>
+                    <Select
+                      value={paymentStatus}
+                      onValueChange={setPaymentStatus}
+                    >
+                      <SelectTrigger className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {paymentStatusOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <h2 className="text-sm font-medium text-gray-900">Dates</h2>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="bookingDate"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Booking Date *
-                  </Label>
-                  <Input
-                    id="bookingDate"
-                    name="bookingDate"
-                    type="date"
-                    required
-                    className="h-8 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="bookingHandoverDate"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Booking Handover Date *
-                  </Label>
-                  <Input
-                    id="bookingHandoverDate"
-                    name="bookingHandoverDate"
-                    type="date"
-                    required
-                    className="h-8 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="handoverDate"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Handover Date
-                  </Label>
-                  <Input
-                    id="handoverDate"
-                    name="handoverDate"
-                    type="date"
-                    className="h-8 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="etd"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    ETD
-                  </Label>
-                  <Input
-                    id="etd"
-                    name="etd"
-                    type="date"
-                    className="h-8 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="eta"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    ETA
-                  </Label>
-                  <Input
-                    id="eta"
-                    name="eta"
-                    type="date"
-                    className="h-8 border-gray-200 focus:border-orange-500 focus:ring-orange-500/20"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Document Status */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-blue-700 rounded-md flex items-center justify-center">
-                  <ClipboardList className="w-3.5 h-3.5 text-white" />
+                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-zinc-100 dark:border-zinc-800">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                      ETD
+                    </Label>
+                    <Input
+                      type="date"
+                      id="etd"
+                      name="etd"
+                      className="h-10 text-xs bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+                      ETA
+                    </Label>
+                    <Input
+                      type="date"
+                      id="eta"
+                      name="eta"
+                      className="h-10 text-xs bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800"
+                    />
+                  </div>
                 </div>
-                <h2 className="text-sm font-medium text-gray-900">
-                  Document Status
-                </h2>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-700">
-                    Document Status
-                  </Label>
-                  <Select
-                    value={documentStatus}
-                    onValueChange={setDocumentStatus}
-                  >
-                    <SelectTrigger className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {documentStatusOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
+
+                <div className="space-y-2 pt-2">
                   <Label
                     htmlFor="docCourierNo"
-                    className="text-xs font-medium text-gray-700"
+                    className="text-xs font-semibold uppercase tracking-wider text-zinc-500 flex items-center gap-2"
                   >
-                    Doc Courier No
+                    <Truck className="w-3.5 h-3.5" />
+                    Tracking Number
                   </Label>
                   <Input
                     id="docCourierNo"
                     name="docCourierNo"
-                    placeholder="e.g.: DHL-784512"
-                    className="h-8 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    placeholder="Enter tracking ID"
+                    className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800"
                   />
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Payment */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-6 h-6 bg-gradient-to-r from-green-500 to-green-600 rounded-md flex items-center justify-center">
-                  <DollarSign className="w-3.5 h-3.5 text-white" />
-                </div>
-                <h2 className="text-sm font-medium text-gray-900">Payment</h2>
+            <div className="bg-zinc-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Info className="h-12 w-12 text-zinc-100" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="lacAmountPayment"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    LAC Value ($)
-                  </Label>
-                  <Input
-                    id="lacAmountPayment"
-                    name="lacAmount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g.: 40000"
-                    className="h-8 border-gray-200 focus:border-green-500 focus:ring-green-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-700">
-                    Payment Status
-                  </Label>
-                  <Select
-                    value={paymentStatus}
-                    onValueChange={setPaymentStatus}
-                  >
-                    <SelectTrigger className="h-8 border-gray-200 focus:border-green-500 focus:ring-green-500/20">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {paymentStatusOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="approximatePaymentDate"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Approximate Payment Date
-                  </Label>
-                  <Input
-                    id="approximatePaymentDate"
-                    name="approximatePaymentDate"
-                    type="date"
-                    className="h-8 border-gray-200 focus:border-green-500 focus:ring-green-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="receivedAmount"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Received Amount ($)
-                  </Label>
-                  <Input
-                    id="receivedAmount"
-                    name="receivedAmount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g.: 20000"
-                    className="h-8 border-gray-200 focus:border-green-500 focus:ring-green-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="receivedDate"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Received Date
-                  </Label>
-                  <Input
-                    id="receivedDate"
-                    name="receivedDate"
-                    type="date"
-                    className="h-8 border-gray-200 focus:border-green-500 focus:ring-green-500/20"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="balance"
-                    className="text-xs font-medium text-gray-700"
-                  >
-                    Balance ($)
-                  </Label>
-                  <Input
-                    id="balance"
-                    name="balance"
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g.: 20000"
-                    className="h-8 border-gray-200 focus:border-green-500 focus:ring-green-500/20"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Remarks */}
-            <div className="space-y-2">
-              <Label
-                htmlFor="remarks"
-                className="text-xs font-medium text-gray-700"
-              >
-                Remarks
-              </Label>
+              <h4 className="font-bold flex items-center gap-2 mb-4">
+                <div className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                Internal Remarks
+              </h4>
               <Textarea
                 id="remarks"
                 name="remarks"
-                placeholder="e.g.: Documents sent via courier to buyer"
-                className="min-h-16 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500/20 resize-none"
-                rows={2}
+                placeholder="Internal notes or special instructions..."
+                className="min-h-[120px] bg-zinc-800/80 border-zinc-700 text-zinc-100 placeholder:text-zinc-500 focus:ring-indigo-500/20 text-sm leading-relaxed"
               />
-            </div>
-
-            {/* Submit */}
-            <div className="flex justify-end pt-3 border-t border-gray-100">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="h-9 px-5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium text-sm rounded-lg shadow-sm hover:shadow-md transition-all duration-200 transform hover:scale-[1.02]"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Creating…
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Send className="w-4 h-4" />
-                    Create Commercial
-                  </div>
-                )}
-              </Button>
+              <div className="pt-4 mt-2 border-t border-zinc-800 flex items-center justify-between text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
+                <span>Auto-sync active</span>
+                <span>DATA_NODE_SECURED</span>
+              </div>
             </div>
           </div>
         </form>
