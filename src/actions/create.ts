@@ -347,6 +347,137 @@ export const createOrder = async (data: FormData) => {
   return result;
 };
 
+export const createDevelopmentSample = async (data: FormData) => {
+  const session = await getUserSession();
+  const o = Object.fromEntries(data.entries());
+
+  const parseDate = (v: unknown) => {
+    if (!v) return undefined;
+    const d = new Date(v as string);
+    return isNaN(d.getTime()) ? undefined : d.toISOString();
+  };
+
+  const toInt = (v: unknown) => {
+    const n = parseInt(v as string);
+    return isNaN(n) ? undefined : n;
+  };
+
+  const processedData = {
+    buyerId: toInt(o.buyerId),
+    factoryId: toInt(o.factoryId),
+    style: o.style || undefined,
+    styleName: o.styleName || undefined,
+    seasonName: o.seasonName || undefined,
+    year: o.year || undefined,
+    brand: o.brand || undefined,
+    description: o.description || undefined,
+    composition: o.composition || undefined,
+    sizes: o.sizes || undefined,
+    color: o.color || undefined,
+    userRemarks: o.userRemarks || undefined,
+    createdById: toInt(session?.user?.id as string),
+  };
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/development`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(processedData),
+  });
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("DEVELOPMENT_SAMPLES");
+    revalidatePath("/dashboard/development");
+  }
+  return result;
+};
+
+export const deleteDevelopmentSample = async (id: number) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/development/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  const result = await res.json();
+
+  if (res.ok) {
+    revalidateTag("DEVELOPMENT_SAMPLES");
+    revalidatePath("/dashboard/development");
+    return { success: true };
+  }
+  return {
+    success: false,
+    message: result?.message || "Failed to delete sample",
+  };
+};
+
+export const updateDevelopmentSample = async (data: FormData) => {
+  const session = await getUserSession();
+  const o = Object.fromEntries(data.entries());
+
+  const parseDate = (v: unknown) => {
+    if (!v) return undefined;
+    const d = new Date(v as string);
+    return isNaN(d.getTime()) ? undefined : d.toISOString();
+  };
+
+  const toInt = (v: unknown) => {
+    const n = parseInt(v as string);
+    return isNaN(n) ? undefined : n;
+  };
+
+  const processedData = {
+    id: toInt(o.id),
+    buyerId: toInt(o.buyerId),
+    factoryId: toInt(o.factoryId),
+    style: o.style || undefined,
+    styleName: o.styleName || undefined,
+    seasonName: o.seasonName || undefined,
+    year: o.year || undefined,
+    brand: o.brand || undefined,
+    description: o.description || undefined,
+    composition: o.composition || undefined,
+    sizes: o.sizes || undefined,
+    color: o.color || undefined,
+    smsDeadline: parseDate(o.smsDeadline),
+    tpReceiveDate: parseDate(o.tpReceiveDate),
+    originalSwatchDate: parseDate(o.originalSwatchDate),
+    originalSampleDate: parseDate(o.originalSampleDate),
+    labdipReceiveDate: parseDate(o.labdipReceiveDate),
+    labApprovalDate: parseDate(o.labApprovalDate),
+    printEmbStrikeOff: parseDate(o.printEmbStrikeOff),
+    smsSubmissionDate: parseDate(o.smsSubmissionDate),
+    fabricQuality: o.fabricQuality || undefined,
+    smsStatus: o.smsStatus || undefined,
+    userRemarks: o.userRemarks || undefined,
+    managementRemarks: o.managementRemarks || undefined,
+  };
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/development/${processedData.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(processedData),
+    },
+  );
+
+  const result = await res.json();
+
+  if (result?.id) {
+    revalidateTag("DEVELOPMENT_SAMPLES");
+    revalidatePath("/dashboard/development");
+  }
+  return result;
+};
+
 export const updateOrder = async (id: number, data: FormData) => {
   const o = Object.fromEntries(data.entries());
 

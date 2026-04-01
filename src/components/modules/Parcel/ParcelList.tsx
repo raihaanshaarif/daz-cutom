@@ -3,7 +3,7 @@
 import { Parcel, Courier } from "@/types";
 import { useEffect, useState, useCallback } from "react";
 
-import { Package, Truck, Plus, ChevronLeft } from "lucide-react";
+import { Package, Truck, Plus, ChevronLeft, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -53,6 +53,7 @@ export default function ParcelList() {
   const [dateTo, setDateTo] = useState("");
   const [selectedCourier, setSelectedCourier] = useState("");
   const [couriers, setCouriers] = useState<Courier[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Access User from session for API calls
   const { data: session } = useSession();
@@ -326,100 +327,128 @@ export default function ParcelList() {
         </div>
 
         <div className="space-y-8">
-          {/* Quick Filters Card */}
-          <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="w-64 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Courier Company
-              </Label>
-              <Select
-                value={selectedCourier}
-                onValueChange={setSelectedCourier}
-              >
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-orange-500/20">
-                  <SelectValue placeholder="Select Courier" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Couriers
-                  </SelectItem>
-                  {couriers.map((courier) => (
-                    <SelectItem
-                      key={courier.id}
-                      value={courier.id.toString()}
-                      className="rounded-lg"
-                    >
-                      {courier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Header for Filter Section */}
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters & Search
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950/30 rounded-xl transition-all"
+            >
+              {showFilters ? (
+                <>
+                  <X className="w-3.5 h-3.5 mr-2" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Show Filters
+                </>
+              )}
+            </Button>
+          </div>
 
-            <div className="w-48 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Inward Month
-              </Label>
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Months
-                  </SelectItem>
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const d = new Date();
-                    d.setMonth(d.getMonth() - i);
-                    let label = "";
-                    try {
-                      label = d.toLocaleString("default", {
-                        month: "long",
-                        year: "numeric",
-                      });
-                    } catch (error) {
-                      label = `${d.getFullYear()} ${d.toLocaleString("default", { month: "long" })}`;
-                    }
-                    const value = `${d.getFullYear()}-${(d.getMonth() + 1)
-                      .toString()
-                      .padStart(2, "0")}`;
-                    return (
+          {/* Quick Filters Card */}
+          {showFilters && (
+            <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="w-64 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Courier Company
+                </Label>
+                <Select
+                  value={selectedCourier}
+                  onValueChange={setSelectedCourier}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-orange-500/20">
+                    <SelectValue placeholder="Select Courier" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Couriers
+                    </SelectItem>
+                    {couriers.map((courier) => (
                       <SelectItem
-                        key={value}
-                        value={value}
+                        key={courier.id}
+                        value={courier.id.toString()}
                         className="rounded-lg"
                       >
-                        {label}
+                        {courier.name}
                       </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {hasActiveFilters && (
-              <div className="space-y-2">
+              <div className="w-48 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Inward Month
+                </Label>
+                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Months
+                    </SelectItem>
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const d = new Date();
+                      d.setMonth(d.getMonth() - i);
+                      let label = "";
+                      try {
+                        label = d.toLocaleString("default", {
+                          month: "long",
+                          year: "numeric",
+                        });
+                      } catch (error) {
+                        label = `${d.getFullYear()} ${d.toLocaleString("default", { month: "long" })}`;
+                      }
+                      const value = `${d.getFullYear()}-${(d.getMonth() + 1)
+                        .toString()
+                        .padStart(2, "0")}`;
+                      return (
+                        <SelectItem
+                          key={value}
+                          value={value}
+                          className="rounded-lg"
+                        >
+                          {label}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="space-y-2">
+                  <div className="h-4" />
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              )}
+
+              <div className="ml-auto space-y-2 min-w-[140px]">
                 <div className="h-4" />
-                <Button
-                  onClick={clearAllFilters}
-                  variant="ghost"
-                  size="sm"
-                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            )}
-
-            <div className="ml-auto space-y-2 min-w-[140px]">
-              <div className="h-4" />
-              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
-                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
-                  {parcels.length} / {totalParcels} Records
-                </span>
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                  <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                    {parcels.length} / {totalParcels} Records
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Main Table Content */}
           <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">

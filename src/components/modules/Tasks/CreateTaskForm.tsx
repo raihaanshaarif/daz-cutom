@@ -395,7 +395,7 @@ export default function CreateTaskForm() {
                           Authorized By
                         </span>
                         <span className="text-[11px] font-bold text-zinc-200">
-                          {session?.user?.name || "System Administrator"}
+                          {"System Administrator"}
                         </span>
                       </div>
                     </div>

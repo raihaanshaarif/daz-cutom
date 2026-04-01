@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CommercialTable } from "./CommercialTable";
 import { EditCommercialForm } from "./EditCommercialForm";
 import { ViewCommercialModal } from "./ViewCommercialModal";
-import { FileText, Plus, ChevronLeft } from "lucide-react";
+import { FileText, Plus, ChevronLeft, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -48,6 +48,7 @@ export default function CommercialList() {
   const [selectedDocumentStatus, setSelectedDocumentStatus] =
     useState<string>("all");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
   const [allCommercialsCache, setAllCommercialsCache] = useState<Commercial[]>(
     [],
   );
@@ -271,105 +272,133 @@ export default function CommercialList() {
         </div>
 
         <div className="space-y-8">
-          {/* Quick Filters Card */}
-          <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="w-56 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Payment Status
-              </Label>
-              <Select
-                value={selectedPaymentStatus}
-                onValueChange={(val) => {
-                  setSelectedPaymentStatus(val);
-                  handleFilterChange();
-                }}
-              >
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-emerald-500/20">
-                  <SelectValue placeholder="Payment" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Payments
-                  </SelectItem>
-                  <SelectItem
-                    value="PAID"
-                    className="rounded-lg text-emerald-600 font-medium"
-                  >
-                    Paid
-                  </SelectItem>
-                  <SelectItem
-                    value="UNPAID"
-                    className="rounded-lg text-red-600 font-medium"
-                  >
-                    Unpaid
-                  </SelectItem>
-                  <SelectItem
-                    value="PARTIAL"
-                    className="rounded-lg text-amber-600 font-medium"
-                  >
-                    Partial
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="w-56 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Document Status
-              </Label>
-              <Select
-                value={selectedDocumentStatus}
-                onValueChange={(val) => {
-                  setSelectedDocumentStatus(val);
-                  handleFilterChange();
-                }}
-              >
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-emerald-500/20">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Status
-                  </SelectItem>
-                  <SelectItem value="PENDING" className="rounded-lg">
-                    Pending
-                  </SelectItem>
-                  <SelectItem value="APPROVED" className="rounded-lg">
-                    Approved
-                  </SelectItem>
-                  <SelectItem value="CANCELLED" className="rounded-lg">
-                    Cancelled
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {(selectedDate ||
-              selectedPeriod !== "all" ||
-              selectedPaymentStatus !== "all" ||
-              selectedDocumentStatus !== "all") && (
-              <div className="space-y-2">
-                <div className="h-4" />
-                <Button
-                  onClick={clearAllFilters}
-                  variant="ghost"
-                  size="sm"
-                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            )}
-
-            <div className="ml-auto space-y-2 min-w-[140px]">
-              <div className="h-4" />
-              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
-                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
-                  {commercials.length} / {totalCommercials} Records
-                </span>
-              </div>
-            </div>
+          {/* Header for Filter Section */}
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters & Search
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl transition-all"
+            >
+              {showFilters ? (
+                <>
+                  <X className="w-3.5 h-3.5 mr-2" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Show Filters
+                </>
+              )}
+            </Button>
           </div>
+
+          {/* Quick Filters Card */}
+          {showFilters && (
+            <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="w-56 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Payment Status
+                </Label>
+                <Select
+                  value={selectedPaymentStatus}
+                  onValueChange={(val) => {
+                    setSelectedPaymentStatus(val);
+                    handleFilterChange();
+                  }}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-emerald-500/20">
+                    <SelectValue placeholder="Payment" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Payments
+                    </SelectItem>
+                    <SelectItem
+                      value="PAID"
+                      className="rounded-lg text-emerald-600 font-medium"
+                    >
+                      Paid
+                    </SelectItem>
+                    <SelectItem
+                      value="UNPAID"
+                      className="rounded-lg text-red-600 font-medium"
+                    >
+                      Unpaid
+                    </SelectItem>
+                    <SelectItem
+                      value="PARTIAL"
+                      className="rounded-lg text-amber-600 font-medium"
+                    >
+                      Partial
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-56 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Document Status
+                </Label>
+                <Select
+                  value={selectedDocumentStatus}
+                  onValueChange={(val) => {
+                    setSelectedDocumentStatus(val);
+                    handleFilterChange();
+                  }}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-emerald-500/20">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Status
+                    </SelectItem>
+                    <SelectItem value="PENDING" className="rounded-lg">
+                      Pending
+                    </SelectItem>
+                    <SelectItem value="APPROVED" className="rounded-lg">
+                      Approved
+                    </SelectItem>
+                    <SelectItem value="CANCELLED" className="rounded-lg">
+                      Cancelled
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(selectedDate ||
+                selectedPeriod !== "all" ||
+                selectedPaymentStatus !== "all" ||
+                selectedDocumentStatus !== "all") && (
+                <div className="space-y-2">
+                  <div className="h-4" />
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              )}
+
+              <div className="ml-auto space-y-2 min-w-[140px]">
+                <div className="h-4" />
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                  <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                    {commercials.length} / {totalCommercials} Records
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Main Table Content */}
           <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">

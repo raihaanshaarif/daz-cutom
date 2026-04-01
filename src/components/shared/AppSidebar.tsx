@@ -17,6 +17,7 @@ import {
   Package,
   Truck,
   BarChart3,
+  TestTube,
 } from "lucide-react";
 
 import {
@@ -148,6 +149,27 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       ],
     },
     {
+      label: "Development",
+      items: [
+        {
+          title: "Development",
+          icon: TestTube,
+          children: [
+            {
+              title: "New Sample",
+              url: "/dashboard/development/create",
+              icon: PlusCircle,
+            },
+            {
+              title: "Sample List",
+              url: "/dashboard/development",
+              icon: TestTube,
+            },
+          ],
+        },
+      ],
+    },
+    {
       label: "Parcels",
       items: [
         {
@@ -184,6 +206,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             {
               title: "Commercial Report",
               url: "/dashboard/commercial/report",
+              icon: BarChart3,
+            },
+            {
+              title: "Development Report",
+              url: "/dashboard/development/report",
               icon: BarChart3,
             },
             {

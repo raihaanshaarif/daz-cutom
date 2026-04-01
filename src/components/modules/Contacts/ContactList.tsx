@@ -378,117 +378,145 @@ export default function ContactList() {
               className="h-11 px-6 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 transition-all active:scale-95 group rounded-xl"
             >
               <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform" />
-              New Contact
+              Create New Lead
             </Button>
           </div>
         </div>
 
         <div className="space-y-8">
-          {/* Enhanced Filter Bar */}
-          <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800/50">
-            <div className="w-64 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Follow-up Date
-              </Label>
-              <Input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  handleFilterChange();
-                }}
-                className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20"
-              />
-            </div>
-
-            <div className="w-56 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Contact Type
-              </Label>
-              <Select
-                value={selectedType}
-                onValueChange={(val) => {
-                  setSelectedType(val);
-                  handleFilterChange();
-                }}
-              >
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Types
-                  </SelectItem>
-                  <SelectItem value="Buyer" className="rounded-lg">
-                    Buyer
-                  </SelectItem>
-                  <SelectItem value="Factory" className="rounded-lg">
-                    Factory
-                  </SelectItem>
-                  <SelectItem value="Courier" className="rounded-lg">
-                    Courier
-                  </SelectItem>
-                  <SelectItem value="Other" className="rounded-lg">
-                    Other
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="w-64 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Created By
-              </Label>
-              <Select
-                value={selectedUser}
-                onValueChange={(value) => {
-                  setSelectedUser(value);
-                  handleFilterChange();
-                }}
-              >
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
-                  <SelectValue placeholder="All users" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All users
-                  </SelectItem>
-                  {users.map((user) => (
-                    <SelectItem
-                      key={user.id}
-                      value={user.id.toString()}
-                      className="rounded-lg"
-                    >
-                      {user.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {hasActiveFilters && (
-              <div className="space-y-2">
-                <div className="h-4" />
-                <Button
-                  onClick={clearAllFilters}
-                  variant="ghost"
-                  size="sm"
-                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl shadow-sm hover:shadow-md"
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            )}
-
-            <div className="ml-auto space-y-2 min-w-[140px]">
-              <div className="h-4" />
-              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
-                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
-                  {contacts.length} / {totalContacts} Records
-                </span>
-              </div>
-            </div>
+          {/* Header for Filter Section */}
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters & Search
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition-all"
+            >
+              {showFilters ? (
+                <>
+                  <X className="w-3.5 h-3.5 mr-2" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Show Filters
+                </>
+              )}
+            </Button>
           </div>
+
+          {/* Enhanced Filter Bar */}
+          {showFilters && (
+            <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="w-64 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Follow-up Date
+                </Label>
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    handleFilterChange();
+                  }}
+                  className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="w-56 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Contact Type
+                </Label>
+                <Select
+                  value={selectedType}
+                  onValueChange={(val) => {
+                    setSelectedType(val);
+                    handleFilterChange();
+                  }}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Types
+                    </SelectItem>
+                    <SelectItem value="Buyer" className="rounded-lg">
+                      Buyer
+                    </SelectItem>
+                    <SelectItem value="Factory" className="rounded-lg">
+                      Factory
+                    </SelectItem>
+                    <SelectItem value="Courier" className="rounded-lg">
+                      Courier
+                    </SelectItem>
+                    <SelectItem value="Other" className="rounded-lg">
+                      Other
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-64 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Created By
+                </Label>
+                <Select
+                  value={selectedUser}
+                  onValueChange={(value) => {
+                    setSelectedUser(value);
+                    handleFilterChange();
+                  }}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
+                    <SelectValue placeholder="All users" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All users
+                    </SelectItem>
+                    {users.map((user) => (
+                      <SelectItem
+                        key={user.id}
+                        value={user.id.toString()}
+                        className="rounded-lg"
+                      >
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="space-y-2">
+                  <div className="h-4" />
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl shadow-sm hover:shadow-md"
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+
+              <div className="ml-auto space-y-2 min-w-[140px]">
+                <div className="h-4" />
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                  <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                    {contacts.length} / {totalContacts} Records
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Main Table Content */}
           <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">

@@ -5,7 +5,14 @@ import { useEffect, useState, useRef } from "react";
 import { OrderTable } from "./OrderTable";
 import EditOrderForm from "./EditOrderForm";
 import OrderDetails from "./OrderDetails";
-import { Package, Plus, ShoppingCart, ChevronLeft } from "lucide-react";
+import {
+  Package,
+  Plus,
+  ShoppingCart,
+  ChevronLeft,
+  Filter,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +58,7 @@ export default function OrderList() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
 
   const router = useRouter();
 
@@ -312,107 +320,139 @@ export default function OrderList() {
         </div>
 
         <div className="space-y-6">
-          <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="w-48 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Status
-              </Label>
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Status
-                  </SelectItem>
-                  <SelectItem value="PENDING" className="rounded-lg">
-                    Not Shipped
-                  </SelectItem>
-                  <SelectItem value="PAID" className="rounded-lg">
-                    Shipped
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="w-56 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Buyer
-              </Label>
-              <Select value={selectedBuyer} onValueChange={setSelectedBuyer}>
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
-                  <SelectValue placeholder="Buyer" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Buyers
-                  </SelectItem>
-                  {buyers.map((buyer) => (
-                    <SelectItem
-                      key={buyer.id}
-                      value={buyer.id.toString()}
-                      className="rounded-lg"
-                    >
-                      {buyer.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="w-56 space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Factory
-              </Label>
-              <Select
-                value={selectedFactory}
-                onValueChange={setSelectedFactory}
-              >
-                <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
-                  <SelectValue placeholder="Factory" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
-                  <SelectItem value="all" className="rounded-lg">
-                    All Factories
-                  </SelectItem>
-                  {factories.map((factory) => (
-                    <SelectItem
-                      key={factory.id}
-                      value={factory.id.toString()}
-                      className="rounded-lg"
-                    >
-                      {factory.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {(selectedStatus !== "all" ||
-              selectedBuyer !== "all" ||
-              selectedFactory !== "all") && (
-              <div className="space-y-2">
-                <div className="h-4" /> {/* Spacer to align with labels */}
-                <Button
-                  onClick={clearAllFilters}
-                  variant="ghost"
-                  size="sm"
-                  className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            )}
-
-            <div className="ml-auto space-y-2 min-w-[140px]">
-              <div className="h-4" /> {/* Spacer to align with labels */}
-              <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
-                <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
-                  {orders.length} / {totalOrders} Records
-                </span>
-              </div>
-            </div>
+          {/* Header for Filter Section */}
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters & Search
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition-all"
+            >
+              {showFilters ? (
+                <>
+                  <X className="w-3.5 h-3.5 mr-2" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Show Filters
+                </>
+              )}
+            </Button>
           </div>
+
+          {/* Enhanced Filter Bar */}
+          {showFilters && (
+            <div className="flex flex-wrap items-end gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="w-48 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Status
+                </Label>
+                <Select
+                  value={selectedStatus}
+                  onValueChange={setSelectedStatus}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Status
+                    </SelectItem>
+                    <SelectItem value="PENDING" className="rounded-lg">
+                      Not Shipped
+                    </SelectItem>
+                    <SelectItem value="PAID" className="rounded-lg">
+                      Shipped
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-56 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Buyer
+                </Label>
+                <Select value={selectedBuyer} onValueChange={setSelectedBuyer}>
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
+                    <SelectValue placeholder="Buyer" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Buyers
+                    </SelectItem>
+                    {buyers.map((buyer) => (
+                      <SelectItem
+                        key={buyer.id}
+                        value={buyer.id.toString()}
+                        className="rounded-lg"
+                      >
+                        {buyer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-56 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Factory
+                </Label>
+                <Select
+                  value={selectedFactory}
+                  onValueChange={setSelectedFactory}
+                >
+                  <SelectTrigger className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all">
+                    <SelectValue placeholder="Factory" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 shadow-2xl p-1">
+                    <SelectItem value="all" className="rounded-lg">
+                      All Factories
+                    </SelectItem>
+                    {factories.map((factory) => (
+                      <SelectItem
+                        key={factory.id}
+                        value={factory.id.toString()}
+                        className="rounded-lg"
+                      >
+                        {factory.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(selectedStatus !== "all" ||
+                selectedBuyer !== "all" ||
+                selectedFactory !== "all") && (
+                <div className="space-y-2">
+                  <div className="h-4" /> {/* Spacer to align with labels */}
+                  <Button
+                    onClick={clearAllFilters}
+                    variant="ghost"
+                    size="sm"
+                    className="h-11 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-4 transition-all rounded-xl"
+                  >
+                    Reset Filters
+                  </Button>
+                </div>
+              )}
+
+              <div className="ml-auto space-y-2 min-w-[140px]">
+                <div className="h-4" /> {/* Spacer to align with labels */}
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                  <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                    {orders.length} / {totalOrders} Records
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="w-full">
             {/* Main Table Content */}

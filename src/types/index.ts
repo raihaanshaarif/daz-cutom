@@ -320,9 +320,86 @@ export interface Task {
   dailyLogs?: TaskDailyLog[];
 }
 
+export type FabricQuality = "ACTUAL" | "AVAILABLE" | "IMPORTED";
+export type SmsStatus = "PENDING" | "SUBMITTED" | "APPROVED" | "DROPPED";
+export type SeasonName =
+  | "SPRING"
+  | "SUMMER"
+  | "AUTUMN"
+  | "WINTER"
+  | "RESORT"
+  | "PRE_FALL";
+
+export interface DevelopmentSample {
+  id: number;
+  buyerId: number;
+  buyer?: Buyer;
+  factoryId: number;
+  factory?: Factory;
+  createdById: number;
+  createdBy?: User;
+  seasonName: SeasonName;
+  seasonYear: number;
+  brand?: string;
+  style: string;
+  styleName?: string;
+  description?: string;
+  composition?: string;
+  sizes?: string;
+  color?: string;
+  smsDeadline?: string;
+  tpReceiveDate?: string;
+  originalSwatchDate?: string;
+  originalSampleDate?: string;
+  labdipReceiveDate?: string;
+  labApprovalDate?: string;
+  printEmbStrikeOff?: string;
+  smsSubmissionDate?: string;
+  fabricQuality: FabricQuality;
+  smsStatus: SmsStatus;
+  userRemarks?: string;
+  managementRemarks?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskStats {
+  targetValue: number;
+  achieved: number;
+  performance?: number;
+  status: TaskStatus;
+  createdAt: string;
+}
+
+export interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  targetValue: number;
+  assignedById: number;
+  assignedToId: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  assignedBy?: User;
+  assignedTo?: User;
+  dailyLogs?: TaskDailyLog[];
+}
+
 export interface TaskFormData {
   title: string;
   description?: string;
   targetValue: number;
   assignedToId: number;
+}
+
+export interface DevelopmentStats {
+  totalSamples: number;
+  statusCounts: {
+    PENDING: number;
+    SUBMITTED: number;
+    APPROVED: number;
+    DROPPED: number;
+  };
+  seasonCounts?: Record<string, number>;
 }
