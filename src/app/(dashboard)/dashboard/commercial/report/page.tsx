@@ -242,7 +242,7 @@ export default function CommercialReportPage() {
                   variant="secondary"
                   className="bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-none font-medium text-[10px]"
                 >
-                  Billed Items
+                  Total Invoices
                 </Badge>
               </div>
             </div>
@@ -253,7 +253,7 @@ export default function CommercialReportPage() {
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center justify-between">
-              Gross Receivables
+              Invoice Value
               <DollarSign className="h-5 w-5 text-emerald-500 opacity-20 group-hover:opacity-100 transition-opacity" />
             </CardTitle>
           </CardHeader>
@@ -271,7 +271,7 @@ export default function CommercialReportPage() {
                   variant="secondary"
                   className="bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none font-medium text-[10px]"
                 >
-                  Invoice Aggregate
+                  Total Invoice Value
                 </Badge>
               </div>
             </div>
@@ -282,7 +282,7 @@ export default function CommercialReportPage() {
           <div className="absolute top-0 left-0 w-1 h-full bg-purple-500" />
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-500 flex items-center justify-between">
-              Agent Earnings
+              Agent Commission
               <TrendingUp className="h-5 w-5 text-purple-500 opacity-20 group-hover:opacity-100 transition-opacity" />
             </CardTitle>
           </CardHeader>
@@ -300,7 +300,7 @@ export default function CommercialReportPage() {
                   variant="secondary"
                   className="bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border-none font-medium text-[10px]"
                 >
-                  LC Commission
+                  Total Agent Commission
                 </Badge>
               </div>
             </div>

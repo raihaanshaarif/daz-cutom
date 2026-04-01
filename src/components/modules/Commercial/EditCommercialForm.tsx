@@ -193,10 +193,25 @@ export function EditCommercialForm({
     field: keyof CommercialFormData,
     value: string | number,
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => {
+      const updatedData = {
+        ...prev,
+        [field]: value,
+      };
+
+      // Auto-calculate balance if lacAmount or receivedAmount changes
+      if (field === "lacAmount" || field === "receivedAmount") {
+        const lac =
+          field === "lacAmount" ? Number(value) : Number(prev.lacAmount);
+        const received =
+          field === "receivedAmount"
+            ? Number(value)
+            : Number(prev.receivedAmount);
+        updatedData.balance = lac - received;
+      }
+
+      return updatedData;
+    });
   };
 
   return (

@@ -71,175 +71,76 @@ export function ViewCommercialModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <FileText className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-semibold">
-                  Commercial Details
-                </DialogTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  {commercial.bookingReference}
-                </p>
-              </div>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader className="pb-4 border-b">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FileText className="w-6 h-6 text-blue-600" />
             </div>
-            <Badge
-              variant="outline"
-              className={`${getStatusColor(commercial.documentStatus)} flex items-center gap-1`}
-            >
-              {getStatusIcon(commercial.documentStatus)}
-              {commercial.documentStatus}
-            </Badge>
+            <div>
+              <DialogTitle className="text-xl font-semibold">
+                Invoice Details: {commercial.invoiceNo}
+              </DialogTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                {commercial.bookingReference}
+              </p>
+            </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 mt-4">
           {/* Basic Information */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Package className="w-5 h-5 text-blue-600" />
+            <CardHeader className="pb-3 border-b bg-gray-50/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-gray-700">
+                <Package className="w-4 h-4" />
                 Basic Information
               </CardTitle>
-              <Separator className="mt-2" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Booking Reference
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {commercial.bookingReference}
-                    </div>
-                    <Separator />
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.bookingReference || "—"}
+                    </p>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Invoice No
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {commercial.invoiceNo}
-                    </div>
-                    <Separator />
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.invoiceNo || "—"}
+                    </p>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                </div>
+                <div className="flex items-start gap-3">
+                  <CreditCard className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Total Price
-                    </div>
-                    <div className="text-lg font-bold text-green-600">
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
                       ${commercial.totalPrice?.toLocaleString() ?? "0"}
-                    </div>
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  {/* <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      LAC Amount
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      ${commercial.lacAmount.toLocaleString()}
-                    </div>
-                    <Separator />
-                  </div> */}
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Doc Courier No
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {commercial.docCourierNo || "-"}
-                    </div>
-                    <Separator />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <div className="flex items-start gap-3">
+                  <Package className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Quantity
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
                       {commercial.quantity?.toLocaleString() ?? "0"}
-                    </div>
-                    <Separator />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Remarks
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900">
-                      {commercial.remarks || "-"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dates */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-green-600" />
-                Important Dates
-              </CardTitle>
-              <Separator className="mt-2" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-blue-600 uppercase tracking-wide">
-                    Booking Date
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {commercial.bookingDate
-                      ? new Date(commercial.bookingDate).toLocaleDateString()
-                      : "-"}
-                  </div>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-green-600 uppercase tracking-wide">
-                    Booking Handover
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {commercial.bookingHandoverDate
-                      ? new Date(
-                          commercial.bookingHandoverDate,
-                        ).toLocaleDateString()
-                      : "-"}
-                  </div>
-                </div>
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-purple-600 uppercase tracking-wide">
-                    Handover Date
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {commercial.handoverDate
-                      ? new Date(commercial.handoverDate).toLocaleDateString()
-                      : "-"}
-                  </div>
-                </div>
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-orange-600 uppercase tracking-wide">
-                    ETD
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {commercial.etd
-                      ? new Date(commercial.etd).toLocaleDateString()
-                      : "-"}
-                  </div>
-                </div>
-                <div className="bg-red-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-red-600 uppercase tracking-wide">
-                    ETA
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {commercial.eta
-                      ? new Date(commercial.eta).toLocaleDateString()
-                      : "-"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -248,137 +149,259 @@ export function ViewCommercialModal({
 
           {/* Payment Information */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-purple-600" />
+            <CardHeader className="pb-3 border-b bg-gray-50/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-gray-700">
+                <CreditCard className="w-4 h-4" />
                 Payment Information
               </CardTitle>
-              <Separator className="mt-2" />
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-600">
-                      Payment Status
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className={`${getStatusColor(commercial.paymentStatus)} flex items-center gap-1`}
-                    >
-                      {getStatusIcon(commercial.paymentStatus)}
-                      {commercial.paymentStatus}
-                    </Badge>
-                  </div>
-                  {/* LAC Amount under payment info */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
-                      LAC Amount
-                    </div>
-                    <div className="text-sm font-semibold">
-                      ${commercial.lacAmount?.toLocaleString() || "0"}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm font-medium text-gray-600">
-                      Received Amount
-                    </span>
-                    <span className="text-lg font-bold text-green-600">
-                      ${commercial.receivedAmount?.toLocaleString() || "0"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm font-medium text-gray-600">
-                      Received Date
-                    </span>
-                    <span className="text-sm font-semibold text-gray-900">
-                      {new Date(commercial.receivedDate).toLocaleDateString()}
-                    </span>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-green-600 uppercase tracking-wider">
+                    LAC Amount
+                  </p>
+                  <p className="text-lg font-bold text-green-700 mt-1">
+                    ${commercial.lacAmount?.toLocaleString() ?? "0"}
+                  </p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-blue-600 uppercase tracking-wider">
+                    Received Amount
+                  </p>
+                  <p className="text-lg font-bold text-blue-700 mt-1">
+                    ${commercial.receivedAmount?.toLocaleString() ?? "0"}
+                  </p>
+                </div>
+                <div className="bg-red-50 p-3 rounded-lg">
+                  <p className="text-xs font-medium text-red-600 uppercase tracking-wider">
+                    Balance
+                  </p>
+                  <p className="text-lg font-bold text-red-700 mt-1">
+                    ${commercial.balance?.toLocaleString() ?? "0"}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-600">
+                    Payment Status
+                  </p>
+                  <Badge
+                    variant="outline"
+                    className={`${getStatusColor(commercial.paymentStatus)} flex items-center gap-1`}
+                  >
+                    {getStatusIcon(commercial.paymentStatus)}
+                    {commercial.paymentStatus}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Important Dates */}
+          <Card>
+            <CardHeader className="pb-3 border-b bg-gray-50/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-gray-700">
+                <Calendar className="w-4 h-4" />
+                Important Dates
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Booking Date
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.bookingDate
+                        ? new Date(commercial.bookingDate).toLocaleDateString()
+                        : "—"}
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
-                      Approximate Payment Date
-                    </div>
-                    <div className="text-sm font-semibold">
-                      {commercial.approximatePaymentDate
-                        ? new Date(
-                            commercial.approximatePaymentDate,
-                          ).toLocaleDateString()
-                        : "Not set"}
-                    </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ETD
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.etd
+                        ? new Date(commercial.etd).toLocaleDateString()
+                        : "—"}
+                    </p>
                   </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-sm font-medium text-gray-600">
-                      Balance
-                    </span>
-                    <span className="text-lg font-bold text-red-600">
-                      ${commercial.balance?.toLocaleString() ?? "0"}
-                    </span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ETA
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.eta
+                        ? new Date(commercial.eta).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created At
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {new Date(commercial.createdAt).toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Additional Details */}
+          <Card>
+            <CardHeader className="pb-3 border-b bg-gray-50/50">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-gray-700">
+                <Clock className="w-4 h-4" />
+                Additional Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Document Status
+                    </p>
+                    <Badge variant="outline" className="mt-1">
+                      {commercial.documentStatus}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Doc Courier No
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.docCourierNo || "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Booking Handover Date
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.bookingHandoverDate
+                        ? new Date(
+                            commercial.bookingHandoverDate,
+                          ).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Handover Date
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.handoverDate
+                        ? new Date(commercial.handoverDate).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Approx. Payment Date
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.approximatePaymentDate
+                        ? new Date(
+                            commercial.approximatePaymentDate,
+                          ).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Received Date
+                    </p>
+                    <p className="text-sm text-gray-900 font-medium">
+                      {commercial.receivedDate
+                        ? new Date(commercial.receivedDate).toLocaleDateString()
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {commercial.remarks && (
+                <div className="mt-6 p-4 bg-zinc-900 text-zinc-50 rounded-xl">
+                  <p className="text-xs font-medium text-zinc-400 uppercase tracking-wider mb-2">
+                    Remarks
+                  </p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {commercial.remarks}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Associated Orders */}
           {commercial.orders && commercial.orders.length > 0 && (
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="w-5 h-5 text-indigo-600" />
+              <CardHeader className="pb-3 border-b bg-gray-50/50">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2 text-gray-700">
+                  <Package className="w-4 h-4" />
                   Associated Orders ({commercial.orders.length})
                 </CardTitle>
-                <Separator className="mt-2" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-4">
                 <div className="space-y-3">
                   {commercial.orders.map((co) => (
                     <div
                       key={co.id}
-                      className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-50 text-blue-700 border-blue-200"
-                            >
-                              {co.order?.orderNumber}
-                            </Badge>
-                            <span className="text-sm text-gray-600">
-                              {co.order?.style}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Buyer:</span>
-                              <div className="font-medium">
-                                {co.order?.buyer?.name}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Quantity:</span>
-                              <div className="font-medium">
-                                {co.order?.quantity?.toLocaleString()}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Price:</span>
-                              <div className="font-medium">
-                                ${co.order?.price?.toLocaleString()}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Total:</span>
-                              <div className="font-medium text-green-600">
-                                ${co.order?.totalPrice?.toLocaleString()}
-                              </div>
-                            </div>
-                          </div>
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-zinc-100 rounded-md">
+                          <Package className="w-4 h-4 text-zinc-600" />
                         </div>
+                        <div>
+                          <p className="text-sm font-semibold text-zinc-900">
+                            {co.order?.orderNumber || `Order #${co.orderId}`}
+                          </p>
+                          <p className="text-xs text-zinc-500">
+                            {co.order?.buyer?.name} • {co.order?.style}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-zinc-900">
+                          {co.order?.quantity} Units
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          ${co.order?.totalPrice?.toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -386,37 +409,6 @@ export function ViewCommercialModal({
               </CardContent>
             </Card>
           )}
-
-          {/* Timestamps */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Clock className="w-5 h-5 text-gray-600" />
-                Record Information
-              </CardTitle>
-              <Separator className="mt-2" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                    Created At
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(commercial.createdAt).toLocaleString()}
-                  </div>
-                </div>
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <div className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-                    Updated At
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900 mt-1">
-                    {new Date(commercial.updatedAt).toLocaleString()}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         <div className="flex justify-end pt-6 border-t">

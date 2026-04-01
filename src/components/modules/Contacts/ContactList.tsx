@@ -356,7 +356,7 @@ export default function ContactList() {
             </div>
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 ">
-                Contact Directory
+                Contact Lead
               </h1>
               <p className="text-base text-zinc-500 dark:text-zinc-400">
                 Manage your network of {totalContacts} professional contacts
@@ -430,7 +430,7 @@ export default function ContactList() {
 
               <div className="w-56 space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Contact Type
+                  Lead Type
                 </Label>
                 <Select
                   value={selectedType}
@@ -524,10 +524,10 @@ export default function ContactList() {
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                    Contact Database
+                    Lead Database
                   </CardTitle>
                   <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
-                    Search and manage your business contact information
+                    Search and manage your business Lead information
                   </CardDescription>
                 </div>
               </div>

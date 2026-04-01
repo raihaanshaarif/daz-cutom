@@ -215,6 +215,58 @@ const AdminCommandCenter = () => {
           return etdDate >= startDate && etdDate <= endDate;
         });
 
+        // 7. Commission Forecasting Logic
+        // Combine pending commercials with orders that have missing or low-payment commercials
+        const overdueOrders = allOrders
+          .filter((o) => {
+            const shipDate = o.shipDate ? new Date(o.shipDate) : null;
+            const isShippedOrOverdue = shipDate && shipDate <= now;
+
+            // Find related commercials (via commercialOrders)
+            const relatedCommercials = allCommercials.filter((c) =>
+              (c as any).orders?.some((co: any) => co.orderId === o.id),
+            );
+
+            const totalReceived = relatedCommercials.reduce(
+              (sum, c) => sum + (c.receivedAmount || 0),
+              0,
+            );
+            const isPaymentDue = totalReceived < (o.totalPrice || 0);
+
+            return isShippedOrOverdue && isPaymentDue;
+          })
+          .map(
+            (o) =>
+              ({
+                id: `order-${o.id}`,
+                invoiceNo: `ORD: ${o.orderNumber}`,
+                lacAmount: o.totalPrice || 0,
+                paymentStatus: "DUE_PAYMENT",
+                approximatePaymentDate: o.shipDate,
+                etd: o.shipDate,
+                orders: [{ order: o }],
+              }) as any,
+          );
+
+        const upcomingCommissions = allCommercials.filter(
+          (c) =>
+            (c.paymentStatus === "PENDING" || c.paymentStatus === "PARTIAL") &&
+            c.approximatePaymentDate &&
+            new Date(c.approximatePaymentDate as any) >= now,
+        );
+
+        const combinedForecast = [...upcomingCommissions, ...overdueOrders]
+          .sort((a, b) => {
+            const dateA = new Date(
+              a.approximatePaymentDate || a.etd || 0,
+            ).getTime();
+            const dateB = new Date(
+              b.approximatePaymentDate || b.etd || 0,
+            ).getTime();
+            return dateA - dateB;
+          })
+          .slice(0, 15);
+
         const totalPendingLAC = timeframeInvoices
           .filter(
             (c) =>
@@ -261,20 +313,7 @@ const AdminCommandCenter = () => {
             pendingLAC: totalPendingLAC,
             receivedLAC: totalPaidLAC,
             shippedInvoiceCount: shippedInvoices.length,
-            upcomingCommissions: allCommercials
-              .filter(
-                (c) =>
-                  (c.paymentStatus === "PENDING" ||
-                    c.paymentStatus === "PARTIAL") &&
-                  c.approximatePaymentDate &&
-                  new Date(c.approximatePaymentDate as any) >= now,
-              )
-              .sort(
-                (a, b) =>
-                  new Date(a.approximatePaymentDate as any).getTime() -
-                  new Date(b.approximatePaymentDate as any).getTime(),
-              )
-              .slice(0, 10),
+            upcomingCommissions: combinedForecast, // Updated forecasting logic
           },
           pipeline: {
             totalLeads: timeframeContacts.length,
@@ -517,9 +556,9 @@ const AdminCommandCenter = () => {
                       className="flex items-start gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 relative overflow-hidden group hover:border-indigo-200 hover:bg-white transition-all"
                     >
                       <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full -mr-8 -mt-8 group-hover:bg-indigo-100/50 transition-colors" />
-                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border font-black text-indigo-600 text-xs text-center leading-tight">
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border font-black text-indigo-600 text-[10px] text-center leading-tight">
                         {new Date(
-                          comm.approximatePaymentDate as any,
+                          (comm.approximatePaymentDate || comm.etd) as any,
                         ).toLocaleString("default", {
                           month: "short",
                           day: "numeric",
@@ -529,15 +568,16 @@ const AdminCommandCenter = () => {
                         <div className="flex justify-between items-start mb-1">
                           <div>
                             <h4 className="text-sm font-bold text-slate-800">
-                              Inv: {comm.invoiceNo || "N/A"}
+                              {comm.invoiceNo}
                             </h4>
                             <p className="text-[10px] text-slate-500 font-medium">
-                              {/* Assuming prisma structure commercial.orders[0].order.buyer.name */}
-                              {(comm as any).orders?.[0]?.order?.buyer?.name ||
+                              {comm.orders?.[0]?.order?.buyer?.name ||
+                                (comm as any).order?.buyer?.name ||
                                 "Multiple Buyers"}{" "}
                               •{" "}
-                              {(comm as any).orders?.[0]?.order?.factory
-                                ?.name || "Direct Factory"}
+                              {comm.orders?.[0]?.order?.factory?.name ||
+                                (comm as any).order?.factory?.name ||
+                                "Direct Factory"}
                             </p>
                           </div>
                           <div className="text-right">
@@ -547,28 +587,36 @@ const AdminCommandCenter = () => {
                             <Badge
                               variant="outline"
                               className={`text-[9px] px-1 py-0 h-4 border-none ${
-                                comm.paymentStatus === "PARTIAL"
-                                  ? "bg-amber-100 text-amber-700"
+                                comm.paymentStatus === "PARTIAL" ||
+                                comm.paymentStatus === "DUE_PAYMENT"
+                                  ? "bg-amber-100 text-amber-700 font-bold"
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {comm.paymentStatus}
+                              {comm.paymentStatus === "DUE_PAYMENT"
+                                ? "OVERDUE"
+                                : comm.paymentStatus}
                             </Badge>
                           </div>
                         </div>
                         <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-2">
                           <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> ETD:{" "}
+                            <Calendar className="w-3 h-3 text-indigo-400" />{" "}
+                            ETD:{" "}
                             {comm.etd
                               ? new Date(comm.etd as any).toLocaleDateString()
                               : "TBD"}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> Pay Date:{" "}
-                            {new Date(
-                              comm.approximatePaymentDate as any,
-                            ).toLocaleDateString()}
-                          </span>
+                          {(comm.approximatePaymentDate || comm.etd) && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-indigo-400" /> Pay
+                              Date:{" "}
+                              {new Date(
+                                (comm.approximatePaymentDate ||
+                                  comm.etd) as any,
+                              ).toLocaleDateString()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

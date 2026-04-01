@@ -25,12 +25,6 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export default function CommercialList() {
   const [commercials, setCommercials] = useState<Commercial[]>([]);
@@ -429,46 +423,22 @@ export default function CommercialList() {
         </div>
 
         {/* Modals and Dialogs */}
-        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5" />
-                </div>
-                Edit Commercial: {editingCommercial?.invoiceNo}
-              </DialogTitle>
-            </DialogHeader>
-            {editingCommercial && (
-              <EditCommercialForm
-                commercial={editingCommercial}
-                onClose={handleCloseEditModal}
-                onSuccess={handleEditSuccess}
-                isOpen={false}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+        {editingCommercial && (
+          <EditCommercialForm
+            commercial={editingCommercial}
+            onClose={handleCloseEditModal}
+            onSuccess={handleEditSuccess}
+            isOpen={isEditModalOpen}
+          />
+        )}
 
-        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl">
-            <DialogHeader className="pb-4 border-b border-zinc-100">
-              <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5" />
-                </div>
-                Invoice Details: {viewCommercial?.invoiceNo}
-              </DialogTitle>
-            </DialogHeader>
-            {viewCommercial && (
-              <ViewCommercialModal
-                commercial={viewCommercial}
-                onClose={handleCloseViewModal}
-                isOpen={false}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+        {viewCommercial && (
+          <ViewCommercialModal
+            commercial={viewCommercial}
+            onClose={handleCloseViewModal}
+            isOpen={isViewModalOpen}
+          />
+        )}
       </div>
     </div>
   );
