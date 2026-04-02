@@ -1,14 +1,18 @@
 "use server";
 import { FieldValues } from "react-hook-form";
+import { authenticatedFetch } from "@/lib/apiClient";
 
 export const register = async (data: FieldValues) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const res = await authenticatedFetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/user`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  });
+  );
   if (!res?.ok) {
     console.error("User Registration Failed", await res.text());
   }

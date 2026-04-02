@@ -11,6 +11,7 @@ declare module "next-auth" {
       image?: string | null;
       role?: string | null;
     };
+    backendToken?: string;
   }
   interface User {
     id: string;
@@ -18,6 +19,15 @@ declare module "next-auth" {
     email?: string | null;
     image?: string | null;
     role?: string | null;
+    backendToken?: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    role?: string;
+    backendToken?: string;
   }
 }
 
@@ -68,6 +78,7 @@ export const authOptions: NextAuthOptions = {
               email: user?.email,
               role: user?.role,
               image: user?.picture,
+              backendToken: user?.token,
             };
           } else {
             return null;
@@ -80,10 +91,44 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Handle Google OAuth - send to backend for JWT token
+      if (account?.provider === "google") {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/auth/google`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: user.name,
+                email: user.email,
+                picture: user.image,
+              }),
+            },
+          );
+
+          if (res.ok) {
+            const { data } = await res.json();
+            // Store backend token in user object
+            user.backendToken = data?.token;
+            user.id = data?.user?.id?.toString();
+            user.role = data?.user?.role;
+          }
+        } catch (error) {
+          console.error("Error authenticating with backend:", error);
+          return false;
+        }
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user?.id;
         token.role = user?.role;
+        token.backendToken = user?.backendToken;
       }
       return token;
     },
@@ -91,6 +136,7 @@ export const authOptions: NextAuthOptions = {
       if (session?.user) {
         session.user.id = token?.id as string;
         session.user.role = token?.role as string;
+        session.backendToken = token?.backendToken as string;
       }
       return session;
     },

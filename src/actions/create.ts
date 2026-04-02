@@ -3,6 +3,7 @@
 import { getUserSession } from "@/helpers/getUserSession";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { authenticatedFetch } from "@/lib/apiClient";
 
 export const create = async (data: FormData) => {
   const session = await getUserSession();
@@ -12,7 +13,7 @@ export const create = async (data: FormData) => {
     authorId: session?.user?.id,
   };
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/post`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -62,7 +63,7 @@ export const createContact = async (data: FormData) => {
     modifiedData.countryId = parseInt(String(sanitized.countryId));
   }
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -82,7 +83,7 @@ export const createContact = async (data: FormData) => {
 export const createCountry = async (data: FormData) => {
   const contactInfo = Object.fromEntries(data.entries());
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -102,7 +103,7 @@ export const createCountry = async (data: FormData) => {
 export const createBuyer = async (data: FormData) => {
   const buyerInfo = Object.fromEntries(data.entries());
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -122,7 +123,7 @@ export const createBuyer = async (data: FormData) => {
 export const createCourier = async (data: FormData) => {
   const courierInfo = Object.fromEntries(data.entries());
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies`,
     {
       method: "POST",
@@ -145,7 +146,7 @@ export const createCourier = async (data: FormData) => {
 export const updateCourier = async (id: number, data: FormData) => {
   const courierInfo = Object.fromEntries(data.entries());
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies/${id}`,
     {
       method: "PATCH",
@@ -166,7 +167,7 @@ export const updateCourier = async (id: number, data: FormData) => {
 };
 
 export const deleteCourier = async (id: number) => {
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies/${id}`,
     {
       method: "DELETE",
@@ -193,7 +194,7 @@ export const createParcel = async (data: FormData) => {
     weight: parseInt(parcelInfo.weight as string),
   };
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels`,
     {
       method: "POST",
@@ -223,7 +224,7 @@ export const updateParcel = async (id: number, data: FormData) => {
     weight: parseInt(parcelInfo.weight as string),
   };
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels/${id}`,
     {
       method: "PATCH",
@@ -244,7 +245,7 @@ export const updateParcel = async (id: number, data: FormData) => {
 };
 
 export const deleteParcel = async (id: number) => {
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels/${id}`,
     {
       method: "DELETE",
@@ -263,7 +264,7 @@ export const deleteParcel = async (id: number) => {
 export const createFactory = async (data: FormData) => {
   const factoryInfo = Object.fromEntries(data.entries());
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/order/factories`,
     {
       method: "POST",
@@ -330,7 +331,7 @@ export const createOrder = async (data: FormData) => {
     createdById: toInt(session?.user?.id as string),
   };
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/orders`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/orders`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -378,7 +379,7 @@ export const createDevelopmentSample = async (data: FormData) => {
     createdById: toInt(session?.user?.id as string),
   };
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/development`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/development`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -396,7 +397,7 @@ export const createDevelopmentSample = async (data: FormData) => {
 };
 
 export const deleteDevelopmentSample = async (id: number) => {
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/development/${id}`,
     {
       method: "DELETE",
@@ -458,7 +459,7 @@ export const updateDevelopmentSample = async (data: FormData) => {
     managementRemarks: o.managementRemarks || undefined,
   };
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/development/${processedData.id}`,
     {
       method: "PATCH",
@@ -550,7 +551,7 @@ export const updateOrder = async (id: number, data: FormData) => {
       : null,
   };
 
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/order/orders/${id}`,
     {
       method: "PATCH",
@@ -571,7 +572,7 @@ export const updateOrder = async (id: number, data: FormData) => {
 };
 
 export const deleteOrder = async (id: number) => {
-  const res = await fetch(
+  const res = await authenticatedFetch(
     `${process.env.NEXT_PUBLIC_BASE_API}/order/orders/${id}`,
     {
       method: "DELETE",
@@ -588,7 +589,7 @@ export const deleteOrder = async (id: number) => {
 };
 
 export const deleteContact = async (id: number) => {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact/${id}`, {
+  const res = await authenticatedFetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact/${id}`, {
     method: "DELETE",
   });
 
@@ -600,3 +601,4 @@ export const deleteContact = async (id: number) => {
   }
   return result;
 };
+
