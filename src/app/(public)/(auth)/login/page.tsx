@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import LoginForm from "@/components/modules/Auth/LoginForm";
 
-const LoginPage = () => {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { status } = useSession();
@@ -34,6 +34,20 @@ const LoginPage = () => {
   }
 
   return <LoginForm />;
+}
+
+const LoginPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center min-h-screen">
+          <div>Loading...</div>
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
+  );
 };
 
 export default LoginPage;
