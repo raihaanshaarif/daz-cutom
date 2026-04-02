@@ -64,21 +64,23 @@ export const authOptions: NextAuthOptions = {
               }),
             },
           );
-          // console.log("Response From Backend:", res);
+
           if (!res?.ok) {
             console.error("Login Failed", await res.text());
             return null;
           }
 
-          const { data: user } = await res.json();
-          if (user.id) {
+          const response = await res.json();
+          const { user, token } = response.data;
+
+          if (user?.id) {
             return {
-              id: user?.id,
-              name: user?.name,
-              email: user?.email,
-              role: user?.role,
-              image: user?.picture,
-              backendToken: user?.token,
+              id: user.id.toString(),
+              name: user.name,
+              email: user.email,
+              role: user.role,
+              image: user.picture,
+              backendToken: token,
             };
           } else {
             return null;
