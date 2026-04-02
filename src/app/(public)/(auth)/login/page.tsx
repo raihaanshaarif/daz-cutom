@@ -11,11 +11,11 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.replace("/dashboard");
+      router.push("/dashboard");
     }
   }, [status, router]);
 
-  if (status === "loading") {
+  if (status === "loading" || status === "authenticated") {
     return <div>Loading...</div>;
   }
 

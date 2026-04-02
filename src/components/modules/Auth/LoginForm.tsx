@@ -30,17 +30,17 @@ export default function LoginForm() {
 
   const onSubmit = async (values: FieldValues) => {
     try {
-      // const res = await login(values);
-      // if (res?.id) {
-      //   toast.success("User Logged in Successfully");
-      // } else {
-      //   toast.error("User Login Failed");
-      // }
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
         ...values,
-        redirect: true,
-        callbackUrl: "/dashboard",
+        redirect: false,
       });
+
+      if (result?.error) {
+        console.error("Login failed:", result.error);
+      } else if (result?.ok) {
+        // Successful login - NextAuth will handle the redirect
+        window.location.href = "/dashboard";
+      }
     } catch (err) {
       console.error(err);
     }
