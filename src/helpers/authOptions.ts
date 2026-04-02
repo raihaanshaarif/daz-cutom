@@ -93,7 +93,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       // Handle Google OAuth - send to backend for JWT token
       if (account?.provider === "google") {
         try {
@@ -129,7 +129,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user?.id;
-        token.role = user?.role;
+        token.role = user?.role ?? undefined;
         token.backendToken = user?.backendToken;
       }
       return token;
