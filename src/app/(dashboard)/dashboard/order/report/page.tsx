@@ -25,6 +25,7 @@ import {
 import { useState, useEffect } from "react";
 import { OrderTable } from "@/components/modules/Order/OrderTable";
 import { Order, OrderItem, Buyer, Factory } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function OrderReportPage() {
   const [selectedBuyer, setSelectedBuyer] = useState<string>("all");
@@ -43,13 +44,15 @@ export default function OrderReportPage() {
     totalCommission: 0,
   });
 
+  const { authFetch } = useAuthFetch();
+
   // Fetch buyers and factories for filters
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
         const [buyersRes, factoriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
         ]);
         const buyersData = await buyersRes.json();
         const factoriesData = await factoriesRes.json();
@@ -60,7 +63,7 @@ export default function OrderReportPage() {
       }
     };
     fetchFilterData();
-  }, []);
+  }, [authFetch]);
 
   // Fetch orders based on filters
   useEffect(() => {
@@ -78,7 +81,7 @@ export default function OrderReportPage() {
           );
         }
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
         );
         const { data } = await res.json();

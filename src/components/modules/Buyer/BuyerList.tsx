@@ -1,83 +1,76 @@
 "use client";
 
 import { Buyer } from "@/types";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BuyerTable } from "./BuyerTable";
-import { Database, Filter, ShoppingBag, X } from "lucide-react";
+import { Database, Filter, X, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSession } from "next-auth/react";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function BuyerList() {
+  const { authFetch } = useAuthFetch();
+  const router = useRouter();
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalBuyers, setTotalBuyers] = useState(0);
+  const limit = 10;
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Access User from session for API calls
-  const { data: session } = useSession();
-  const userId = session?.user?.id ?? "";
-  const userRole = session?.user?.role ?? "";
-  const { authFetch } = useAuthFetch();
-  console.log(userId, userRole);
-
-  useEffect(() => {
-    if (!userId || !userRole) return; // Wait for session to load
-    const fetchBuyers = async () => {
+  const fetchBuyers = useCallback(
+    async ({ page = 1, search = "" } = {}) => {
       setLoading(true);
       try {
+        const params = new URLSearchParams({
+          page: page.toString(),
+          limit: limit.toString(),
+        });
+        if (search) params.append("search", search);
+
         const res = await authFetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
-          {
-            cache: "no-store",
-          },
+          `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers?${params.toString()}`,
+          { cache: "no-store" },
         );
-        const responseData = await res.json();
-        console.log("API response data:", responseData);
 
-        // Check if response is an array or object with data
-        let data = [];
-        let pagination = null;
+        const payload = await res.json();
+        const data = Array.isArray(payload)
+          ? payload
+          : (payload?.data ?? payload?.data?.data ?? []);
+        const pagination =
+          payload?.pagination ?? payload?.meta ?? payload?.data?.meta;
 
-        if (Array.isArray(responseData)) {
-          data = responseData;
-          // For array response, assume all data is returned, no pagination
-          pagination = {
-            totalPages: 1,
-            total: responseData.length,
-          };
-        } else {
-          data = responseData.data || [];
-          pagination = responseData.pagination;
-        }
-
-        console.log("Number of buyers returned:", data?.length || 0);
-
-        setBuyers(data);
+        setBuyers(data || []);
         setTotalPages(pagination?.totalPages || 1);
-        setTotalBuyers(pagination?.total || data.length);
+        setTotalBuyers(pagination?.total || data.length || 0);
       } catch (error) {
-        console.error("Failed to fetch buyers:", error);
+        console.error(error);
+        toast.error("Failed to fetch buyers");
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchBuyers();
-  }, [userId, userRole, authFetch]);
-
-  // Filter buyers based on search term
-  const filteredBuyers = buyers.filter(
-    (buyer) =>
-      buyer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      buyer.brand.toLowerCase().includes(searchTerm.toLowerCase()),
+    },
+    [authFetch],
   );
+
+  useEffect(() => {
+    fetchBuyers({ page: currentPage, search: searchTerm });
+  }, [currentPage, searchTerm, fetchBuyers]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -86,7 +79,7 @@ export default function BuyerList() {
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1);
     setLoading(true);
   };
 
@@ -96,111 +89,146 @@ export default function BuyerList() {
     setLoading(true);
   };
 
-  const handleEditBuyer = (buyer: Buyer) => {
-    // TODO: Implement edit functionality
-    console.log("Edit buyer:", buyer);
-  };
-
-  const handleViewBuyer = (buyer: Buyer) => {
-    // TODO: Implement view functionality
-    console.log("View buyer:", buyer);
-  };
-
-  const handleDeleteBuyer = (buyer: Buyer) => {
-    // TODO: Implement delete functionality
-    console.log("Delete buyer:", buyer);
-  };
-
-  if (loading) {
+  if (loading && buyers.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-2 px-4">
-        <div className="w-full mx-auto">
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-3">
-              <Database className="w-4 h-4 text-white animate-pulse" />
+      <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-8 px-4">
+        <div className="max-w-[1200px] mx-auto space-y-6">
+          <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+            <Skeleton className="h-12 w-12 rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-64" />
             </div>
-            <p className="text-gray-500 text-sm">Loading buyers...</p>
           </div>
+          <Skeleton className="h-[600px] w-full rounded-[32px]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-2 px-4">
-      <div className="w-full mx-auto">
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1200px] mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-3 text-center">
-          <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-1 shadow-md">
-            <ShoppingBag className="w-4 h-4 text-white" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+              <Database className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Buyers
+              </h1>
+              <p className="text-base text-zinc-500 dark:text-zinc-400">
+                Manage buyers · {totalBuyers} records
+              </p>
+            </div>
           </div>
-          <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            Buyers
-          </h1>
-          <p className="text-gray-500 text-xs">
-            Manage buyers ({totalBuyers} total)
-            {searchTerm && (
-              <span className="ml-2 text-blue-600 font-medium">
-                • Showing {filteredBuyers.length} filtered results
-              </span>
-            )}
-          </p>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-11 px-5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all rounded-xl"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <Button
+              onClick={() => router.push("/dashboard/buyer/create-buyer")}
+              className="h-11 px-6 bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 group rounded-xl"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Buyer
+            </Button>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                <Filter className="w-3 h-3 text-white" />
-              </div>
-              <h2 className="text-xs font-medium text-gray-900">Filters</h2>
-            </div>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters & Search
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl transition-all"
+            >
+              {showFilters ? (
+                <>
+                  <X className="w-3.5 h-3.5 mr-2" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Show Filters
+                </>
+              )}
+            </Button>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* Search Filter */}
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-                  <ShoppingBag className="w-3.5 h-3.5" />
-                  Search Buyers
+          {showFilters && (
+            <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="w-72 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Search
                 </Label>
                 <div className="flex gap-2">
                   <Input
-                    type="text"
-                    placeholder="Search by name or brand..."
                     value={searchTerm}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="h-7 text-xs border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    placeholder="Search by name or brand"
+                    className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm"
                   />
                   {searchTerm && (
                     <Button
                       onClick={clearSearch}
                       variant="outline"
                       size="sm"
-                      className="h-7 px-2 border-gray-200 hover:border-red-500 hover:text-red-600"
+                      className="h-11 px-3"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-4 h-4" />
                     </Button>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Buyer Table */}
-        <div className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <BuyerTable
-              data={filteredBuyers}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-              onEdit={handleEditBuyer}
-              onView={handleViewBuyer}
-              onDelete={handleDeleteBuyer}
-            />
-          </div>
+              <div className="ml-auto space-y-2 min-w-[140px]">
+                <div className="h-4" />
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                  <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                    {buyers.length} / {totalBuyers} Records
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">
+            <CardHeader className="pb-4 pt-8 px-8 border-b border-zinc-50 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Buyers
+                  </CardTitle>
+                  <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
+                    Browse and manage buyers
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-8 pb-8 pt-6">
+              <BuyerTable
+                data={buyers}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

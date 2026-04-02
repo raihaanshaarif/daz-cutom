@@ -3,15 +3,35 @@
 import { Task } from "@/types";
 import { useEffect, useState } from "react";
 import { TaskTable } from "./TaskTable";
-import { ClipboardList, Database, Filter, X } from "lucide-react";
+import {
+  ClipboardList,
+  Database,
+  Filter,
+  X,
+  Plus,
+  ChevronLeft,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TaskList() {
   const { authFetch } = useAuthFetch();
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -19,6 +39,7 @@ export default function TaskList() {
   const [totalTasks, setTotalTasks] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
   const limit = 10;
 
   useEffect(() => {
@@ -146,66 +167,104 @@ export default function TaskList() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background py-2 px-4">
-        <div className="w-full mx-auto">
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-3">
-              <Database className="w-4 h-4 text-white animate-pulse" />
-            </div>
-            <p className="text-gray-500 text-sm">Loading tasks...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background py-2 px-4">
-      <div className="w-full mx-auto">
-        {/* Header */}
-        <div className="mb-3 text-center">
-          <div className="inline-flex items-center justify-center w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg mb-1 shadow-md">
-            <ClipboardList className="w-4 h-4 text-white" />
-          </div>
-          <h1 className="text-lg font-semibold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-0.5">
-            All Tasks
-          </h1>
-          <p className="text-gray-500 text-xs">
-            Manage all assigned tasks ({totalTasks} total)
-            {searchTerm && (
-              <span className="ml-2 text-blue-600 font-medium">
-                • Filtered by: &quot;{searchTerm}&quot;
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-5 h-5 bg-gradient-to-r from-blue-500 to-blue-600 rounded flex items-center justify-center">
-                <Filter className="w-3 h-3 text-white" />
+    if (tasks.length === 0) {
+      return (
+        <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-8 px-4">
+          <div className="max-w-[1200px] mx-auto space-y-6">
+            <div className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-64" />
               </div>
-              <h2 className="text-xs font-medium text-gray-900">Filters</h2>
             </div>
-            <div className="flex gap-2">
-              <div className="space-y-1.5 flex-1">
-                <Label className="text-xs font-medium text-gray-700">
-                  Search Tasks
+            <Skeleton className="h-[600px] w-full rounded-[32px]" />
+          </div>
+        </div>
+      );
+    }
+  }
+  return (
+    <div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950/50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1200px] mx-auto space-y-8">
+        {/* Modern Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+              <ClipboardList className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+                Task List
+              </h1>
+              <p className="text-base text-zinc-500 dark:text-zinc-400">
+                Manage assigned tasks · {totalTasks} records
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.back()}
+              className="h-11 px-5 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all rounded-xl"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+            <Button
+              onClick={() => router.push("/dashboard/tasks/create-task")}
+              className="h-11 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all active:scale-95 group rounded-xl"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Task
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              Filters & Search
+            </h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className="h-9 px-4 text-xs font-bold uppercase tracking-wider text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl transition-all"
+            >
+              {showFilters ? (
+                <>
+                  <X className="w-3.5 h-3.5 mr-2" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <Filter className="w-3.5 h-3.5 mr-2" />
+                  Show Filters
+                </>
+              )}
+            </Button>
+          </div>
+
+          {showFilters && (
+            <div className="flex items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <div className="w-72 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Search
                 </Label>
                 <Input
-                  type="text"
                   placeholder="Search by title..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="h-7 text-xs"
+                  className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm"
                 />
               </div>
+
               {searchTerm && (
                 <div className="flex items-end">
                   <Button
@@ -215,31 +274,51 @@ export default function TaskList() {
                     }}
                     variant="outline"
                     size="sm"
-                    className="h-7 px-2"
+                    className="h-11 px-3"
                   >
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
 
-        {/* Table */}
-        <div className="w-full bg-white/95 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 overflow-hidden">
-          <div className="p-3 lg:p-4">
-            <TaskTable
-              data={tasks}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
-              onUpdateProgress={handleUpdateProgress}
-              onUpdateTarget={handleUpdateTarget}
-              onToggleActive={handleToggleActive}
-              onDelete={handleDelete}
-              showAssignedBy={true}
-            />
-          </div>
+              <div className="ml-auto space-y-2 min-w-[140px]">
+                <div className="h-4" />
+                <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl px-4 h-11 flex items-center justify-center border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all hover:bg-zinc-100/80">
+                  <span className="text-[11px] font-extrabold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest whitespace-nowrap">
+                    {tasks.length} / {totalTasks} Records
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <Card className="border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/60 dark:shadow-none rounded-[32px] bg-white dark:bg-zinc-900 overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800">
+            <CardHeader className="pb-4 pt-8 px-8 border-b border-zinc-50 dark:border-zinc-800">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                    Task Management
+                  </CardTitle>
+                  <CardDescription className="text-base text-zinc-500 dark:text-zinc-400">
+                    Browse and manage all tasks
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="px-8 pb-8 pt-6">
+              <TaskTable
+                data={tasks}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+                onUpdateProgress={handleUpdateProgress}
+                onUpdateTarget={handleUpdateTarget}
+                onToggleActive={handleToggleActive}
+                onDelete={handleDelete}
+                showAssignedBy={true}
+              />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

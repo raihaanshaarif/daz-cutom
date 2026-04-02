@@ -28,6 +28,7 @@ import { useState, useEffect } from "react";
 import { DevelopmentTable } from "@/components/modules/Development/DevelopmentTable";
 import { DevelopmentSample, Buyer } from "@/types";
 import { useRouter } from "next/navigation";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function DevelopmentReportPage() {
   const router = useRouter();
@@ -46,10 +47,12 @@ export default function DevelopmentReportPage() {
     rejectedSamples: 0,
   });
 
+  const { authFetch } = useAuthFetch();
+
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
-        const buyersRes = await fetch(
+        const buyersRes = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
         );
         const buyersData = await buyersRes.json();
@@ -59,7 +62,7 @@ export default function DevelopmentReportPage() {
       }
     };
     fetchFilterData();
-  }, []);
+  }, [authFetch]);
 
   useEffect(() => {
     const fetchSamples = async () => {
@@ -72,7 +75,7 @@ export default function DevelopmentReportPage() {
         if (selectedStatus !== "all") params.append("status", selectedStatus);
         if (selectedSeason !== "all") params.append("season", selectedSeason);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/development/samples?${params.toString()}`,
         );
         const result = await res.json();

@@ -28,6 +28,7 @@ import {
 import { useState, useEffect } from "react";
 import { ParcelTable } from "@/components/modules/Parcel/ParcelTable";
 import { Parcel, Buyer, Courier } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function ParcelReportPage() {
   const [selectedBuyer, setSelectedBuyer] = useState<string>("all");
@@ -46,13 +47,17 @@ export default function ParcelReportPage() {
     monthlyAverage: 0,
   });
 
+  const { authFetch } = useAuthFetch();
+
   // Fetch buyers and couriers for filters
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
         const [buyersRes, couriersRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
+          authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies`,
+          ),
         ]);
         const buyersData = await buyersRes.json();
         const couriersData = await couriersRes.json();
@@ -67,7 +72,7 @@ export default function ParcelReportPage() {
       }
     };
     fetchFilterData();
-  }, []);
+  }, [authFetch]);
 
   // Fetch parcels based on filters
   useEffect(() => {
@@ -82,7 +87,7 @@ export default function ParcelReportPage() {
         if (startDate) params.append("startDate", startDate);
         if (endDate) params.append("endDate", endDate);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels?${params.toString()}`,
         );
         const response = await res.json();
