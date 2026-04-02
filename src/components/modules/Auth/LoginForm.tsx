@@ -42,8 +42,10 @@ export default function LoginForm() {
         alert("Login failed: " + result.error);
         setIsLoading(false);
       } else if (result?.ok) {
-        // Successful login - force full page reload to dashboard
-        window.location.href = "/dashboard";
+        // Wait a moment for session to be saved, then redirect
+        setTimeout(() => {
+          window.location.href = "/dashboard";
+        }, 500);
       }
     } catch (err) {
       console.error(err);
