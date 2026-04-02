@@ -11,8 +11,10 @@ import {
   Layers,
 } from "lucide-react";
 import { DevelopmentStats as DevelopmentStatsType } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function DevelopmentStats() {
+  const { authFetch } = useAuthFetch();
   const [stats, setStats] = useState<DevelopmentStatsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ export default function DevelopmentStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/development/stats`,
         );
         if (!response.ok) {

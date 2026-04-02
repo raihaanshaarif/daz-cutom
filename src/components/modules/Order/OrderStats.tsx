@@ -12,8 +12,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { OrderStats as OrderStatsType } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function OrderStats() {
+  const { authFetch } = useAuthFetch();
   const [stats, setStats] = useState<OrderStatsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export default function OrderStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/orders/stats`,
         );
         if (!response.ok) {

@@ -31,6 +31,7 @@ export default function CourierList() {
   // Access User from session for API calls
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
   const { authFetch } = useAuthFetch();
   const router = useRouter();
 
@@ -53,8 +54,7 @@ export default function CourierList() {
       const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?${params}`,
         {
-          cache: "no-store" "Authorization": `Bearer ${backendToken}`,
-          },
+          cache: "no-store",
         },
       );
       const responseData = await res.json();
@@ -74,11 +74,11 @@ export default function CourierList() {
     } finally {
       setLoading(false);
     }
-  }, [userId, userRole, backendToken, currentPage, searchTerm, limit]);
+  }, [authFetch, userId, userRole, currentPage, searchTerm]);
 
   useEffect(() => {
     fetchCouriers();
-  }, [fetchCouriers]);authFetch, currentPage, searchTerm
+  }, [fetchCouriers]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
