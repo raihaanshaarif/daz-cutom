@@ -11,12 +11,20 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
   }, [status, router]);
 
-  if (status === "loading" || status === "authenticated") {
-    return <div>Loading...</div>;
+  if (status === "loading") {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (status === "authenticated") {
+    return null;
   }
 
   return <LoginForm />;

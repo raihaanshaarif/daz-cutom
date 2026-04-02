@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/form";
 
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 // type LoginFormValues = {
 //   email: string;
@@ -21,6 +22,8 @@ import { signIn } from "next-auth/react";
 // };
 
 export default function LoginForm() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<FieldValues>({
     defaultValues: {
       email: "",
@@ -29,6 +32,7 @@ export default function LoginForm() {
   });
 
   const onSubmit = async (values: FieldValues) => {
+    setIsLoading(true);
     try {
       const result = await signIn("credentials", {
         ...values,
@@ -37,12 +41,16 @@ export default function LoginForm() {
 
       if (result?.error) {
         console.error("Login failed:", result.error);
+        alert("Login failed: " + result.error);
+        setIsLoading(false);
       } else if (result?.ok) {
-        // Successful login - NextAuth will handle the redirect
-        window.location.href = "/dashboard";
+        // Successful login - redirect to dashboard
+        router.push("/dashboard");
+        router.refresh();
       }
     } catch (err) {
       console.error(err);
+      setIsLoading(false);
     }
   };
 
@@ -96,8 +104,8 @@ export default function LoginForm() {
               )}
             />
 
-            <Button type="submit" className="w-full mt-2">
-              Login
+            <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
 
             <div className="flex items-center justify-center space-x-2">
