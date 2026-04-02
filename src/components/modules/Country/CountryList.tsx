@@ -7,8 +7,10 @@ import { Database, Filter, Globe, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function CountryList() {
+  const { authFetch } = useAuthFetch();
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +39,7 @@ export default function CountryList() {
         const queryString = params.toString();
         console.log("API call with params:", queryString);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/country?${queryString}`,
           {
             cache: "no-store",

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { User } from "@/types";
 import { useSession } from "next-auth/react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -52,6 +53,7 @@ type TaskFormValues = z.infer<typeof taskSchema>;
 export default function CreateTaskForm() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { authFetch } = useAuthFetch();
   const [users, setUsers] = useState<User[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -68,7 +70,7 @@ export default function CreateTaskForm() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
+        const res = await authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
         if (res.ok) {
           const data = await res.json();
           setUsers(Array.isArray(data) ? data : data?.data || []);
@@ -96,7 +98,7 @@ export default function CreateTaskForm() {
         assignedToId: Number(data.assignedToId),
         assignedById: Number(assignedById),
       };
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/task`, {
+      const res = await authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/task`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -16,6 +16,7 @@ import { Package, User, Building, DollarSign } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Buyer, Factory, Order } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const DATE_STAGES: { key: keyof Order; label: string }[] = [
   { key: "yarnBooking", label: "Yarn Booking" },
@@ -74,6 +75,7 @@ interface EditOrderFormProps {
 }
 
 export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
+  const { authFetch } = useAuthFetch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
@@ -97,8 +99,8 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
     const fetchData = async () => {
       try {
         const [buyersRes, factoriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
         ]);
         const buyersData = await buyersRes.json();
         const factoriesData = await factoriesRes.json();

@@ -7,8 +7,10 @@ import { User } from "@/types";
 import Loading from "@/components/ui/Loading";
 import { EditUser } from "./index";
 import { toast } from "sonner";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const UserList = () => {
+  const { authFetch } = useAuthFetch();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,7 +20,9 @@ const UserList = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
+      const response = await authFetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/user`,
+      );
       if (!response.ok) {
         throw new Error("Failed to fetch users");
       }
@@ -52,7 +56,7 @@ const UserList = () => {
   const handleDelete = async (user: User) => {
     if (confirm(`Are you sure you want to delete user "${user.name}"?`)) {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/user/${user.id}`,
           {
             method: "DELETE",

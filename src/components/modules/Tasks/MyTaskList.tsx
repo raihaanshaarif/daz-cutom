@@ -6,9 +6,11 @@ import { TaskTable } from "./TaskTable";
 import { ClipboardList, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function MyTaskList() {
   const { data: session } = useSession();
+  const { authFetch } = useAuthFetch();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,7 +35,7 @@ export default function MyTaskList() {
           userId: userId.toString(),
         });
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/task/my?${params.toString()}`,
           { cache: "no-store" },
         );
@@ -66,7 +68,7 @@ export default function MyTaskList() {
       return;
     }
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
         {
           method: "PATCH",
@@ -93,7 +95,7 @@ export default function MyTaskList() {
       return;
     }
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}/progress`,
         {
           method: "PATCH",

@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function TaskList() {
+  const { authFetch } = useAuthFetch();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -29,7 +31,7 @@ export default function TaskList() {
         });
         if (searchTerm) params.append("search", searchTerm);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/task/all?${params.toString()}`,
           { cache: "no-store" },
         );
@@ -54,7 +56,7 @@ export default function TaskList() {
   const handleDelete = async (task: Task) => {
     if (!confirm(`Delete task "${task.title}"?`)) return;
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
         {
           method: "DELETE",
@@ -73,7 +75,7 @@ export default function TaskList() {
     if (!confirm(`Are you sure you want to ${action} task "${task.title}"?`))
       return;
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
         {
           method: "PATCH",
@@ -100,7 +102,7 @@ export default function TaskList() {
       return;
     }
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}/progress`,
         {
           method: "PATCH",
@@ -127,7 +129,7 @@ export default function TaskList() {
       return;
     }
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
         {
           method: "PATCH",

@@ -7,8 +7,10 @@ import { Database, Filter, Factory as FactoryIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function FactoryList() {
+  const { authFetch } = useAuthFetch();
   const [factories, setFactories] = useState<Factory[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +24,7 @@ export default function FactoryList() {
     const fetchFactories = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/factories`,
           {
             cache: "no-store",

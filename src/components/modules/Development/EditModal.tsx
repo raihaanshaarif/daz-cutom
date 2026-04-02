@@ -32,6 +32,7 @@ import {
 import { DevelopmentSample, Buyer, Factory } from "@/types";
 import { toast } from "sonner";
 import { updateDevelopmentSample } from "@/actions/create";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 interface EditModalProps {
   isOpen: boolean;
@@ -46,6 +47,7 @@ export function EditModal({
   sample,
   onSuccess,
 }: EditModalProps) {
+  const { authFetch } = useAuthFetch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
@@ -80,8 +82,8 @@ export function EditModal({
     const fetchData = async () => {
       try {
         const [buyersResponse, factoriesResponse] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
         ]);
 
         const buyersData = await buyersResponse.json();
