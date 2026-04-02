@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { CourierTable } from "./CourierTable";
 import { ViewCourierModal, EditCourierModal } from "./index";
 import { toast } from "sonner";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function CourierList() {
   // Demo data for development
@@ -30,7 +31,7 @@ export default function CourierList() {
   // Access User from session for API calls
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
-  const userRole = session?.user?.role ?? "";
+  const { authFetch } = useAuthFetch();
   const router = useRouter();
 
   // Modal states
@@ -49,13 +50,10 @@ export default function CourierList() {
         limit: limit.toString(),
         ...(searchTerm && { search: searchTerm }),
       });
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?${params}`,
         {
-          cache: "no-store",
-          headers: {
-            "user-id": userId,
-            "user-role": userRole,
+          cache: "no-store" "Authorization": `Bearer ${backendToken}`,
           },
         },
       );
@@ -76,11 +74,11 @@ export default function CourierList() {
     } finally {
       setLoading(false);
     }
-  }, [userId, userRole, currentPage, searchTerm, limit]);
+  }, [userId, userRole, backendToken, currentPage, searchTerm, limit]);
 
   useEffect(() => {
     fetchCouriers();
-  }, [fetchCouriers]);
+  }, [fetchCouriers]);authFetch, currentPage, searchTerm
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -113,14 +111,10 @@ export default function CourierList() {
   const handleDeleteCourier = async (courier: Courier) => {
     if (window.confirm(`Are you sure you want to delete ${courier.name}?`)) {
       try {
-        const result = await fetch(
+        const result = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies/${courier.id}`,
           {
             method: "DELETE",
-            headers: {
-              "user-id": userId,
-              "user-role": userRole,
-            },
           },
         );
 

@@ -73,6 +73,13 @@ export const authOptions: NextAuthOptions = {
           const response = await res.json();
           const { user, token } = response.data;
 
+          console.log("[LOGIN DEBUG] Backend token received:", token);
+          console.log("[LOGIN DEBUG] Token length:", token?.length);
+          console.log(
+            "[LOGIN DEBUG] Token first 20 chars:",
+            token?.substring(0, 20),
+          );
+
           if (user?.id) {
             return {
               id: user.id.toString(),

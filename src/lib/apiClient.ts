@@ -18,7 +18,15 @@ export async function authenticatedFetch(
 
   // Add Authorization header if backend token exists
   if (session?.backendToken) {
+    console.log("[API DEBUG] Sending token to:", url);
+    console.log("[API DEBUG] Token length:", session.backendToken.length);
+    console.log(
+      "[API DEBUG] Token first 20 chars:",
+      session.backendToken.substring(0, 20),
+    );
     headers["Authorization"] = `Bearer ${session.backendToken}`;
+  } else {
+    console.log("[API DEBUG] No backend token in session for:", url);
   }
 
   return fetch(url, {
