@@ -86,7 +86,7 @@ const UserProfile = () => {
     };
 
     fetchUser();
-  }, [userId]);
+  }, [userId, authFetch]);
 
   useEffect(() => {
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
@@ -100,7 +100,7 @@ const UserProfile = () => {
         setCountries(list);
       })
       .catch(() => {});
-  }, []);
+  }, [authFetch]);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -116,7 +116,7 @@ const UserProfile = () => {
       }
     };
     fetchTasks();
-  }, [userId, taskRefresh]);
+  }, [userId, taskRefresh, authFetch]);
 
   const handleUpdateTarget = async (task: Task) => {
     const newTargetStr = prompt(

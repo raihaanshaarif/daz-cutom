@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { DataTable } from "@/components/ui/data-table";
 import { User } from "@/types";
@@ -18,7 +18,7 @@ const UserList = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const router = useRouter();
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/user`,
@@ -33,11 +33,11 @@ const UserList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [authFetch]);
 
   useEffect(() => {
     fetchUsers();
-  }, [authFetch]);
+  }, [fetchUsers]);
 
   const handleEdit = (user: User) => {
     setEditUser(user);
