@@ -45,8 +45,7 @@ const AssignUserForm = () => {
       .then((data) => {
         setUsers(Array.isArray(data) ? data : data.data || []);
       });
-  }, [authFetch});
-  }, []);
+  }, [authFetch]);
 
   // Assign user to buyer
   const handleAssign = async () => {
@@ -55,8 +54,8 @@ const AssignUserForm = () => {
       return;
     }
     setIsSubmitting(true);
-    try {authF
-      const res = await fetch(
+    try {
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers/assign`,
         {
           method: "POST",
