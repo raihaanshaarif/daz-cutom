@@ -29,6 +29,7 @@ import { DevelopmentTable } from "./DevelopmentTable";
 import DevelopmentStats from "./DevelopmentStats";
 import { ViewDetailsModal } from "./ViewDetailsModal";
 import { EditModal } from "./EditModal";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function DevelopmentList() {
   const [samples, setSamples] = useState<DevelopmentSample[]>([]);
@@ -57,6 +58,7 @@ export default function DevelopmentList() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = (session?.user as { role?: string })?.role ?? "";
+  const { authFetch } = useAuthFetch();
   const router = useRouter();
 
   // Data for filters
@@ -105,13 +107,9 @@ export default function DevelopmentList() {
         if (selectedSeason !== "all")
           queryParams.append("seasonName", selectedSeason);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/development?${queryParams.toString()}`,
           {
-            headers: {
-              "user-id": userId.toString(),
-              "user-role": userRole,
-            },
             cache: "no-store",
           },
         );
@@ -132,6 +130,7 @@ export default function DevelopmentList() {
 
     fetchSamples();
   }, [
+    authFetch,
     currentPage,
     debouncedSearch,
     selectedStatus,
@@ -146,7 +145,7 @@ export default function DevelopmentList() {
   useEffect(() => {
     const fetchFilterData = async () => {
       try {
-        const buyersRes = await fetch(
+        const buyersRes = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
         );
 
@@ -161,6 +160,7 @@ export default function DevelopmentList() {
       }
     };
     fetchFilterData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePageChange = (page: number) => {

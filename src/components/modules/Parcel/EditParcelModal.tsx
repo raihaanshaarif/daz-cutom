@@ -25,6 +25,7 @@ import { Loader2, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import { updateParcel } from "@/actions/create";
 import { useSession } from "next-auth/react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 interface EditParcelModalProps {
   parcel: Parcel | null;
@@ -49,6 +50,7 @@ export function EditParcelModal({
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
+  const { authFetch } = useAuthFetch();
   const [formData, setFormData] = useState({
     buyerId: "",
     courierCompanyId: "",
@@ -80,14 +82,10 @@ export function EditParcelModal({
           limit: "100",
           ...(buyerSearch && { search: buyerSearch }),
         });
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers?${params}`,
           {
             cache: "no-store",
-            headers: {
-              "user-id": userId,
-              "user-role": userRole,
-            },
           },
         );
         const result = await res.json();
@@ -102,7 +100,7 @@ export function EditParcelModal({
 
     const debounceTimer = setTimeout(fetchBuyers, 300);
     return () => clearTimeout(debounceTimer);
-  }, [buyerSearch, userId, userRole]);
+  }, [buyerSearch, userId, userRole, authFetch]);
 
   // Fetch couriers
   useEffect(() => {
@@ -115,14 +113,10 @@ export function EditParcelModal({
           limit: "100",
           ...(courierSearch && { search: courierSearch }),
         });
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?${params}`,
           {
             cache: "no-store",
-            headers: {
-              "user-id": userId,
-              "user-role": userRole,
-            },
           },
         );
         const result = await res.json();
@@ -137,7 +131,7 @@ export function EditParcelModal({
 
     const debounceTimer = setTimeout(fetchCouriers, 300);
     return () => clearTimeout(debounceTimer);
-  }, [courierSearch, userId, userRole]);
+  }, [courierSearch, userId, userRole, authFetch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

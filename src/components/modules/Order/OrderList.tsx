@@ -40,6 +40,7 @@ import {
 import { deleteOrder } from "@/actions/create";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function OrderList() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -100,6 +101,7 @@ export default function OrderList() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
+  const { authFetch } = useAuthFetch();
   console.log(userId, userRole);
 
   useEffect(() => {
@@ -120,21 +122,17 @@ export default function OrderList() {
 
         // Fetch orders + filter data in parallel
         const [ordersRes, buyersRes, factoriesRes] = await Promise.all([
-          fetch(
+          authFetch(
             `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
             {
               cache: "no-store",
-              headers: {
-                "user-id": userId, // Replace userId with your actual user id variable
-                "user-role": userRole, // Replace userRole with your actual user role variable
-              },
             },
           ),
           buyers.length === 0
-            ? fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
+            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
             : null,
           factories.length === 0
-            ? fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`)
+            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`)
             : null,
         ]);
 
@@ -197,6 +195,7 @@ export default function OrderList() {
     fetchAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    authFetch,
     currentPage,
     selectedStatus,
     selectedBuyer,

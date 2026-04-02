@@ -16,6 +16,7 @@ import {
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ParcelTable } from "./ParcelTable";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 import { toast } from "sonner";
 import { ViewParcelModal } from "./ViewParcelModal";
@@ -59,6 +60,7 @@ export default function ParcelList() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
+  const { authFetch } = useAuthFetch();
   const router = useRouter();
 
   // Modal states
@@ -72,14 +74,10 @@ export default function ParcelList() {
     const fetchCouriers = async () => {
       if (!userId || !userRole) return;
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?page=1&limit=100`,
           {
             cache: "no-store",
-            headers: {
-              "user-id": userId,
-              "user-role": userRole,
-            },
           },
         );
         const responseData = await res.json();
@@ -90,7 +88,7 @@ export default function ParcelList() {
       }
     };
     fetchCouriers();
-  }, [userId, userRole]);
+  }, [userId, userRole, authFetch]);
 
   // Extract fetchParcels as a separate function
   const fetchParcels = useCallback(async () => {
@@ -148,14 +146,10 @@ export default function ParcelList() {
         selectedCourier,
       });
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels?${params}`,
+      const res = await authFetch(
+        `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?page=1&limit=100`,
         {
           cache: "no-store",
-          headers: {
-            "user-id": userId,
-            "user-role": userRole,
-          },
         },
       );
       const responseData = await res.json();
@@ -176,6 +170,7 @@ export default function ParcelList() {
       setLoading(false);
     }
   }, [
+    authFetch,
     userId,
     userRole,
     currentPage,
@@ -228,14 +223,10 @@ export default function ParcelList() {
       )
     ) {
       try {
-        const result = await fetch(
+        const result = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels/${parcel.id}`,
           {
             method: "DELETE",
-            headers: {
-              "user-id": userId,
-              "user-role": userRole,
-            },
           },
         );
 

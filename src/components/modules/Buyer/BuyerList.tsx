@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "next-auth/react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function BuyerList() {
   const [buyers, setBuyers] = useState<Buyer[]>([]);
@@ -23,6 +24,7 @@ export default function BuyerList() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
+  const { authFetch } = useAuthFetch();
   console.log(userId, userRole);
 
   useEffect(() => {
@@ -30,14 +32,10 @@ export default function BuyerList() {
     const fetchBuyers = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
           {
             cache: "no-store",
-            headers: {
-              "user-id": userId,
-              "user-role": userRole,
-            },
           },
         );
         const responseData = await res.json();
@@ -72,7 +70,7 @@ export default function BuyerList() {
     };
 
     fetchBuyers();
-  }, [userId, userRole]);
+  }, [userId, userRole, authFetch]);
 
   // Filter buyers based on search term
   const filteredBuyers = buyers.filter(
