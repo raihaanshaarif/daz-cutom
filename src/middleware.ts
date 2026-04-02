@@ -4,6 +4,30 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl;
 
+  // Check if user is authenticated
+  const token = await getToken({
+    req,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  // Redirect authenticated users away from login page
+  if (pathname === "/login" && token) {
+    const callbackUrl = searchParams.get("callbackUrl");
+    if (callbackUrl) {
+      try {
+        const decoded = decodeURIComponent(callbackUrl);
+        // Prevent redirect loops
+        if (decoded !== "/login" && !decoded.startsWith("/login?")) {
+          return NextResponse.redirect(new URL(decoded, req.url));
+        }
+      } catch {
+        // ignore malformed callbackUrl
+      }
+    }
+    // Default redirect for authenticated users
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
   // Break /login redirect loop: if callbackUrl resolves to /login, strip it
   if (pathname === "/login") {
     const callbackUrl = searchParams.get("callbackUrl");
@@ -28,10 +52,6 @@ export async function middleware(req: NextRequest) {
 
   // Protect dashboard routes
   if (pathname.startsWith("/dashboard")) {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
     if (!token) {
       const loginUrl = new URL("/login", req.url);
       loginUrl.searchParams.set(

@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/form";
 
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 // type LoginFormValues = {
 //   email: string;
@@ -22,7 +21,6 @@ import { useRouter } from "next/navigation";
 // };
 
 export default function LoginForm() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const form = useForm<FieldValues>({
     defaultValues: {
@@ -44,9 +42,8 @@ export default function LoginForm() {
         alert("Login failed: " + result.error);
         setIsLoading(false);
       } else if (result?.ok) {
-        // Successful login - redirect to dashboard
-        router.push("/dashboard");
-        router.refresh();
+        // Successful login - force full page reload to dashboard
+        window.location.href = "/dashboard";
       }
     } catch (err) {
       console.error(err);
