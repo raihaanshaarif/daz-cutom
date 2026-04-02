@@ -38,7 +38,7 @@ export default function DevelopmentStats() {
     };
 
     fetchStats();
-  }, []);
+  }, [authFetch]);
 
   if (loading) {
     return (

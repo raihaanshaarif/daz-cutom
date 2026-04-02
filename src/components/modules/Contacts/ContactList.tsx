@@ -43,8 +43,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function ContactList() {
+  const { authFetch } = useAuthFetch();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -105,7 +107,7 @@ export default function ContactList() {
         const queryString = params.toString();
         console.log("API call with params:", queryString);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/contact?${queryString}`,
           {
             cache: "no-store",
@@ -175,7 +177,7 @@ export default function ContactList() {
         for (const endpoint of endpoints) {
           try {
             console.log(`Trying endpoint: ${endpoint}`);
-            const res = await fetch(endpoint, {
+            const res = await authFetch(endpoint, {
               cache: "no-store",
             });
 

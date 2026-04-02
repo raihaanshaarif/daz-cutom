@@ -96,7 +96,7 @@ export function EditModal({
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]);
 
   // Populate form when sample changes
   useEffect(() => {

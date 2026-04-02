@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 interface Buyer {
   id: number;
@@ -24,6 +25,7 @@ interface User {
 }
 
 const AssignUserForm = () => {
+  const { authFetch } = useAuthFetch();
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [buyerId, setBuyerId] = useState<string>("");
@@ -31,19 +33,19 @@ const AssignUserForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Fetch buyers
-    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
+    authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setBuyers(data);
         else setBuyers(data.data || []);
       });
     // Fetch users
-    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`)
+    authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`)
       .then((res) => res.json())
       .then((data) => {
         setUsers(Array.isArray(data) ? data : data.data || []);
       });
+  }, [authFetch});
   }, []);
 
   // Assign user to buyer
@@ -53,7 +55,7 @@ const AssignUserForm = () => {
       return;
     }
     setIsSubmitting(true);
-    try {
+    try {authF
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers/assign`,
         {
@@ -88,7 +90,7 @@ const AssignUserForm = () => {
     }
     setIsSubmitting(true);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers/assign`,
         {
           method: "DELETE",

@@ -25,8 +25,10 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function CommercialList() {
+  const { authFetch } = useAuthFetch();
   const [commercials, setCommercials] = useState<Commercial[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,7 +98,7 @@ export default function CommercialList() {
         const queryString = params.toString();
         console.log("API call with params:", queryString);
 
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/commercial?${queryString}`,
           {
             cache: "no-store",
@@ -137,6 +139,7 @@ export default function CommercialList() {
     selectedDate,
     selectedPeriod,
     refreshTrigger,
+    authFetch,
   ]);
 
   const handlePageChange = (page: number) => {

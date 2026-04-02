@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Order } from "@/types";
 import { cn } from "@/lib/utils";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const documentStatusOptions = [
   { value: "PENDING", label: "Pending" },
@@ -55,6 +56,7 @@ const paymentStatusOptions = [
 ];
 
 export default function CreateCommercialForm() {
+  const { authFetch } = useAuthFetch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [documentStatus, setDocumentStatus] = useState("PENDING");
   const [paymentStatus, setPaymentStatus] = useState("PENDING");
@@ -81,31 +83,34 @@ export default function CreateCommercialForm() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const searchOrders = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      setShowDropdown(false);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?search=${encodeURIComponent(query)}&limit=20`,
-      );
-      if (res.ok) {
-        const json = await res.json();
-        const arr: Order[] = Array.isArray(json)
-          ? json
-          : json.data || json.orders || [];
-        setSearchResults(arr);
-        setShowDropdown(true);
+  const searchOrders = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        setShowDropdown(false);
+        return;
       }
-    } catch (err) {
-      console.error("Failed to search orders:", err);
-    } finally {
-      setIsSearching(false);
-    }
-  }, []);
+      setIsSearching(true);
+      try {
+        const res = await authFetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?search=${encodeURIComponent(query)}&limit=20`,
+        );
+        if (res.ok) {
+          const json = await res.json();
+          const arr: Order[] = Array.isArray(json)
+            ? json
+            : json.data || json.orders || [];
+          setSearchResults(arr);
+          setShowDropdown(true);
+        }
+      } catch (err) {
+        console.error("Failed to search orders:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    },
+    [authFetch],
+  );
 
   const handleOrderSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -172,7 +177,7 @@ export default function CreateCommercialForm() {
     };
 
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/commercial`,
         {
           method: "POST",

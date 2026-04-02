@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Edit } from "lucide-react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 interface EditCommercialFormProps {
   commercial: Commercial | null;
@@ -37,6 +38,7 @@ export function EditCommercialForm({
   onClose,
   onSuccess,
 }: EditCommercialFormProps) {
+  const { authFetch } = useAuthFetch();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<CommercialFormData>({
     bookingReference: "",
@@ -102,7 +104,7 @@ export function EditCommercialForm({
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?page=1&limit=100`,
         );
         if (res.ok) {
@@ -118,7 +120,7 @@ export function EditCommercialForm({
     if (isOpen) {
       fetchOrders();
     }
-  }, [isOpen]);
+  }, [isOpen, authFetch]);
 
   // Set selected orders when commercial changes
   useEffect(() => {
@@ -162,7 +164,7 @@ export function EditCommercialForm({
 
       console.log("Updating commercial with data:", dataToSend);
 
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/commercial/${commercial.id}`,
         {
           method: "PATCH",

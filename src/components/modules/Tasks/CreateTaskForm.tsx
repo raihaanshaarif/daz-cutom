@@ -80,7 +80,7 @@ export default function CreateTaskForm() {
       }
     };
     fetchUsers();
-  }, []);
+  }, [authFetch]);
 
   const onSubmit = async (data: TaskFormValues) => {
     setSubmitting(true);

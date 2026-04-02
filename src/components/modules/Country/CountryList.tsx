@@ -60,7 +60,7 @@ export default function CountryList() {
     };
 
     fetchCountries();
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, authFetch]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

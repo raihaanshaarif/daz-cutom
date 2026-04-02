@@ -51,7 +51,7 @@ export default function TaskList() {
       }
     };
     fetchTasks();
-  }, [currentPage, searchTerm, refreshTrigger]);
+  }, [currentPage, searchTerm, refreshTrigger, authFetch]);
 
   const handleDelete = async (task: Task) => {
     if (!confirm(`Delete task "${task.title}"?`)) return;

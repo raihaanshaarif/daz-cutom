@@ -39,7 +39,7 @@ export default function OrderStats() {
     };
 
     fetchStats();
-  }, []);
+  }, [authFetch]);
 
   if (loading) {
     return (

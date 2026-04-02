@@ -20,8 +20,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import Loading from "@/components/ui/Loading";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const UserDashboard = () => {
+  const { authFetch } = useAuthFetch();
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
@@ -47,7 +49,7 @@ const UserDashboard = () => {
 
   useEffect(() => {
     if (!userId) return;
-    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
+    authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
       .then((r) => r.json())
       .then((data) => {
         setUser(data);
@@ -57,11 +59,11 @@ const UserDashboard = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [userId]);
+  }, [userId, authFetch]);
 
   useEffect(() => {
     if (!userId) return;
-    fetch(
+    authFetch(
       `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${userId}&limit=100`,
     )
       .then((r) => r.json())
@@ -70,10 +72,10 @@ const UserDashboard = () => {
         setTasks(Array.isArray(data) ? data : []);
       })
       .catch(() => {});
-  }, [userId]);
+  }, [userId, authFetch]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
+    authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data)
@@ -84,7 +86,7 @@ const UserDashboard = () => {
         setCountries(list);
       })
       .catch(() => {});
-  }, []);
+  }, [authFetch]);
 
   if (!session || loading) return <Loading />;
   if (error || !user)

@@ -55,7 +55,7 @@ export default function CreateSampleForm() {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

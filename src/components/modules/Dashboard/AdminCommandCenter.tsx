@@ -99,8 +99,11 @@ interface DashboardStats {
   };
 }
 
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
+
 const AdminCommandCenter = () => {
   // --- Initialization & State ---
+  const { authFetch } = useAuthFetch();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timeframe, setTimeframe] = useState("month");
@@ -145,12 +148,14 @@ const AdminCommandCenter = () => {
         // 2. Fetch all required datasets in parallel
         const [ordersRes, commercialRes, contactsRes, usersRes] =
           await Promise.all([
-            fetch(`${baseUrl}/order/orders?limit=2000`).then((r) => r.json()),
-            fetch(
+            authFetch(`${baseUrl}/order/orders?limit=2000`).then((r) =>
+              r.json(),
+            ),
+            authFetch(
               `${baseUrl}/commercial?limit=2000&include=orders.order.buyer,orders.order.factory`,
             ).then((r) => r.json()),
-            fetch(`${baseUrl}/contact?limit=2000`).then((r) => r.json()),
-            fetch(`${baseUrl}/user`).then((r) => r.json()),
+            authFetch(`${baseUrl}/contact?limit=2000`).then((r) => r.json()),
+            authFetch(`${baseUrl}/user`).then((r) => r.json()),
           ]);
 
         const allOrders: ExtendedOrder[] = ordersRes.data || [];
@@ -162,13 +167,17 @@ const AdminCommandCenter = () => {
 
         // 3. Enrich Users with Tasks for Performance Tracking (single batch call)
         const userIds = userList.map((u) => u.id).join(",");
-        const batchTaskRes = await fetch(
-          `${baseUrl}/task/batch?userIds=${userIds}`,
-        ).then((r) => r.json());
-        userList.forEach((u) => {
-          const userTasks = batchTaskRes[u.id];
-          u.tasks = Array.isArray(userTasks) ? userTasks : [];
-        });
+        if (!userIds) {
+          userList.forEach((u) => (u.tasks = []));
+        } else {
+          const batchTaskRes = await authFetch(
+            `${baseUrl}/task/batch?userIds=${userIds}`,
+          ).then((r) => r.json());
+          userList.forEach((u) => {
+            const userTasks = batchTaskRes[u.id];
+            u.tasks = Array.isArray(userTasks) ? userTasks : [];
+          });
+        }
 
         // 4. Calculate User Performance Metrics (Leads & Tasks)
         const userPerformance = userList.map((u) => {

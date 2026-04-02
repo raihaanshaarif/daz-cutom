@@ -35,6 +35,7 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 import { Country } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const statusConfig = {
   NOT_CONTACTED: {
@@ -130,6 +131,7 @@ const statusConfig = {
 };
 
 export default function CreateContactForm() {
+  const { authFetch } = useAuthFetch();
   const [selectedStatus, setSelectedStatus] = useState<string>("NOT_CONTACTED");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -143,7 +145,7 @@ export default function CreateContactForm() {
         const apiUrl = `${process.env.NEXT_PUBLIC_BASE_API}/country`;
         // console.log("Fetching countries from:", apiUrl);
 
-        const response = await fetch(apiUrl);
+        const response = await authFetch(apiUrl);
         // console.log("Response status:", response.status);
 
         if (response.ok) {

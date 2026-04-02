@@ -25,8 +25,10 @@ import {
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Loading from "@/components/ui/Loading";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const UserProfile = () => {
+  const { authFetch } = useAuthFetch();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +70,7 @@ const UserProfile = () => {
       }
 
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`,
         );
         if (!response.ok) {
@@ -87,7 +89,7 @@ const UserProfile = () => {
   }, [userId]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
+    authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
         const list = Array.isArray(data)
@@ -103,7 +105,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${userId}&limit=100`,
         );
         const json = await res.json();
@@ -127,7 +129,7 @@ const UserProfile = () => {
       return;
     }
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/task/${task.id}`,
         {
           method: "PATCH",

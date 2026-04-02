@@ -63,7 +63,7 @@ export default function CreateOrderForm() {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

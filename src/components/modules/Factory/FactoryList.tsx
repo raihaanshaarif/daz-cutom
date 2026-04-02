@@ -62,7 +62,7 @@ export default function FactoryList() {
     };
 
     fetchFactories();
-  }, []); // Remove dependencies since we're fetching all data once
+  }, [authFetch]); // Remove dependencies since we're fetching all data once
 
   // Filter factories based on search term
   const filteredFactories = factories.filter((factory) =>

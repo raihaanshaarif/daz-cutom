@@ -7,7 +7,7 @@ import { useCallback } from "react";
  */
 export function useAuthFetch() {
   const { data: session } = useSession();
-  const backendToken = (session as any)?.backendToken;
+  const backendToken = session?.backendToken;
 
   const authFetch = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {

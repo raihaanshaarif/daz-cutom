@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { User } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 type UserFormValues = {
   name: string;
@@ -52,6 +53,7 @@ export default function EditUser({
   onOpenChange,
   onSuccess,
 }: EditUserProps) {
+  const { authFetch } = useAuthFetch();
   const form = useForm<UserFormValues>({
     defaultValues: {
       name: "",
@@ -78,7 +80,7 @@ export default function EditUser({
     if (!user) return;
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/user/${user.id}`,
         {
           method: "PATCH",

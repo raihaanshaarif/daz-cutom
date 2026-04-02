@@ -78,7 +78,7 @@ export default function CourierList() {
 
   useEffect(() => {
     fetchCouriers();
-  }, [fetchCouriers]);
+  }, [fetchCouriers, authFetch]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

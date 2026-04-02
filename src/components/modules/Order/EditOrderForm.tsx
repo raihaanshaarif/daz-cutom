@@ -111,7 +111,7 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
       }
     };
     fetchData();
-  }, []);
+  }, [authFetch]);
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);

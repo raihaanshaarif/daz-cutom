@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Edit } from "lucide-react";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 interface EditContactFormProps {
   contact: Contact | null;
@@ -38,6 +39,7 @@ export function EditContactForm({
   onClose,
   onSuccess,
 }: EditContactFormProps) {
+  const { authFetch } = useAuthFetch();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -68,7 +70,9 @@ export function EditContactForm({
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country`);
+        const res = await authFetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/country`,
+        );
         if (res.ok) {
           const data = await res.json();
           const countriesArray = Array.isArray(data) ? data : data?.data || [];
@@ -82,7 +86,7 @@ export function EditContactForm({
     if (isOpen) {
       fetchCountries();
     }
-  }, [isOpen]);
+  }, [isOpen, authFetch]);
 
   // Populate form when contact changes
   useEffect(() => {
@@ -166,7 +170,7 @@ export function EditContactForm({
 
       console.log("Final data to send:", dataToSend);
 
-      const res = await fetch(
+      const res = await authFetch(
         `${process.env.NEXT_PUBLIC_BASE_API}/contact/${contact.id}`,
         {
           method: "PATCH",

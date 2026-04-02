@@ -25,7 +25,10 @@ interface UserWithTasks extends User {
   tasks?: Task[];
 }
 
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
+
 const AdminDashboard = () => {
+  const { authFetch } = useAuthFetch();
   const [users, setUsers] = useState<UserWithTasks[]>([]);
   const [allContacts, setAllContacts] = useState<Contact[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
@@ -48,15 +51,15 @@ const AdminDashboard = () => {
     const load = async () => {
       try {
         const [userData, contactData, countryData] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`).then((r) =>
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`).then((r) =>
             r.json(),
           ),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/contact?limit=10000`).then(
-            (r) => r.json(),
-          ),
-          fetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`).then(
-            (r) => r.json(),
-          ),
+          authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/contact?limit=10000`,
+          ).then((r) => r.json()),
+          authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`,
+          ).then((r) => r.json()),
         ]);
 
         const userList: UserWithTasks[] = Array.isArray(userData)
@@ -65,13 +68,17 @@ const AdminDashboard = () => {
 
         // Fetch tasks for all users in a single batch call
         const userIds = userList.map((u) => u.id).join(",");
-        const batchTaskRes = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/task/batch?userIds=${userIds}`,
-        ).then((r) => r.json());
-        userList.forEach((u) => {
-          const userTasks = batchTaskRes[u.id];
-          u.tasks = Array.isArray(userTasks) ? userTasks : [];
-        });
+        if (!userIds) {
+          userList.forEach((u) => (u.tasks = []));
+        } else {
+          const batchTaskRes = await authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/task/batch?userIds=${userIds}`,
+          ).then((r) => r.json());
+          userList.forEach((u) => {
+            const userTasks = batchTaskRes[u.id];
+            u.tasks = Array.isArray(userTasks) ? userTasks : [];
+          });
+        }
 
         setUsers(userList);
 
@@ -93,7 +100,7 @@ const AdminDashboard = () => {
       }
     };
     load();
-  }, []);
+  }, [authFetch]);
 
   if (loading) return <Loading />;
 

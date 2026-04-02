@@ -184,7 +184,7 @@ export default function ParcelList() {
 
   useEffect(() => {
     fetchParcels();
-  }, [fetchParcels]);
+  }, [fetchParcels, authFetch]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

@@ -37,7 +37,7 @@ const UserList = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [authFetch]);
 
   const handleEdit = (user: User) => {
     setEditUser(user);
