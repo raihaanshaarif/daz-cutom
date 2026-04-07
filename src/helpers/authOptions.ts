@@ -2,41 +2,6 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-      role?: string | null;
-    };
-    backendToken?: string;
-    refreshToken?: string;
-    error?: string;
-  }
-  interface User {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-    role?: string | null;
-    backendToken?: string;
-    refreshToken?: string;
-  }
-}
-
-declare module "next-auth/jwt" {
-  interface JWT {
-    id?: string;
-    role?: string;
-    backendToken?: string;
-    refreshToken?: string;
-    accessTokenExpires?: number;
-    error?: string;
-  }
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
