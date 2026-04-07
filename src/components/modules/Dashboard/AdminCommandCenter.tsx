@@ -578,15 +578,20 @@ const AdminCommandCenter = () => {
                             <Badge
                               variant="outline"
                               className={`text-[9px] px-1 py-0 h-4 border-none ${
-                                comm.paymentStatus === "PARTIAL" ||
-                                comm.paymentStatus === "DUE_PAYMENT"
-                                  ? "bg-amber-100 text-amber-700 font-bold"
-                                  : "bg-slate-100 text-slate-600"
+                                comm.paymentStatus === "PARTIALLY_PAID"
+                                  ? "bg-blue-100 text-blue-700 font-bold"
+                                  : comm.paymentStatus === "PENDING"
+                                    ? "bg-yellow-100 text-yellow-700 font-bold"
+                                    : comm.paymentStatus === "PAID"
+                                      ? "bg-green-100 text-green-700 font-bold"
+                                      : comm.paymentStatus === "SURRENDERED"
+                                        ? "bg-gray-100 text-gray-700 font-bold"
+                                        : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {comm.paymentStatus === "DUE_PAYMENT"
-                                ? "OVERDUE"
-                                : comm.paymentStatus}
+                              {comm.paymentStatus
+                                .replace("_", " ")
+                                .toLowerCase()}
                             </Badge>
                           </div>
                         </div>

@@ -464,8 +464,9 @@ export function EditCommercialForm({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="PARTIAL">Partial</SelectItem>
+                  <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
                   <SelectItem value="PAID">Paid</SelectItem>
+                  <SelectItem value="SURRENDERED">Surrendered</SelectItem>
                 </SelectContent>
               </Select>
             </div>

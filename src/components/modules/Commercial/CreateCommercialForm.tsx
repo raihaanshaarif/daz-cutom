@@ -46,6 +46,7 @@ const paymentStatusOptions = [
   { value: "PENDING", label: "Pending" },
   { value: "PARTIALLY_PAID", label: "Partially Paid" },
   { value: "PAID", label: "Paid" },
+  { value: "SURRENDERED", label: "Surrendered" },
 ];
 
 export default function CreateCommercialForm() {

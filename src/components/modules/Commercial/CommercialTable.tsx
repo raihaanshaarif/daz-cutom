@@ -327,8 +327,19 @@ export function CommercialTable({
         header: "Payment Status",
         cell: ({ row }) => {
           const status = row.getValue("paymentStatus") as string;
+          const statusColors = {
+            PENDING: "bg-yellow-100 text-yellow-800",
+            PARTIALLY_PAID: "bg-blue-100 text-blue-800",
+            PAID: "bg-green-100 text-green-800",
+            SURRENDERED: "bg-gray-100 text-gray-800",
+          };
           return (
-            <div className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium capitalize bg-green-100 text-green-800">
+            <div
+              className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium capitalize ${
+                statusColors[status as keyof typeof statusColors] ||
+                "bg-gray-100 text-gray-800"
+              }`}
+            >
               {status.replace("_", " ").toLowerCase()}
             </div>
           );
