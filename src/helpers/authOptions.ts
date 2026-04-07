@@ -111,68 +111,21 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           backendToken: user.backendToken,
           refreshToken: user.refreshToken,
-          accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
         };
       }
 
-      // Return previous token if the access token has not expired yet
-      if (Date.now() < (token.accessTokenExpires as number)) {
-        return token;
-      }
-
-      console.log(
-        "[AUTH DEBUG] Token expired, attempting rotation for:",
-        token.email,
-      );
-      // Access token has expired, try to update it
-      try {
-        if (!token.refreshToken) {
-          console.error(
-            "[AUTH DEBUG] No refresh token available in JWT for rotation",
-          );
-          throw new Error("Missing refresh token");
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/auth/refresh-token`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              refreshToken: token.refreshToken,
-            }),
-          },
-        );
-
-        const refreshedTokens = await response.json();
-
-        if (!response.ok) {
-          throw refreshedTokens;
-        }
-
-        return {
-          ...token,
-          backendToken: refreshedTokens.data.accessToken,
-          accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
-        };
-      } catch (error) {
-        console.error("[AUTH] RefreshAccessTokenError", error);
-        return {
-          ...token,
-          error: "RefreshAccessTokenError",
-        };
-      }
+      // Return the token as-is for subsequent calls
+      return token;
     },
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token?.id as string;
         session.user.role = token?.role as string;
-        session.backendToken = token?.backendToken as string;
-        session.refreshToken = token?.refreshToken as string;
-        session.error = token?.error as string;
       }
+      // Add custom properties to session
+      session.backendToken = token?.backendToken as string;
+      session.refreshToken = token?.refreshToken as string;
+      session.error = token?.error as string;
       return session;
     },
     async redirect({ url, baseUrl }) {

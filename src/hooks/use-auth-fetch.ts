@@ -1,5 +1,5 @@
 import { useSession, signOut } from "next-auth/react";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 
 /**
  * Custom hook for making authenticated API calls from client components
@@ -8,14 +8,6 @@ import { useCallback, useEffect } from "react";
 export function useAuthFetch() {
   const { data: session, status } = useSession();
   const backendToken = session?.backendToken;
-  const error = session?.error;
-
-  // Sign out if there's a refresh token error
-  useEffect(() => {
-    if (error === "RefreshAccessTokenError") {
-      signOut({ callbackUrl: "/login" });
-    }
-  }, [error]);
 
   const authFetch = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
