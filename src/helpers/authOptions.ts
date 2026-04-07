@@ -156,16 +156,16 @@ export const authOptions: NextAuthOptions = {
 
       // Access token has expired, try to update it
       try {
+        if (!token.refreshToken) {
+          throw new Error("Missing refresh token");
+        }
+
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/auth/refresh-token`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              // Some implementations pass it in header, others in cookie via credentials
-              // Here we stick to the backend's expectation of a "refreshToken" in cookie
-              // but since Next.js server might not have the cookie, we can also pass it in body if needed.
-              // For PH style, we might need to adjust based on how backend was updated.
             },
             body: JSON.stringify({
               refreshToken: token.refreshToken,
@@ -185,7 +185,7 @@ export const authOptions: NextAuthOptions = {
           accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
         };
       } catch (error) {
-        console.error("RefreshAccessTokenError", error);
+        console.error("[AUTH] RefreshAccessTokenError", error);
         return {
           ...token,
           error: "RefreshAccessTokenError",
