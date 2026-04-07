@@ -34,18 +34,17 @@ export default function LoginForm() {
     try {
       const result = await signIn("credentials", {
         ...values,
-        redirect: false,
+        redirect: true,
+        callbackUrl: "/dashboard",
       });
 
       if (result?.error) {
         console.error("Login failed:", result.error);
         alert("Login failed: " + result.error);
         setIsLoading(false);
-      } else if (result?.ok) {
-        // Wait a moment for session to be saved, then redirect
-        setTimeout(() => {
-          window.location.href = "/dashboard";
-        }, 500);
+      } else {
+        // NextAuth will handle the redirect automatically
+        setIsLoading(false);
       }
     } catch (err) {
       console.error(err);

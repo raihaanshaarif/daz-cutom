@@ -114,8 +114,14 @@ export const authOptions: NextAuthOptions = {
         };
       }
 
-      // Return the token as-is for subsequent calls
-      return token;
+      // For subsequent calls, ensure custom properties are preserved
+      return {
+        ...token,
+        id: token.id,
+        role: token.role,
+        backendToken: token.backendToken,
+        refreshToken: token.refreshToken,
+      };
     },
     async session({ session, token }) {
       if (session?.user) {
@@ -168,6 +174,17 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false, // Set to false for development
+      },
+    },
   },
   pages: {
     signIn: "/login",
