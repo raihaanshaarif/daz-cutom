@@ -230,38 +230,6 @@ const AdminCommandCenter = () => {
         });
 
         // 7. Commission Forecasting Logic
-        // Combine pending commercials with orders that have missing or low-payment commercials
-        const overdueOrders = allOrders
-          .filter((o) => {
-            const shipDate = o.shipDate ? new Date(o.shipDate) : null;
-            const isShippedOrOverdue = shipDate && shipDate <= now;
-
-            // Find related commercials (via commercialOrders)
-            const relatedCommercials = allCommercials.filter((c) =>
-              (c as any).orders?.some((co: any) => co.orderId === o.id),
-            );
-
-            const totalReceived = relatedCommercials.reduce(
-              (sum, c) => sum + (c.receivedAmount || 0),
-              0,
-            );
-            const isPaymentDue = totalReceived < (o.totalPrice || 0);
-
-            return isShippedOrOverdue && isPaymentDue;
-          })
-          .map(
-            (o) =>
-              ({
-                id: `order-${o.id}`,
-                invoiceNo: `ORD: ${o.orderNumber}`,
-                lacAmount: o.totalPrice || 0,
-                paymentStatus: "DUE_PAYMENT",
-                approximatePaymentDate: o.shipDate,
-                etd: o.shipDate,
-                orders: [{ order: o }],
-              }) as any,
-          );
-
         const upcomingCommissions = allCommercials.filter(
           (c) =>
             (c.paymentStatus === "PENDING" || c.paymentStatus === "PARTIAL") &&
@@ -269,7 +237,7 @@ const AdminCommandCenter = () => {
             new Date(c.approximatePaymentDate as any) >= now,
         );
 
-        const combinedForecast = [...upcomingCommissions, ...overdueOrders]
+        const combinedForecast = upcomingCommissions
           .sort((a, b) => {
             const dateA = new Date(
               a.approximatePaymentDate || a.etd || 0,
@@ -377,6 +345,16 @@ const AdminCommandCenter = () => {
       maximumFractionDigits: 0,
     }).format(val);
 
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8 bg-[#f8fafc]/50 min-h-screen">
       {/* GLOBAL HEADER & FILTER */}
@@ -388,10 +366,7 @@ const AdminCommandCenter = () => {
           </h1>
           <p className="text-slate-500 font-medium">
             Enterprise Intelligence System •{" "}
-            {new Date().toLocaleDateString("en-US", {
-              month: "long",
-              year: "numeric",
-            })}
+            {formatDate(new Date().toISOString())}
           </p>
         </div>
 
@@ -471,7 +446,7 @@ const AdminCommandCenter = () => {
               <div>
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-rose-500" />
-                  Shipment Recovery Queue
+                  Overdue Shipment
                 </CardTitle>
                 <CardDescription>
                   Orders that missed their target shipment date
@@ -510,7 +485,7 @@ const AdminCommandCenter = () => {
                       </TableCell>
                       <TableCell className="text-xs">
                         <span className="text-rose-600 font-bold">
-                          {new Date(order.shipDate!).toLocaleDateString()}
+                          {formatDate(order.shipDate)}
                         </span>
                       </TableCell>
                       <TableCell className="text-right font-bold text-xs">
@@ -571,12 +546,9 @@ const AdminCommandCenter = () => {
                     >
                       <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50/50 rounded-full -mr-8 -mt-8 group-hover:bg-indigo-100/50 transition-colors" />
                       <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border font-black text-indigo-600 text-[10px] text-center leading-tight">
-                        {new Date(
+                        {formatDate(
                           (comm.approximatePaymentDate || comm.etd) as any,
-                        ).toLocaleString("default", {
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="flex justify-between items-start mb-1">

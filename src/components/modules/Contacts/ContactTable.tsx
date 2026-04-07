@@ -65,6 +65,16 @@ export function ContactTable({
   const isAdminOrSuperAdmin =
     session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
 
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const columns = React.useMemo<ColumnDef<Contact>[]>(
     () => [
       {
@@ -234,7 +244,7 @@ export function ContactTable({
         header: "Last Contacted",
         cell: ({ row }) => {
           const date = row.getValue("lastContactedAt") as string | undefined;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -242,7 +252,7 @@ export function ContactTable({
         header: "Last Replied",
         cell: ({ row }) => {
           const date = row.getValue("lastRepliedAt") as string | undefined;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -250,7 +260,7 @@ export function ContactTable({
         header: "Next Follow-up",
         cell: ({ row }) => {
           const date = row.getValue("nextFollowUpAt") as string | undefined;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -275,16 +285,16 @@ export function ContactTable({
         accessorKey: "createdAt",
         header: "Created At",
         cell: ({ row }) => {
-          const date = new Date(row.getValue("createdAt"));
-          return <div>{date.toLocaleDateString()}</div>;
+          const date = row.getValue("createdAt") as string;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
         accessorKey: "updatedAt",
         header: "Updated At",
         cell: ({ row }) => {
-          const date = new Date(row.getValue("updatedAt"));
-          return <div>{date.toLocaleDateString()}</div>;
+          const date = row.getValue("updatedAt") as string;
+          return <div>{formatDate(date)}</div>;
         },
       },
     ],
