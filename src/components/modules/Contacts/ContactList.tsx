@@ -82,16 +82,16 @@ export default function ContactList() {
 
         if (selectedUser && selectedUser !== "all") {
           params.append("authorId", selectedUser);
-          console.log(
-            "Filtering by user ID:",
-            selectedUser,
-            "Type:",
-            typeof selectedUser,
-          );
+          // console.log(
+          //   "Filtering by user ID:",
+          //   selectedUser,
+          //   "Type:",
+          //   typeof selectedUser,
+          // );
         }
 
         const queryString = params.toString();
-        console.log("API call with params:", queryString);
+        // console.log("API call with params:", queryString);
 
         const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/contact?${queryString}`,
@@ -100,8 +100,8 @@ export default function ContactList() {
           },
         );
         const { data, pagination } = await res.json();
-        console.log("API response data:", data);
-        console.log("Number of contacts returned:", data?.length || 0);
+        // console.log("API response data:", data);
+        // console.log("Number of contacts returned:", data?.length || 0);
 
         let filteredData = data || [];
 
@@ -112,7 +112,7 @@ export default function ContactList() {
               contact.authorId?.toString() === selectedUser ||
               contact.author?.id?.toString() === selectedUser,
           );
-          console.log("Frontend filtered to:", filteredData.length, "contacts");
+          // console.log("Frontend filtered to:", filteredData.length, "contacts");
         }
 
         setContacts(filteredData);
@@ -168,14 +168,14 @@ export default function ContactList() {
 
         for (const endpoint of endpoints) {
           try {
-            console.log(`Trying endpoint: ${endpoint}`);
+            // console.log(`Trying endpoint: ${endpoint}`);
             const res = await authFetch(endpoint, {
               cache: "no-store",
             });
 
             if (res.ok) {
               const data = await res.json();
-              console.log(`Success from ${endpoint}:`, data);
+              // console.log(`Success from ${endpoint}:`, data);
 
               // Handle different response structures
               const usersArray = Array.isArray(data)
@@ -195,7 +195,7 @@ export default function ContactList() {
         }
 
         if (usersData) {
-          console.log(`Using users from ${successfulEndpoint}:`, usersData);
+          // console.log(`Using users from ${successfulEndpoint}:`, usersData);
           setUsers(usersData);
         } else {
           // Try to extract users from contacts API

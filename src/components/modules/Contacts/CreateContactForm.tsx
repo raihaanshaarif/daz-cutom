@@ -141,7 +141,7 @@ export default function CreateContactForm() {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        console.log("NEXT_PUBLIC_BASE_API:", process.env.NEXT_PUBLIC_BASE_API);
+        // console.log("NEXT_PUBLIC_BASE_API:", process.env.NEXT_PUBLIC_BASE_API);
         const apiUrl = `${process.env.NEXT_PUBLIC_BASE_API}/country`;
         // console.log("Fetching countries from:", apiUrl);
 
@@ -179,15 +179,14 @@ export default function CreateContactForm() {
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
     try {
-      // Log form data values for debugging
-      console.log("Form Data entries:");
-      for (const [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
+      // console.log("Form Data entries:");
+      // for (const [key, value] of formData.entries()) {
+      //   console.log(`${key}:`, value);
+      // }
 
-      console.log("Calling createContact...");
+      // console.log("Calling createContact...");
       const result = await createContact(formData);
-      console.log("createContact result:", result);
+      // console.log("createContact result:", result);
 
       if (result?.id) {
         toast.success("Contact created successfully!", {

@@ -102,7 +102,7 @@ export default function OrderList() {
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
   const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
-  console.log(userId, userRole);
+  // console.log(userId, userRole);
 
   useEffect(() => {
     if (isAuthLoading) return;

@@ -91,7 +91,7 @@ export default function CommercialList() {
         }
 
         const queryString = params.toString();
-        console.log("API call with params:", queryString);
+        // console.log("API call with params:", queryString);
 
         const res = await authFetch(
           `${process.env.NEXT_PUBLIC_BASE_API}/commercial?${queryString}`,
@@ -100,8 +100,8 @@ export default function CommercialList() {
           },
         );
         const { data, pagination } = await res.json();
-        console.log("API response data:", data);
-        console.log("Number of commercials returned:", data?.length || 0);
+        // console.log("API response data:", data);
+        // console.log("Number of commercials returned:", data?.length || 0);
 
         const filteredData = data || [];
 

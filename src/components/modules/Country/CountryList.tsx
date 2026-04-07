@@ -83,17 +83,17 @@ export default function CountryList() {
 
   const handleEditCountry = (country: Country) => {
     // TODO: Implement edit functionality
-    console.log("Edit country:", country);
+    // console.log("Edit country:", country);
   };
 
   const handleViewCountry = (country: Country) => {
     // TODO: Implement view functionality
-    console.log("View country:", country);
+    // console.log("View country:", country);
   };
 
   const handleDeleteCountry = (country: Country) => {
     // TODO: Implement delete functionality
-    console.log("Delete country:", country);
+    // console.log("Delete country:", country);
   };
 
   if (loading && countries.length === 0) {
