@@ -42,7 +42,7 @@ type UserFormValues = {
   name: string;
   email: string;
   password: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "MERCHANDISER" | "COMMERCIAL" | "ADMIN" | "SUPER_ADMIN";
   status: "ACTIVE" | "INACTIVE";
   isVerified: boolean;
 };
@@ -84,7 +84,7 @@ export default function CreateUser() {
               User <span className="text-indigo-600">Management</span>
             </h1>
             <p className="text-zinc-500 mt-1 flex items-center gap-2 text-sm font-medium">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse inline-block" />
               Provision new access and credentials for platform users
             </p>
           </div>
@@ -272,11 +272,35 @@ export default function CreateUser() {
                               </span>
                             </SelectItem>
                             <SelectItem
+                              value="MERCHANDISER"
+                              className="focus:bg-blue-50 rounded-xl my-1 mx-1 transition-colors"
+                            >
+                              <span className="font-bold text-sm text-zinc-900">
+                                Merchandiser
+                              </span>
+                            </SelectItem>
+                            <SelectItem
+                              value="COMMERCIAL"
+                              className="focus:bg-blue-50 rounded-xl my-1 mx-1 transition-colors"
+                            >
+                              <span className="font-bold text-sm text-zinc-900">
+                                Commercial
+                              </span>
+                            </SelectItem>
+                            <SelectItem
                               value="ADMIN"
                               className="focus:bg-blue-50 rounded-xl my-1 mx-1 transition-colors"
                             >
                               <span className="font-bold text-sm text-zinc-900">
                                 Administrator
+                              </span>
+                            </SelectItem>
+                            <SelectItem
+                              value="SUPER_ADMIN"
+                              className="focus:bg-blue-50 rounded-xl my-1 mx-1 transition-colors"
+                            >
+                              <span className="font-bold text-sm text-zinc-900">
+                                Super Administrator
                               </span>
                             </SelectItem>
                           </SelectContent>

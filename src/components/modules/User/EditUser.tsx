@@ -35,7 +35,7 @@ import { useAuthFetch } from "@/hooks/use-auth-fetch";
 type UserFormValues = {
   name: string;
   email: string;
-  role: "USER" | "ADMIN";
+  role: "USER" | "MERCHANDISER" | "COMMERCIAL" | "ADMIN" | "SUPER_ADMIN";
   status: "ACTIVE" | "INACTIVE";
   isVerified: boolean;
 };
@@ -69,7 +69,12 @@ export default function EditUser({
       form.reset({
         name: user.name,
         email: user.email,
-        role: user.role as "USER" | "ADMIN",
+        role: user.role as
+          | "USER"
+          | "MERCHANDISER"
+          | "COMMERCIAL"
+          | "ADMIN"
+          | "SUPER_ADMIN",
         status: user.status as "ACTIVE" | "INACTIVE",
         isVerified: true, // Assuming existing users are verified
       });
@@ -159,7 +164,10 @@ export default function EditUser({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="USER">User</SelectItem>
+                      <SelectItem value="MERCHANDISER">Merchandiser</SelectItem>
+                      <SelectItem value="COMMERCIAL">Commercial</SelectItem>
                       <SelectItem value="ADMIN">Admin</SelectItem>
+                      <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

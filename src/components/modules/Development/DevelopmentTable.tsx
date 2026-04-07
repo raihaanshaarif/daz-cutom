@@ -41,6 +41,16 @@ export function DevelopmentTable({
   totalPages = 1,
   onPageChange,
 }: DevelopmentTableProps) {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const columns = React.useMemo<ColumnDef<DevelopmentSample>[]>(
     () => [
       {
@@ -214,11 +224,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("smsDeadline") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs font-medium">
-              {new Date(date).toLocaleDateString()}
-            </div>
-          );
+          return <div className="text-xs font-medium">{formatDate(date)}</div>;
         },
       },
       {
@@ -227,9 +233,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("tpReceiveDate") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -238,9 +242,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("originalSwatchDate") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -249,9 +251,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("originalSampleDate") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -260,9 +260,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("labdipReceiveDate") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -271,9 +269,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("labApprovalDate") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -282,9 +278,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("printEmbStrikeOff") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -293,9 +287,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("smsSubmissionDate") as string;
           if (!date) return <span className="text-zinc-400">---</span>;
-          return (
-            <div className="text-xs">{new Date(date).toLocaleDateString()}</div>
-          );
+          return <div className="text-xs">{formatDate(date)}</div>;
         },
       },
       {
@@ -352,9 +344,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("createdAt") as string;
           return (
-            <div className="text-xs text-zinc-500">
-              {new Date(date).toLocaleDateString()}
-            </div>
+            <div className="text-xs text-zinc-500">{formatDate(date)}</div>
           );
         },
       },
@@ -364,9 +354,7 @@ export function DevelopmentTable({
         cell: ({ row }) => {
           const date = row.getValue("updatedAt") as string;
           return (
-            <div className="text-xs text-zinc-500">
-              {new Date(date).toLocaleDateString()}
-            </div>
+            <div className="text-xs text-zinc-500">{formatDate(date)}</div>
           );
         },
       },

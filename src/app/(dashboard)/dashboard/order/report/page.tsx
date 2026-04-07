@@ -25,6 +25,7 @@ import {
 import { useState, useEffect } from "react";
 import { OrderTable } from "@/components/modules/Order/OrderTable";
 import { Order, OrderItem, Buyer, Factory } from "@/types";
+import { useSession } from "next-auth/react";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 export default function OrderReportPage() {
@@ -45,6 +46,11 @@ export default function OrderReportPage() {
   });
 
   const { authFetch } = useAuthFetch();
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
+  const isAdminOrSuperAdmin =
+    userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   // Fetch buyers and factories for filters
   useEffect(() => {
@@ -70,6 +76,12 @@ export default function OrderReportPage() {
     const fetchOrders = async () => {
       setLoading(true);
       try {
+        // Determine if we need to fetch all orders or paginated results
+        const shouldFetchAll =
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL";
+
         const params = new URLSearchParams();
         if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
         if (selectedFactory !== "all")
@@ -81,11 +93,40 @@ export default function OrderReportPage() {
           );
         }
 
-        const res = await authFetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
-        );
-        const { data } = await res.json();
-        const ordersData = data || [];
+        // For non-admin users, fetch all orders to filter client-side
+        if (shouldFetchAll) {
+          params.set("limit", "10000"); // Large limit to get all orders
+        }
+
+        const [ordersRes, userRes] = await Promise.all([
+          authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
+          ),
+          shouldFetchAll
+            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
+            : Promise.resolve(null),
+        ]);
+
+        const { data } = await ordersRes.json();
+        let ordersData = data || [];
+
+        // Filter orders based on user role and assigned buyers
+        if (shouldFetchAll && userRes) {
+          const user = await userRes.json();
+          const assignedBuyerIds =
+            user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
+
+          if (assignedBuyerIds.length === 0) {
+            // If no buyers assigned, show no orders
+            ordersData = [];
+          } else {
+            // Filter orders where buyerId matches assigned buyers
+            ordersData = ordersData.filter(
+              (order: Order) =>
+                order.buyerId && assignedBuyerIds.includes(order.buyerId),
+            );
+          }
+        }
 
         // Map to OrderItem format for table
         const mappedItems: OrderItem[] = ordersData.map((order: Order) => ({
@@ -147,7 +188,15 @@ export default function OrderReportPage() {
       }
     };
     fetchOrders();
-  }, [selectedBuyer, selectedFactory, selectedShippedStatus, authFetch]);
+  }, [
+    selectedBuyer,
+    selectedFactory,
+    selectedShippedStatus,
+    authFetch,
+    userId,
+    userRole,
+    isAdminOrSuperAdmin,
+  ]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 w-full">

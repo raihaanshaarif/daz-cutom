@@ -311,11 +311,15 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               url: "/dashboard/buyer/buyer-list",
               icon: ShoppingBag,
             },
-            {
-              title: "Assign User",
-              url: "/dashboard//buyer/assign-user",
-              icon: PlusCircle,
-            },
+            ...(isAdmin
+              ? [
+                  {
+                    title: "Assign User",
+                    url: "/dashboard//buyer/assign-user",
+                    icon: PlusCircle,
+                  },
+                ]
+              : []),
           ],
         },
         {

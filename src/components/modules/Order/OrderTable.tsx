@@ -14,6 +14,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ChevronDown, Eye, Edit, Trash2, FileDown } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,6 +54,20 @@ export function OrderTable({
   totalPages = 1,
   onPageChange,
 }: OrderTableProps) {
+  const { data: session } = useSession();
+  const isAdminOrSuperAdmin =
+    session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const columns = React.useMemo<ColumnDef<OrderItem>[]>(
     () => [
       {
@@ -105,15 +120,17 @@ export function OrderTable({
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onDelete?.(item)}
-                title="Delete"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {isAdminOrSuperAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => onDelete?.(item)}
+                  title="Delete"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           );
         },
@@ -139,7 +156,7 @@ export function OrderTable({
         header: "Ship Date",
         cell: ({ row }) => {
           const val = row.getValue("shipDate") as string | undefined;
-          return <div>{val ? new Date(val).toLocaleDateString() : "N/A"}</div>;
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -218,17 +235,7 @@ export function OrderTable({
         header: "Yarn Booking",
         cell: ({ row }) => {
           const val = row.getValue("yarnBooking") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -236,17 +243,7 @@ export function OrderTable({
         header: "Lab-yarn",
         cell: ({ row }) => {
           const val = row.getValue("labYarn") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -254,17 +251,7 @@ export function OrderTable({
         header: "Print Strikeoff",
         cell: ({ row }) => {
           const val = row.getValue("printStrikeoff") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -272,17 +259,7 @@ export function OrderTable({
         header: "PP",
         cell: ({ row }) => {
           const val = row.getValue("pp") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -290,17 +267,7 @@ export function OrderTable({
         header: "Bulk Fab",
         cell: ({ row }) => {
           const val = row.getValue("bulkFab") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -308,17 +275,7 @@ export function OrderTable({
         header: "Cutting",
         cell: ({ row }) => {
           const val = row.getValue("cutting") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -326,17 +283,7 @@ export function OrderTable({
         header: "Printing",
         cell: ({ row }) => {
           const val = row.getValue("printing") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -344,17 +291,7 @@ export function OrderTable({
         header: "Swing",
         cell: ({ row }) => {
           const val = row.getValue("swing") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -362,17 +299,7 @@ export function OrderTable({
         header: "Finishing",
         cell: ({ row }) => {
           const val = row.getValue("finishing") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -380,17 +307,7 @@ export function OrderTable({
         header: "Shipment Sample",
         cell: ({ row }) => {
           const val = row.getValue("shipmentSample") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -398,17 +315,7 @@ export function OrderTable({
         header: "Inspection",
         cell: ({ row }) => {
           const val = row.getValue("inspection") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -416,17 +323,7 @@ export function OrderTable({
         header: "Exfactory",
         cell: ({ row }) => {
           const val = row.getValue("exfactory") as string | null;
-          return (
-            <div>
-              {val
-                ? new Date(val).toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
-                : "—"}
-            </div>
-          );
+          return <div>{formatDate(val)}</div>;
         },
       },
       {
@@ -477,7 +374,7 @@ export function OrderTable({
         ),
       },
     ],
-    [onEdit, onView, onDelete],
+    [onEdit, onView, onDelete, isAdminOrSuperAdmin],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([]);

@@ -276,7 +276,7 @@ export default function CreateOrderForm() {
                       htmlFor="garmentsItem"
                       className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
                     >
-                      Garment Item
+                      Department
                     </Label>
                     <Input
                       id="garmentsItem"
@@ -460,8 +460,11 @@ export default function CreateOrderForm() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="PARTIAL">Partial</SelectItem>
-                        <SelectItem value="PAID">Paid</SelectItem>
+                        <SelectItem value="PARTIALLY_RECEIVED">
+                          Partially Received
+                        </SelectItem>
+                        <SelectItem value="RECEIVED">Received</SelectItem>
+                        <SelectItem value="SURRENDERED">Surrendered</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

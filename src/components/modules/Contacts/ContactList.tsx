@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { ContactTable } from "./ContactTable";
 import { EditContactForm } from "./EditContactForm";
 import { ViewContactModal } from "./ViewContactModal";
-import { Users, Filter, X, Plus, ChevronLeft } from "lucide-react";
+import { Users, Filter, X, Plus, ChevronLeft, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +45,8 @@ export default function ContactList() {
   const limit = 10;
 
   // Filter states
-  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedStartDate, setSelectedStartDate] = useState<string>("");
+  const [selectedEndDate, setSelectedEndDate] = useState<string>("");
   const [selectedUser, setSelectedUser] = useState<string>("all");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
@@ -64,7 +65,10 @@ export default function ContactList() {
 
   // Check if any filters are active
   const hasActiveFilters =
-    selectedDate || selectedUser !== "all" || selectedPeriod !== "all";
+    selectedStartDate ||
+    selectedEndDate ||
+    selectedUser !== "all" ||
+    selectedPeriod !== "all";
 
   const handleCreateContact = () => {
     router.push("/dashboard/contact/create-contact");
@@ -79,6 +83,13 @@ export default function ContactList() {
           page: currentPage.toString(),
           limit: limit.toString(),
         });
+
+        if (selectedStartDate) {
+          params.append("startDate", selectedStartDate);
+        }
+        if (selectedEndDate) {
+          params.append("endDate", selectedEndDate);
+        }
 
         if (selectedUser && selectedUser !== "all") {
           params.append("authorId", selectedUser);
@@ -115,10 +126,36 @@ export default function ContactList() {
           // console.log("Frontend filtered to:", filteredData.length, "contacts");
         }
 
+        // Frontend filtering for date range
+        if (selectedStartDate || selectedEndDate) {
+          filteredData = filteredData.filter((contact: Contact) => {
+            const followUpDate =
+              contact.nextFollowUpAt || contact.lastContactedAt;
+            if (!followUpDate) return false;
+
+            const contactDate = new Date(followUpDate);
+            const start = selectedStartDate
+              ? new Date(selectedStartDate)
+              : null;
+            const end = selectedEndDate ? new Date(selectedEndDate) : null;
+
+            if (start && end) {
+              return contactDate >= start && contactDate <= end;
+            } else if (start) {
+              return contactDate >= start;
+            } else if (end) {
+              return contactDate <= end;
+            }
+            return true;
+          });
+        }
+
         setContacts(filteredData);
         setTotalPages(pagination?.totalPages || 1);
         setTotalContacts(
-          selectedUser && selectedUser !== "all"
+          (selectedUser && selectedUser !== "all") ||
+            selectedStartDate ||
+            selectedEndDate
             ? filteredData.length
             : pagination?.total || 0,
         );
@@ -127,7 +164,8 @@ export default function ContactList() {
         if (
           selectedUser === "all" &&
           selectedPeriod === "all" &&
-          !selectedDate
+          !selectedStartDate &&
+          !selectedEndDate
         ) {
           // setAllContactsCache(filteredData);
           // setAllContactsPagination(pagination);
@@ -142,7 +180,8 @@ export default function ContactList() {
     fetchContacts();
   }, [
     currentPage,
-    selectedDate,
+    selectedStartDate,
+    selectedEndDate,
     selectedUser,
     selectedPeriod,
     refreshTrigger,
@@ -270,7 +309,8 @@ export default function ContactList() {
   };
 
   const clearAllFilters = () => {
-    setSelectedDate("");
+    setSelectedStartDate("");
+    setSelectedEndDate("");
     setSelectedUser("all");
     setSelectedPeriod("all");
     setSelectedType("all");
@@ -404,15 +444,30 @@ export default function ContactList() {
           {/* Enhanced Filter Bar */}
           {showFilters && (
             <div className="flex flex-wrap items-end gap-6 bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden ring-1 ring-zinc-100 dark:ring-zinc-800/50 animate-in fade-in slide-in-from-top-2 duration-300">
-              <div className="w-64 space-y-2">
+              <div className="w-56 space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Follow-up Date
+                  Follow-up Start Date
                 </Label>
                 <Input
                   type="date"
-                  value={selectedDate}
+                  value={selectedStartDate}
                   onChange={(e) => {
-                    setSelectedDate(e.target.value);
+                    setSelectedStartDate(e.target.value);
+                    handleFilterChange();
+                  }}
+                  className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20"
+                />
+              </div>
+
+              <div className="w-56 space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Follow-up End Date
+                </Label>
+                <Input
+                  type="date"
+                  value={selectedEndDate}
+                  onChange={(e) => {
+                    setSelectedEndDate(e.target.value);
                     handleFilterChange();
                   }}
                   className="h-11 bg-zinc-50/50 dark:bg-zinc-800/50 border-zinc-200 dark:border-zinc-700 rounded-xl text-sm shadow-sm transition-all focus:ring-blue-500/20"
@@ -540,6 +595,14 @@ export default function ContactList() {
         {/* Modals and Dialogs */}
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl border-none shadow-2xl p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-zinc-100">
+              <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                  <Edit className="w-5 h-5" />
+                </div>
+                Edit Contact: {editingContact?.name}
+              </DialogTitle>
+            </DialogHeader>
             {editingContact && (
               <EditContactForm
                 contact={editingContact}

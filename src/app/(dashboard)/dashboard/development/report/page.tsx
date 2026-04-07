@@ -29,6 +29,7 @@ import { DevelopmentTable } from "@/components/modules/Development/DevelopmentTa
 import { DevelopmentSample, Buyer } from "@/types";
 import { useRouter } from "next/navigation";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import { useSession } from "next-auth/react";
 
 export default function DevelopmentReportPage() {
   const router = useRouter();
@@ -48,6 +49,11 @@ export default function DevelopmentReportPage() {
   });
 
   const { authFetch } = useAuthFetch();
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
+  const isAdminOrSuperAdmin =
+    userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   useEffect(() => {
     const fetchFilterData = async () => {
@@ -68,18 +74,55 @@ export default function DevelopmentReportPage() {
     const fetchSamples = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          limit: "1000",
-        });
-        if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
-        if (selectedStatus !== "all") params.append("status", selectedStatus);
-        if (selectedSeason !== "all") params.append("season", selectedSeason);
+        // Determine if we need to fetch all samples or paginated results
+        const shouldFetchAll =
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL";
 
-        const res = await authFetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/development/samples?${params.toString()}`,
-        );
-        const result = await res.json();
-        const samplesData = result.data || [];
+        const params = new URLSearchParams();
+        if (shouldFetchAll) {
+          params.set("limit", "10000"); // Large limit to get all samples for filtering
+        } else {
+          params.set("limit", "1000"); // Normal limit for admin users
+        }
+
+        if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
+        if (selectedStatus !== "all")
+          params.append("smsStatus", selectedStatus);
+        if (selectedSeason !== "all")
+          params.append("seasonYear", selectedSeason);
+
+        const [samplesRes, userRes] = await Promise.all([
+          authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/development/?${params.toString()}`,
+          ),
+          shouldFetchAll
+            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
+            : Promise.resolve(null),
+        ]);
+
+        const result = await samplesRes.json();
+        let samplesData = result.data || [];
+
+        // Filter samples based on user role and assigned buyers
+        if (shouldFetchAll && userRes) {
+          const user = await userRes.json();
+          const assignedBuyerIds =
+            user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
+
+          if (assignedBuyerIds.length === 0) {
+            // If no buyers assigned, show no samples
+            samplesData = [];
+          } else {
+            // Filter samples where buyerId matches assigned buyers
+            samplesData = samplesData.filter(
+              (sample: DevelopmentSample) =>
+                sample.buyerId && assignedBuyerIds.includes(sample.buyerId),
+            );
+          }
+        }
+
         setSamples(samplesData);
 
         setMetrics({
@@ -101,7 +144,15 @@ export default function DevelopmentReportPage() {
       }
     };
     fetchSamples();
-  }, [selectedBuyer, selectedStatus, selectedSeason, authFetch]);
+  }, [
+    selectedBuyer,
+    selectedStatus,
+    selectedSeason,
+    authFetch,
+    userId,
+    userRole,
+    isAdminOrSuperAdmin,
+  ]);
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-8 max-w-[1600px] mx-auto w-full bg-zinc-50/50 min-h-screen">
@@ -365,33 +416,9 @@ export default function DevelopmentReportPage() {
                 Syncing technical data...
               </p>
             </div>
-          ) : samples.length > 0 ? (
+          ) : (
             <div className="relative overflow-x-auto">
               <DevelopmentTable data={samples} />
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-20 gap-4 text-center">
-              <div className="p-6 bg-zinc-50 rounded-full mb-2">
-                <FlaskConical className="w-12 h-12 text-zinc-200" />
-              </div>
-              <h4 className="text-lg font-bold text-zinc-900 uppercase italic">
-                No Data Points Detected
-              </h4>
-              <p className="text-zinc-400 max-w-[280px] text-sm font-medium">
-                Adjust your operation parameters or clear filters to track
-                active developments.
-              </p>
-              <Button
-                variant="link"
-                className="text-indigo-600 font-bold uppercase tracking-widest italic mt-2"
-                onClick={() => {
-                  setSelectedBuyer("all");
-                  setSelectedStatus("all");
-                  setSelectedSeason("all");
-                }}
-              >
-                Clear Parameters
-              </Button>
             </div>
           )}
         </CardContent>

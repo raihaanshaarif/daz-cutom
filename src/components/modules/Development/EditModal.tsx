@@ -47,7 +47,7 @@ export function EditModal({
   sample,
   onSuccess,
 }: EditModalProps) {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
@@ -79,6 +79,8 @@ export function EditModal({
 
   // Load buyers and factories
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const fetchData = async () => {
       try {
         const [buyersResponse, factoriesResponse] = await Promise.all([
@@ -96,7 +98,7 @@ export function EditModal({
       }
     };
     fetchData();
-  }, [authFetch]);
+  }, [authFetch, isAuthLoading]);
 
   // Populate form when sample changes
   useEffect(() => {

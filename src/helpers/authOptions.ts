@@ -102,14 +102,14 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, account }) {
-      console.log(
-        "[JWT DEBUG] JWT callback called for:",
-        token?.email || "unknown",
-        "user:",
-        !!user,
-        "account:",
-        !!account,
-      );
+      // console.log(
+      //   "[JWT DEBUG] JWT callback called for:",
+      //   token?.email || "unknown",
+      //   "user:",
+      //   !!user,
+      //   "account:",
+      //   !!account,
+      // );
 
       // Initial sign-in
       if (user && account) {

@@ -21,6 +21,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -60,6 +61,10 @@ export function ContactTable({
   totalPages = 1,
   onPageChange,
 }: ContactTableProps) {
+  const { data: session } = useSession();
+  const isAdminOrSuperAdmin =
+    session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
+
   const columns = React.useMemo<ColumnDef<Contact>[]>(
     () => [
       {
@@ -112,15 +117,17 @@ export function ContactTable({
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onDelete?.(item)}
-                title="Delete"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {isAdminOrSuperAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => onDelete?.(item)}
+                  title="Delete"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           );
         },
@@ -227,7 +234,7 @@ export function ContactTable({
         header: "Last Contacted",
         cell: ({ row }) => {
           const date = row.getValue("lastContactedAt") as string | undefined;
-          return <div>{date ? new Date(date).toLocaleString() : "-"}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -235,7 +242,7 @@ export function ContactTable({
         header: "Last Replied",
         cell: ({ row }) => {
           const date = row.getValue("lastRepliedAt") as string | undefined;
-          return <div>{date ? new Date(date).toLocaleString() : "-"}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -243,7 +250,7 @@ export function ContactTable({
         header: "Next Follow-up",
         cell: ({ row }) => {
           const date = row.getValue("nextFollowUpAt") as string | undefined;
-          return <div>{date ? new Date(date).toLocaleString() : "-"}</div>;
+          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
         },
       },
       {
@@ -281,7 +288,7 @@ export function ContactTable({
         },
       },
     ],
-    [onEdit, onView, onDelete],
+    [onEdit, onView, onDelete, isAdminOrSuperAdmin],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([]);

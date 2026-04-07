@@ -7,6 +7,13 @@ import { ClipboardList, Database } from "lucide-react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import TaskDetails from "./TaskDetails";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function MyTaskList() {
   const { data: session } = useSession();
@@ -17,6 +24,8 @@ export default function MyTaskList() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalTasks, setTotalTasks] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const limit = 10;
 
   useEffect(() => {
@@ -111,6 +120,11 @@ export default function MyTaskList() {
     }
   };
 
+  const handleView = (task: Task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background py-2 px-4">
@@ -150,6 +164,7 @@ export default function MyTaskList() {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={(page) => setCurrentPage(page)}
+              onView={handleView}
               onUpdateProgress={handleUpdateProgress}
               onUpdateTarget={handleUpdateTarget}
               showAssignedBy={true}
@@ -157,6 +172,21 @@ export default function MyTaskList() {
           </div>
         </div>
       </div>
+
+      {/* Task Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Task Details</DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <TaskDetails
+              task={selectedTask}
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -253,6 +253,8 @@ const UserList = () => {
                     <SelectItem value="all">All Roles</SelectItem>
                     <SelectItem value="SUPER_ADMIN">SUPER_ADMIN</SelectItem>
                     <SelectItem value="ADMIN">ADMIN</SelectItem>
+                    <SelectItem value="COMMERCIAL">COMMERCIAL</SelectItem>
+                    <SelectItem value="MERCHANDISER">MERCHANDISER</SelectItem>
                     <SelectItem value="USER">USER</SelectItem>
                   </SelectContent>
                 </Select>

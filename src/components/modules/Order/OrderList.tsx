@@ -102,42 +102,50 @@ export default function OrderList() {
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
   const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
-  // console.log(userId, userRole);
 
   useEffect(() => {
-    if (isAuthLoading) return;
+    if (isAuthLoading || !userId) return;
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          page: currentPage.toString(),
-          limit: limit.toString(),
+        // Determine if we need to fetch all orders or paginated results
+        const shouldFetchAll =
+          userRole !== "ADMIN" && userRole !== "SUPER_ADMIN";
+
+        const ordersParams = new URLSearchParams({
+          page: shouldFetchAll ? "1" : currentPage.toString(),
+          limit: shouldFetchAll ? "10000" : limit.toString(), // Large limit for non-admin users to get all their orders
         });
         if (selectedStatus && selectedStatus !== "all")
-          params.append("commissionStatus", selectedStatus);
+          ordersParams.append("commissionStatus", selectedStatus);
         if (selectedBuyer && selectedBuyer !== "all")
-          params.append("buyerId", selectedBuyer);
+          ordersParams.append("buyerId", selectedBuyer);
         if (selectedFactory && selectedFactory !== "all")
-          params.append("factoryId", selectedFactory);
-        if (debouncedSearch) params.append("search", debouncedSearch);
+          ordersParams.append("factoryId", selectedFactory);
+        if (debouncedSearch) ordersParams.append("search", debouncedSearch);
 
-        // Fetch orders + filter data in parallel
-        const [ordersRes, buyersRes, factoriesRes] = await Promise.all([
-          authFetch(
-            `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
-            {
-              cache: "no-store",
-            },
-          ),
-          buyers.length === 0
-            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
-            : null,
-          factories.length === 0
-            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`)
-            : null,
-        ]);
+        // Fetch orders, user data, and filter data in parallel
+        const [ordersRes, userRes, buyersRes, factoriesRes] = await Promise.all(
+          [
+            authFetch(
+              `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${ordersParams.toString()}`,
+              {
+                cache: "no-store",
+              },
+            ),
+            authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`),
+            buyers.length === 0
+              ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
+              : null,
+            factories.length === 0
+              ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`)
+              : null,
+          ],
+        );
 
-        const { data, pagination } = await ordersRes.json();
+        const { data: ordersData, pagination } = await ordersRes.json();
+        const userData = await userRes.json();
+
         if (buyersRes) {
           const b = await buyersRes.json();
           setBuyers(Array.isArray(b) ? b : []);
@@ -147,45 +155,118 @@ export default function OrderList() {
           setFactories(Array.isArray(f) ? f : []);
         }
 
-        setOrders(data || []);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mappedItems: OrderItem[] = (data || []).map((order: any) => ({
-          id: order.id,
-          orderNumber: order.orderNumber,
-          shipDate: order.shipDate,
-          productName: order.style || order.orderNumber || `Order #${order.id}`,
-          department: order.dept,
-          style: order.style,
-          color: order.color,
-          lot: order.lot,
-          quantity: order.quantity,
-          unitPrice: order.price,
-          totalPrice: order.totalPrice,
-          factoryPrice: order.factoryUnitPrice,
-          totalFactoryPrice: order.totalFactoryPrice,
-          dazCommission: order.dazCommission,
-          finalDazCommission: order.finalDazCommission,
-          paymentTerm: order.paymentTerm,
-          buyerName: order.buyer?.name,
-          factoryName: order.factory?.name,
-          yarnBooking: order.yarnBooking ?? null,
-          labYarn: order.labdipYarndip ?? null,
-          printStrikeoff: order.printStrikeOff ?? null,
-          pp: order.ppSample ?? null,
-          bulkFab: order.bulkFabric ?? null,
-          cutting: order.cutting ?? null,
-          printing: order.printing ?? null,
-          swing: order.swing ?? null,
-          finishing: order.finishing ?? null,
-          shipmentSample: order.shipmentSample ?? null,
-          inspection: order.inspection ?? null,
-          exfactory: order.exFactory ?? null,
-          overallRemarks: order.overallRemarks,
-          isShipped: order.isShipped,
-        }));
-        setOrderItems(mappedItems);
-        setTotalPages(pagination?.totalPages || 1);
-        setTotalOrders(pagination?.total || 0);
+        // Filter orders based on user role and assigned buyers
+        let filteredOrders: Order[] = ordersData || [];
+
+        if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+          // For regular users, only show orders where buyer is assigned to them
+          const assignedBuyerIds =
+            userData?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
+
+          // If no buyers are assigned, show no data
+          if (assignedBuyerIds.length === 0) {
+            filteredOrders = [];
+          } else {
+            filteredOrders = filteredOrders.filter(
+              (order: Order) =>
+                order.buyerId && assignedBuyerIds.includes(order.buyerId),
+            );
+          }
+
+          // Apply client-side pagination for filtered results
+          const startIndex = (currentPage - 1) * limit;
+          const endIndex = startIndex + limit;
+          const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+          setOrders(paginatedOrders);
+          setTotalPages(Math.ceil(filteredOrders.length / limit));
+          setTotalOrders(filteredOrders.length);
+
+          // Create OrderItems from paginated filtered orders
+          const mappedItems: OrderItem[] = paginatedOrders.map(
+            (order: Order) => ({
+              id: order.id,
+              orderNumber: order.orderNumber,
+              shipDate: order.shipDate,
+              productName:
+                order.style || order.orderNumber || `Order #${order.id}`,
+              department: order.dept,
+              style: order.style,
+              color: order.color,
+              lot: order.lot,
+              quantity: order.quantity || 0,
+              unitPrice: order.price || 0,
+              totalPrice: order.totalPrice || 0,
+              factoryPrice: order.factoryUnitPrice,
+              totalFactoryPrice: order.totalFactoryPrice,
+              dazCommission: order.dazCommission,
+              finalDazCommission: order.finalDazCommission,
+              paymentTerm: order.paymentTerm,
+              buyerName: order.buyer?.name,
+              factoryName: order.factory?.name,
+              yarnBooking: order.yarnBooking ?? null,
+              labYarn: order.labdipYarndip ?? null,
+              printStrikeoff: order.printStrikeOff ?? null,
+              pp: order.ppSample ?? null,
+              bulkFab: order.bulkFabric ?? null,
+              cutting: order.cutting ?? null,
+              printing: order.printing ?? null,
+              swing: order.swing ?? null,
+              finishing: order.finishing ?? null,
+              shipmentSample: order.shipmentSample ?? null,
+              inspection: order.inspection ?? null,
+              exfactory: order.exFactory ?? null,
+              overallRemarks: order.overallRemarks,
+              isShipped: order.isShipped,
+            }),
+          );
+          setOrderItems(mappedItems);
+        } else {
+          // For admin/super admin users, use API pagination directly
+          setOrders(filteredOrders);
+
+          // Create OrderItems from API results
+          const mappedItems: OrderItem[] = filteredOrders.map(
+            (order: Order) => ({
+              id: order.id,
+              orderNumber: order.orderNumber,
+              shipDate: order.shipDate,
+              productName:
+                order.style || order.orderNumber || `Order #${order.id}`,
+              department: order.dept,
+              style: order.style,
+              color: order.color,
+              lot: order.lot,
+              quantity: order.quantity || 0,
+              unitPrice: order.price || 0,
+              totalPrice: order.totalPrice || 0,
+              factoryPrice: order.factoryUnitPrice,
+              totalFactoryPrice: order.totalFactoryPrice,
+              dazCommission: order.dazCommission,
+              finalDazCommission: order.finalDazCommission,
+              paymentTerm: order.paymentTerm,
+              buyerName: order.buyer?.name,
+              factoryName: order.factory?.name,
+              yarnBooking: order.yarnBooking ?? null,
+              labYarn: order.labdipYarndip ?? null,
+              printStrikeoff: order.printStrikeOff ?? null,
+              pp: order.ppSample ?? null,
+              bulkFab: order.bulkFabric ?? null,
+              cutting: order.cutting ?? null,
+              printing: order.printing ?? null,
+              swing: order.swing ?? null,
+              finishing: order.finishing ?? null,
+              shipmentSample: order.shipmentSample ?? null,
+              inspection: order.inspection ?? null,
+              exfactory: order.exFactory ?? null,
+              overallRemarks: order.overallRemarks,
+              isShipped: order.isShipped,
+            }),
+          );
+          setOrderItems(mappedItems);
+          setTotalPages(pagination?.totalPages || 1);
+          setTotalOrders(pagination?.total || 0);
+        }
       } catch (error) {
         console.error("Failed to fetch orders:", error);
       } finally {
@@ -366,10 +447,19 @@ export default function OrderList() {
                       All Status
                     </SelectItem>
                     <SelectItem value="PENDING" className="rounded-lg">
-                      Not Shipped
+                      Pending
                     </SelectItem>
-                    <SelectItem value="PAID" className="rounded-lg">
-                      Shipped
+                    <SelectItem
+                      value="PARTIALLY_RECEIVED"
+                      className="rounded-lg"
+                    >
+                      Partially Received
+                    </SelectItem>
+                    <SelectItem value="RECEIVED" className="rounded-lg">
+                      Received
+                    </SelectItem>
+                    <SelectItem value="SURRENDERED" className="rounded-lg">
+                      Surrendered
                     </SelectItem>
                   </SelectContent>
                 </Select>

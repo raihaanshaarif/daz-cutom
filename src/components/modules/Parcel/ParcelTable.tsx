@@ -62,6 +62,16 @@ export function ParcelTable({
   totalPages = 1,
   onPageChange,
 }: ParcelTableProps) {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const columns = React.useMemo<ColumnDef<Parcel>[]>(
     () => [
       {
@@ -235,8 +245,8 @@ export function ParcelTable({
           );
         },
         cell: ({ row }) => {
-          const date = new Date(row.getValue("createdAt"));
-          return <div>{date.toLocaleDateString()}</div>;
+          const date = row.getValue("createdAt") as string;
+          return <div>{formatDate(date)}</div>;
         },
       },
     ],
@@ -290,7 +300,7 @@ export function ParcelTable({
         if (value === null || value === undefined) return "";
         // Format dates
         if (col.id.toLowerCase().includes("date") && value instanceof Date) {
-          return value.toLocaleDateString();
+          return formatDate(value.toISOString());
         }
         // Handle objects (like nested buyer/courier)
         if (typeof value === "object") return JSON.stringify(value);

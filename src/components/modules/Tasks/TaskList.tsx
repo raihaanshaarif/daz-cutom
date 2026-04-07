@@ -18,9 +18,16 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import TaskDetails from "./TaskDetails";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function TaskList() {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const router = useRouter();
 
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -31,9 +38,13 @@ export default function TaskList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const limit = 10;
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const fetchTasks = async () => {
       setLoading(true);
       try {
@@ -63,7 +74,7 @@ export default function TaskList() {
       }
     };
     fetchTasks();
-  }, [currentPage, searchTerm, refreshTrigger, authFetch]);
+  }, [currentPage, searchTerm, refreshTrigger, authFetch, isAuthLoading]);
 
   const handleDelete = async (task: Task) => {
     if (!confirm(`Delete task "${task.title}"?`)) return;
@@ -155,6 +166,11 @@ export default function TaskList() {
     } catch {
       toast.error("Failed to update target");
     }
+  };
+
+  const handleView = (task: Task) => {
+    setSelectedTask(task);
+    setIsModalOpen(true);
   };
 
   if (loading) {
@@ -302,6 +318,7 @@ export default function TaskList() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 onPageChange={(page) => setCurrentPage(page)}
+                onView={handleView}
                 onUpdateProgress={handleUpdateProgress}
                 onUpdateTarget={handleUpdateTarget}
                 onToggleActive={handleToggleActive}
@@ -312,6 +329,21 @@ export default function TaskList() {
           </Card>
         </div>
       </div>
+
+      {/* Task Details Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Task Details</DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <TaskDetails
+              task={selectedTask}
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

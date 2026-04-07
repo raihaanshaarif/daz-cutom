@@ -441,6 +441,10 @@ const AdminDashboard = () => {
         return "bg-purple-500/100/20 text-purple-700 dark:text-purple-400";
       case "ADMIN":
         return "bg-blue-500/100/20 text-blue-700 dark:text-blue-400";
+      case "COMMERCIAL":
+        return "bg-green-500/100/20 text-green-700 dark:text-green-400";
+      case "MERCHANDISER":
+        return "bg-orange-500/100/20 text-orange-700 dark:text-orange-400";
       default:
         return "bg-muted text-gray-700";
     }

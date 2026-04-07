@@ -315,11 +315,9 @@ export const createOrder = async (data: FormData) => {
 
   const processedData = {
     orderNumber: o.orderNumber,
-    shipDate: o.shipDate
-      ? new Date(o.shipDate as string).toISOString()
-      : undefined,
-    dept: o.dept || undefined,
-    style: o.style || undefined,
+    shipDate: o.date ? new Date(o.date as string).toISOString() : undefined,
+    dept: o.garmentsItem || undefined,
+    style: o.styleNumber || undefined,
     color: o.color || undefined,
     lot: o.lot || undefined,
     quantity,

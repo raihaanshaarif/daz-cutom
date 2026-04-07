@@ -176,6 +176,10 @@ const UserProfile = () => {
         return "bg-purple-100 text-purple-800 border-purple-200";
       case "ADMIN":
         return "bg-blue-100 text-blue-800 border-blue-200";
+      case "COMMERCIAL":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "MERCHANDISER":
+        return "bg-orange-100 text-orange-800 border-orange-200";
       case "USER":
         return "bg-muted text-foreground border-border";
       default:

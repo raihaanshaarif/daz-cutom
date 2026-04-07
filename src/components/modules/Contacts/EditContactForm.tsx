@@ -88,6 +88,12 @@ export function EditContactForm({
     }
   }, [isOpen, authFetch]);
 
+  const formatDateForInput = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toISOString().split("T")[0]; // Returns yyyy-MM-dd format
+  };
+
   // Populate form when contact changes
   useEffect(() => {
     if (contact) {
@@ -102,9 +108,9 @@ export function EditContactForm({
         personalLinkedin: contact.personalLinkedin || "",
         status: contact.status || "NOT_CONTACTED",
         note: contact.note || "",
-        lastContactedAt: contact.lastContactedAt || undefined,
-        lastRepliedAt: contact.lastRepliedAt || undefined,
-        nextFollowUpAt: contact.nextFollowUpAt || undefined,
+        lastContactedAt: formatDateForInput(contact.lastContactedAt),
+        lastRepliedAt: formatDateForInput(contact.lastRepliedAt),
+        nextFollowUpAt: formatDateForInput(contact.nextFollowUpAt),
       });
     }
   }, [contact]);
@@ -182,7 +188,7 @@ export function EditContactForm({
       );
 
       if (res.ok) {
-        toast.success("Contact updated successfully!");
+        toast.success("Lead updated successfully!");
         onSuccess();
         onClose();
       } else {
@@ -459,7 +465,7 @@ export function EditContactForm({
                 Last Contacted
               </Label>
               <Input
-                type="datetime-local"
+                type="date"
                 id="lastContactedAt"
                 value={formData.lastContactedAt || ""}
                 onChange={(e) =>
@@ -473,7 +479,7 @@ export function EditContactForm({
                 Last Replied
               </Label>
               <Input
-                type="datetime-local"
+                type="date"
                 id="lastRepliedAt"
                 value={formData.lastRepliedAt || ""}
                 onChange={(e) =>
@@ -487,7 +493,7 @@ export function EditContactForm({
                 Next Follow-up
               </Label>
               <Input
-                type="datetime-local"
+                type="date"
                 id="nextFollowUpAt"
                 value={formData.nextFollowUpAt || ""}
                 onChange={(e) =>

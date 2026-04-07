@@ -75,7 +75,7 @@ interface EditOrderFormProps {
 }
 
 export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
@@ -96,6 +96,8 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
   );
 
   useEffect(() => {
+    if (isAuthLoading) return;
+
     const fetchData = async () => {
       try {
         const [buyersRes, factoriesRes] = await Promise.all([
@@ -111,7 +113,7 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
       }
     };
     fetchData();
-  }, [authFetch]);
+  }, [authFetch, isAuthLoading]);
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
@@ -357,7 +359,11 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="PAID">Paid</SelectItem>
+                <SelectItem value="PARTIALLY_RECEIVED">
+                  Partially Received
+                </SelectItem>
+                <SelectItem value="RECEIVED">Received</SelectItem>
+                <SelectItem value="SURRENDERED">Surrendered</SelectItem>
               </SelectContent>
             </Select>
           </Field>

@@ -228,7 +228,7 @@ export default function OrderDetails({ order }: OrderDetailsProps) {
               <Badge
                 variant="outline"
                 className={
-                  order.commissionStatus === "PAID"
+                  order.commissionStatus === "RECEIVED"
                     ? "text-green-700 border-green-200 bg-green-50 px-2 py-0.5"
                     : "text-amber-700 border-amber-200 bg-amber-50 px-2 py-0.5"
                 }

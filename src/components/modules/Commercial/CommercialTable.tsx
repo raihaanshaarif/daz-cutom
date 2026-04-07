@@ -41,7 +41,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useSession } from "next-auth/react";
 import { Commercial } from "@/types";
+import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import { useEffect, useState } from "react";
 
 interface CommercialTableProps {
   data: Commercial[];
@@ -62,6 +65,76 @@ export function CommercialTable({
   totalPages = 1,
   onPageChange,
 }: CommercialTableProps) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
+  const isAdminOrSuperAdmin =
+    userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+  const { authFetch } = useAuthFetch();
+
+  const [filteredData, setFilteredData] = useState<Commercial[]>(data);
+  const [userData, setUserData] = useState<any>(null);
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // Filter commercials based on user role and assigned buyers
+  useEffect(() => {
+    const filterCommercials = async () => {
+      if (isAdminOrSuperAdmin) {
+        // Admin and super admin see all commercials
+        setFilteredData(data);
+        return;
+      }
+
+      // For regular users, fetch user data and filter commercials
+      if (!userId) return;
+
+      try {
+        const userRes = await authFetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`,
+        );
+        const user = await userRes.json();
+        setUserData(user);
+
+        const assignedBuyerIds =
+          user?.assignedBuyers?.map((buyer: any) => buyer.id) || [];
+
+        if (assignedBuyerIds.length === 0) {
+          // If no buyers assigned, show no commercials
+          setFilteredData([]);
+          return;
+        }
+
+        // Filter commercials where buyerId exists in assignedBuyers
+        const filtered = data.filter((commercial: Commercial) => {
+          const orders = commercial.orders as any[];
+          const buyerId = orders?.find((o) => o.order?.buyer?.id)?.order?.buyer
+            ?.id;
+
+          if (!buyerId) return false;
+
+          // Check if this buyerId is assigned to the user
+          return assignedBuyerIds.includes(buyerId);
+        });
+
+        setFilteredData(filtered);
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        setFilteredData([]);
+      }
+    };
+
+    filterCommercials();
+  }, [data, userId, isAdminOrSuperAdmin, authFetch]);
+
   const columns = React.useMemo<ColumnDef<Commercial>[]>(
     () => [
       {
@@ -114,15 +187,17 @@ export function CommercialTable({
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onDelete?.(item)}
-                title="Delete"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {isAdminOrSuperAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => onDelete?.(item)}
+                  title="Delete"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           );
         },
@@ -201,7 +276,7 @@ export function CommercialTable({
         header: "Booking Date",
         cell: ({ row }) => {
           const date = row.getValue("bookingDate") as string;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -209,7 +284,7 @@ export function CommercialTable({
         header: "Handover Date",
         cell: ({ row }) => {
           const date = row.getValue("handoverDate") as string;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -217,7 +292,7 @@ export function CommercialTable({
         header: "ETD",
         cell: ({ row }) => {
           const date = row.getValue("etd") as string;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -225,7 +300,7 @@ export function CommercialTable({
         header: "ETA",
         cell: ({ row }) => {
           const date = row.getValue("eta") as string;
-          return <div>{date ? new Date(date).toLocaleDateString() : "-"}</div>;
+          return <div>{formatDate(date)}</div>;
         },
       },
       {
@@ -283,15 +358,11 @@ export function CommercialTable({
         header: "Created At",
         cell: ({ row }) => {
           const rawDate = row.getValue("createdAt") as string;
-          if (!rawDate) return <div>-</div>;
-          const date = new Date(rawDate);
-          return (
-            <div>{isNaN(date.getTime()) ? "-" : date.toLocaleDateString()}</div>
-          );
+          return <div>{formatDate(rawDate)}</div>;
         },
       },
     ],
-    [onEdit, onView, onDelete],
+    [onEdit, onView, onDelete, isAdminOrSuperAdmin],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -303,7 +374,7 @@ export function CommercialTable({
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -341,7 +412,7 @@ export function CommercialTable({
         if (value === null || value === undefined) return "";
         // Format dates
         if (col.id.toLowerCase().includes("date") && value instanceof Date) {
-          return value.toLocaleDateString();
+          return formatDate(value.toISOString());
         }
         // Handle objects (like nested buyer/factory)
         if (typeof value === "object") return JSON.stringify(value);
@@ -513,7 +584,7 @@ export function CommercialTable({
       {/* Pagination */}
       <div className="flex items-center justify-between pt-3">
         <div className="text-xs text-gray-500">
-          Page {currentPage} of {totalPages} ({data.length} commercials)
+          Page {currentPage} of {totalPages} ({filteredData.length} commercials)
         </div>
         <div className="flex items-center gap-1">
           <Button

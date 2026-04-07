@@ -68,6 +68,9 @@ export default function CreateTaskForm() {
 
   useEffect(() => {
     const fetchUsers = async () => {
+      // Wait for session to be ready
+      if (session === null) return; // Still loading or unauthenticated
+
       try {
         const res = await authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
         if (res.ok) {
@@ -79,7 +82,7 @@ export default function CreateTaskForm() {
       }
     };
     fetchUsers();
-  }, [authFetch]);
+  }, [authFetch, session]);
 
   const onSubmit = async (data: TaskFormValues) => {
     setSubmitting(true);
@@ -125,7 +128,7 @@ export default function CreateTaskForm() {
               Create <span className="text-blue-600">Task</span>
             </h1>
             <p className="text-zinc-500 mt-1 flex items-center gap-2 text-sm font-medium">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse inline-block" />
               Assign a new performance target or operational task to a team
               member
             </p>
@@ -313,11 +316,13 @@ export default function CreateTaskForm() {
                             </div>
                           </FormControl>
                           <FormMessage className="text-[10px] uppercase font-bold tracking-tight" />
-                          <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight flex items-center gap-1.5 ml-1">
+                          <div className="flex items-center gap-1.5 ml-1">
                             <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                            Numeric targets enable automated performance
-                            tracking
-                          </p>
+                            <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">
+                              Numeric targets enable automated performance
+                              tracking
+                            </p>
+                          </div>
                         </FormItem>
                       )}
                     />

@@ -24,8 +24,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CommercialTable } from "@/components/modules/Commercial/CommercialTable";
-import { Commercial, Buyer, Factory } from "@/types";
+import { Commercial, Buyer, Factory, CommercialOrder } from "@/types";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import { useSession } from "next-auth/react";
 
 export default function CommercialReportPage() {
   const [selectedBuyer, setSelectedBuyer] = useState<string>("all");
@@ -45,6 +46,11 @@ export default function CommercialReportPage() {
   });
 
   const { authFetch } = useAuthFetch();
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? "";
+  const userRole = session?.user?.role ?? "";
+  const isAdminOrSuperAdmin =
+    userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   // Fetch buyers and factories for filters
   useEffect(() => {
@@ -70,8 +76,19 @@ export default function CommercialReportPage() {
     const fetchCommercials = async () => {
       setLoading(true);
       try {
+        // Determine if we need to fetch all commercials or paginated results
+        const shouldFetchAll =
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL";
+
         const params = new URLSearchParams();
-        params.append("limit", "1000"); // Get all for report
+        if (shouldFetchAll) {
+          params.set("limit", "10000"); // Large limit to get all commercials for filtering
+        } else {
+          params.append("limit", "1000"); // Normal limit for admin users
+        }
+
         if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
         if (selectedFactory !== "all")
           params.append("factoryId", selectedFactory);
@@ -79,11 +96,44 @@ export default function CommercialReportPage() {
           params.append("paymentStatus", selectedPaymentStatus);
         }
 
-        const res = await authFetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/commercial?${params.toString()}`,
-        );
-        const response = await res.json();
-        const commercialsData = response.data || [];
+        const [commercialsRes, userRes] = await Promise.all([
+          authFetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/commercial?${params.toString()}`,
+          ),
+          shouldFetchAll
+            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
+            : Promise.resolve(null),
+        ]);
+
+        const response = await commercialsRes.json();
+        let commercialsData = response.data || [];
+
+        // Filter commercials based on user role and assigned buyers
+        if (shouldFetchAll && userRes) {
+          const user = await userRes.json();
+          const assignedBuyerIds =
+            user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
+
+          if (assignedBuyerIds.length === 0) {
+            // If no buyers assigned, show no commercials
+            commercialsData = [];
+          } else {
+            // Filter commercials where buyerId exists in assignedBuyers
+            commercialsData = commercialsData.filter(
+              (commercial: Commercial) => {
+                const orders = commercial.orders as CommercialOrder[];
+                const buyerId = orders?.find((o) => o.order?.buyer?.id)?.order
+                  ?.buyer?.id;
+
+                if (!buyerId) return false;
+
+                // Check if this buyerId is assigned to the user
+                return assignedBuyerIds.includes(buyerId);
+              },
+            );
+          }
+        }
+
         setCommercials(commercialsData);
 
         // Calculate metrics
@@ -111,7 +161,15 @@ export default function CommercialReportPage() {
       }
     };
     fetchCommercials();
-  }, [selectedBuyer, selectedFactory, selectedPaymentStatus, authFetch]);
+  }, [
+    selectedBuyer,
+    selectedFactory,
+    selectedPaymentStatus,
+    authFetch,
+    userId,
+    userRole,
+    isAdminOrSuperAdmin,
+  ]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 w-full">

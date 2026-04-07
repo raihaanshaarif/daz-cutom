@@ -189,8 +189,8 @@ export default function CreateContactForm() {
       // console.log("createContact result:", result);
 
       if (result?.id) {
-        toast.success("Contact created successfully!", {
-          description: "The new contact has been added to your database.",
+        toast.success("Lead created successfully!", {
+          description: "The new lead has been added to database.",
           duration: 4000,
         });
         // Navigate after a short delay to let the user see the toast
@@ -551,6 +551,63 @@ export default function CreateContactForm() {
                       name="personalLinkedin"
                       placeholder="linkedin.com/in/..."
                       className="pl-10 h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <h2 className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  History Dates
+                </h2>
+              </div>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="lastContactedAt"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Last Contacted
+                    </Label>
+                    <Input
+                      id="lastContactedAt"
+                      name="lastContactedAt"
+                      type="date"
+                      className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="lastRepliedAt"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Last Replied
+                    </Label>
+                    <Input
+                      id="lastRepliedAt"
+                      name="lastRepliedAt"
+                      type="date"
+                      className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="nextFollowUpAt"
+                      className="text-xs font-semibold uppercase tracking-wider text-zinc-500"
+                    >
+                      Next Follow-up
+                    </Label>
+                    <Input
+                      id="nextFollowUpAt"
+                      name="nextFollowUpAt"
+                      type="date"
+                      className="h-10 bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200 dark:border-zinc-800 focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500 transition-all"
                     />
                   </div>
                 </div>
