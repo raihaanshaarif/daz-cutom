@@ -191,6 +191,16 @@ export const authOptions: NextAuthOptions = {
         "[SESSION DEBUG] Session callback called for:",
         token?.email || "unknown",
       );
+      console.log(
+        "[SESSION DEBUG] Token has backendToken:",
+        !!token?.backendToken,
+      );
+      console.log(
+        "[SESSION DEBUG] Token preview:",
+        token?.backendToken
+          ? token.backendToken.toString().substring(0, 20) + "..."
+          : "NONE",
+      );
       if (session?.user) {
         session.user.id = token?.id as string;
         session.user.role = token?.role as string;
@@ -247,20 +257,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
-  cookies: {
-    sessionToken: {
-      name:
-        process.env.NODE_ENV === "production"
-          ? "__Secure-next-auth.session-token"
-          : "next-auth.session-token",
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
+  useSecureCookies: process.env.NODE_ENV === "production",
   pages: {
     signIn: "/login",
   },

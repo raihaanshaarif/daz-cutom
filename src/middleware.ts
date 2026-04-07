@@ -6,16 +6,18 @@ export async function middleware(req: NextRequest) {
 
   // Log all cookies for debugging
   const allCookies = req.cookies.getAll();
+  const cookieNames = allCookies.map((c) => c.name);
   console.log(
-    "[MIDDLEWARE DEBUG] All cookies:",
-    allCookies.map((c) => c.name).join(", "),
+    "[MIDDLEWARE DEBUG] Cookies found:",
+    cookieNames.length,
+    "names:",
+    cookieNames.join(", ") || "NONE",
   );
 
-  // Get authentication token with correct cookie name for production
+  // Get authentication token - let NextAuth determine the correct cookie name
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: process.env.NODE_ENV === "production",
   });
 
   console.log(

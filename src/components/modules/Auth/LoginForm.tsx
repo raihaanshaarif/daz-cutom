@@ -32,23 +32,15 @@ export default function LoginForm() {
   const onSubmit = async (values: FieldValues) => {
     setIsLoading(true);
     try {
-      const result = await signIn("credentials", {
+      // Let NextAuth handle the redirect automatically
+      await signIn("credentials", {
         ...values,
-        redirect: false,
+        callbackUrl: "/dashboard",
       });
-
-      if (result?.error) {
-        console.error("Login failed:", result.error);
-        alert("Login failed: " + result.error);
-        setIsLoading(false);
-      } else if (result?.ok) {
-        // Wait for the session to be fully established
-        console.log("[LOGIN] Sign in successful, redirecting...");
-        // Use window.location for hard redirect to ensure cookies are sent
-        window.location.href = "/dashboard";
-      }
+      // If we reach here and there's no error, NextAuth will redirect
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
+      alert("Login failed. Please try again.");
       setIsLoading(false);
     }
   };
