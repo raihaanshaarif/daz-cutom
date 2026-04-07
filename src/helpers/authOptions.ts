@@ -102,6 +102,15 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, account }) {
+      console.log(
+        "[JWT DEBUG] JWT callback called for:",
+        token?.email || "unknown",
+        "user:",
+        !!user,
+        "account:",
+        !!account,
+      );
+
       // Initial sign-in
       if (user && account) {
         console.log("[AUTH DEBUG] Initial sign-in for user:", user.email);
@@ -115,8 +124,11 @@ export const authOptions: NextAuthOptions = {
         };
       }
 
-      // Check if backend token needs refresh (expires in 5 minutes or less)
-      if (Date.now() > (token.accessTokenExpires as number) - 5 * 60 * 1000) {
+      // Check if backend token needs refresh (expires in 10 minutes or less)
+      if (
+        token.accessTokenExpires &&
+        Date.now() > (token.accessTokenExpires as number) - 10 * 60 * 1000
+      ) {
         console.log(
           "[AUTH DEBUG] Backend token expiring soon, attempting refresh for:",
           token.email,
@@ -167,14 +179,12 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Token is still valid, preserve custom properties
-      return {
-        ...token,
-        id: token.id,
-        role: token.role,
-        backendToken: token.backendToken,
-        refreshToken: token.refreshToken,
-      };
+      console.log(
+        "[JWT DEBUG] Returning token as-is for:",
+        token?.email || "unknown",
+      );
+      // Token is still valid, return as-is
+      return token;
     },
     async session({ session, token }) {
       if (session?.user) {
@@ -228,17 +238,7 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: false, // Set to false for development
-      },
-    },
-  },
+
   pages: {
     signIn: "/login",
   },

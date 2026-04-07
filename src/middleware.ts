@@ -8,10 +8,19 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
-    secureCookie: false, // Always use regular cookies for now
+    secureCookie: process.env.NODE_ENV === "production",
   });
 
-  console.log("Middleware - Path:", pathname, "Token exists:", !!token);
+  console.log(
+    "Middleware - Path:",
+    pathname,
+    "Token exists:",
+    !!token,
+    "Token details:",
+    token
+      ? { id: token.id, email: token.email, backendToken: !!token.backendToken }
+      : "none",
+  );
 
   // Redirect authenticated users away from login page
   if (pathname === "/login" && token) {
