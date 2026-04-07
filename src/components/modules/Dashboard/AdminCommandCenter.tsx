@@ -232,19 +232,24 @@ const AdminCommandCenter = () => {
         // 7. Commission Forecasting Logic
         const upcomingCommissions = allCommercials.filter(
           (c) =>
-            (c.paymentStatus === "PENDING" || c.paymentStatus === "PARTIAL") &&
-            c.approximatePaymentDate &&
-            new Date(c.approximatePaymentDate as any) >= now,
+            c.paymentStatus === "PENDING" ||
+            (c.paymentStatus === "PARTIAL" &&
+              c.approximatePaymentDate &&
+              new Date(c.approximatePaymentDate as any) >= now),
         );
 
         const combinedForecast = upcomingCommissions
           .sort((a, b) => {
-            const dateA = new Date(
-              a.approximatePaymentDate || a.etd || 0,
-            ).getTime();
-            const dateB = new Date(
-              b.approximatePaymentDate || b.etd || 0,
-            ).getTime();
+            const dateA = a.approximatePaymentDate
+              ? new Date(a.approximatePaymentDate).getTime()
+              : a.etd
+                ? new Date(a.etd as any).getTime()
+                : Infinity; // Put items without dates at the end
+            const dateB = b.approximatePaymentDate
+              ? new Date(b.approximatePaymentDate).getTime()
+              : b.etd
+                ? new Date(b.etd as any).getTime()
+                : Infinity;
             return dateA - dateB;
           })
           .slice(0, 15);
