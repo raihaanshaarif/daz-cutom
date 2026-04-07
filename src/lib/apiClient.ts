@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/helpers/authOptions";
-import { signOut } from "next-auth/react";
 
 /**
  * Authenticated fetch wrapper for server-side API calls

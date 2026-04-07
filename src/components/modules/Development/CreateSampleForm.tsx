@@ -12,14 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Package,
-  ChevronLeft,
-  Tag,
-  Info,
-  CheckCircle2,
-  Calendar,
-} from "lucide-react";
+import { Package, ChevronLeft, Tag, Info, CheckCircle2 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";

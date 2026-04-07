@@ -30,14 +30,11 @@ import {
   Shield,
   UserPlus,
   Loader2,
-  ChevronRight,
   ArrowLeft,
   Key,
   Fingerprint,
   Activity,
   BadgeCheck,
-  BadgeInfo,
-  Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 

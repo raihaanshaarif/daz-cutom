@@ -122,17 +122,6 @@ export default function ParcelList() {
       }
 
       // Use month dates if month is selected, otherwise use manual date range
-      const finalStartDate = monthStartDate || formattedDateFrom;
-      const finalEndDate = monthEndDate || formattedDateTo;
-
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: limit.toString(),
-        ...(searchTerm && { search: searchTerm }),
-        ...(finalStartDate && { startDate: finalStartDate }),
-        ...(finalEndDate && { endDate: finalEndDate }),
-        ...(selectedCourier && { courierCompanyId: selectedCourier }),
-      });
 
       console.log("Fetching parcels with params:", {
         page: currentPage,

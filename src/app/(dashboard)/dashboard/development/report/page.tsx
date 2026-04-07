@@ -101,7 +101,7 @@ export default function DevelopmentReportPage() {
       }
     };
     fetchSamples();
-  }, [selectedBuyer, selectedStatus, selectedSeason]);
+  }, [selectedBuyer, selectedStatus, selectedSeason, authFetch]);
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-8 max-w-[1600px] mx-auto w-full bg-zinc-50/50 min-h-screen">

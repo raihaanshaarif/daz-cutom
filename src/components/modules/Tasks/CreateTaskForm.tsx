@@ -28,7 +28,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ClipboardList,
   Database,
-  ChevronRight,
   ArrowLeft,
   Zap,
   Target,

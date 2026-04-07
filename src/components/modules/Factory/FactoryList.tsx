@@ -3,14 +3,7 @@
 import { Factory } from "@/types";
 import { useCallback, useEffect, useState } from "react";
 import { FactoryTable } from "./FactoryTable";
-import {
-  Database,
-  Filter,
-  Factory as FactoryIcon,
-  X,
-  Plus,
-  ChevronLeft,
-} from "lucide-react";
+import { Database, Filter, X, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

@@ -3,7 +3,7 @@
 import { Country } from "@/types";
 import { useEffect, useState } from "react";
 import { CountryTable } from "./CountryTable";
-import { Database, Filter, Globe, X, Plus, ChevronLeft } from "lucide-react";
+import { Filter, Globe, X, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,12 +77,6 @@ export default function CountryList() {
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1); // Reset to first page when search changes
-    setLoading(true);
-  };
-
-  const clearSearch = () => {
-    setSearchTerm("");
-    setCurrentPage(1);
     setLoading(true);
   };
 

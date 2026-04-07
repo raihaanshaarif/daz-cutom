@@ -55,7 +55,7 @@ export default function MyTaskList() {
       }
     };
     fetchMyTasks();
-  }, [currentPage, refreshTrigger, session]);
+  }, [currentPage, refreshTrigger, session, authFetch]);
 
   const handleUpdateTarget = async (task: Task) => {
     const newTargetStr = prompt(

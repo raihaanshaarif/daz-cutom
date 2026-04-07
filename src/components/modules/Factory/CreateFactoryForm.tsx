@@ -3,18 +3,11 @@ import { createFactory } from "@/actions/create";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Factory,
   ArrowLeft,
   Building2,
-  CheckCircle2,
   Info,
   ShieldCheck,
   AlertCircle,
@@ -22,7 +15,6 @@ import {
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function CreateFactoryForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);

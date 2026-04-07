@@ -3,20 +3,12 @@
 import { Task } from "@/types";
 import { useEffect, useState } from "react";
 import { TaskTable } from "./TaskTable";
-import {
-  ClipboardList,
-  Database,
-  Filter,
-  X,
-  Plus,
-  ChevronLeft,
-} from "lucide-react";
+import { ClipboardList, Filter, X, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -29,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TaskList() {
   const { authFetch } = useAuthFetch();
-  const { data: session } = useSession();
   const router = useRouter();
 
   const [tasks, setTasks] = useState<Task[]>([]);

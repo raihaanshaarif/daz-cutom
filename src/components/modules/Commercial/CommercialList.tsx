@@ -1,6 +1,6 @@
 "use client";
 
-import { Commercial, Pagination } from "@/types";
+import { Commercial } from "@/types";
 import { useEffect, useState } from "react";
 import { CommercialTable } from "./CommercialTable";
 import { EditCommercialForm } from "./EditCommercialForm";
@@ -45,11 +45,6 @@ export default function CommercialList() {
     useState<string>("all");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [allCommercialsCache, setAllCommercialsCache] = useState<Commercial[]>(
-    [],
-  );
-  const [allCommercialsPagination, setAllCommercialsPagination] =
-    useState<Pagination | null>(null);
   const router = useRouter();
 
   // Edit modal state
@@ -121,8 +116,8 @@ export default function CommercialList() {
           selectedPaymentStatus === "all" &&
           selectedDocumentStatus === "all"
         ) {
-          setAllCommercialsCache(filteredData);
-          setAllCommercialsPagination(pagination);
+          // setAllCommercialsCache(filteredData);
+          // setAllCommercialsPagination(pagination);
         }
       } catch (error) {
         console.error("Failed to fetch commercials:", error);
@@ -187,14 +182,6 @@ export default function CommercialList() {
         toast.error("An error occurred while deleting the record");
       }
     }
-  };
-
-  const clearFilters = () => {
-    setSelectedDate("");
-    setSelectedPeriod("all");
-    setSelectedPaymentStatus("all");
-    setSelectedDocumentStatus("all");
-    setCurrentPage(1);
   };
 
   const handleEditSuccess = () => {

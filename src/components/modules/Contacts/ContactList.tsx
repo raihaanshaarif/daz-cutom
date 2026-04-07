@@ -1,21 +1,11 @@
 "use client";
 
-import { Contact, Pagination } from "@/types";
+import { Contact } from "@/types";
 import { useEffect, useState } from "react";
 import { ContactTable } from "./ContactTable";
 import { EditContactForm } from "./EditContactForm";
 import { ViewContactModal } from "./ViewContactModal";
-import {
-  Users,
-  Database,
-  Filter,
-  Calendar,
-  User,
-  X,
-  UserPlus,
-  Plus,
-  ChevronLeft,
-} from "lucide-react";
+import { Users, Filter, X, Plus, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,11 +50,7 @@ export default function ContactList() {
   const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [allContactsCache, setAllContactsCache] = useState<Contact[]>([]);
-  const [allContactsPagination, setAllContactsPagination] =
-    useState<Pagination | null>(null);
   const [users, setUsers] = useState<{ id: number; name: string }[]>([]);
-  const [usersLoading, setUsersLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
   const router = useRouter();
@@ -143,8 +129,8 @@ export default function ContactList() {
           selectedPeriod === "all" &&
           !selectedDate
         ) {
-          setAllContactsCache(filteredData);
-          setAllContactsPagination(pagination);
+          // setAllContactsCache(filteredData);
+          // setAllContactsPagination(pagination);
         }
       } catch (error) {
         console.error("Failed to fetch contacts:", error);
@@ -154,12 +140,18 @@ export default function ContactList() {
     };
 
     fetchContacts();
-  }, [currentPage, selectedDate, selectedUser, selectedPeriod, refreshTrigger]);
+  }, [
+    currentPage,
+    selectedDate,
+    selectedUser,
+    selectedPeriod,
+    refreshTrigger,
+    authFetch,
+  ]);
 
   useEffect(() => {
     // Fetch users for the created by filter
     const fetchUsers = async () => {
-      setUsersLoading(true);
       try {
         // Try multiple possible endpoints
         const endpoints = [
@@ -239,7 +231,6 @@ export default function ContactList() {
               if (extractedUsers.length > 0) {
                 console.log("Extracted users from contacts:", extractedUsers);
                 setUsers(extractedUsers);
-                setUsersLoading(false);
                 return;
               }
             }
@@ -262,13 +253,11 @@ export default function ContactList() {
           { id: 2, name: "John Doe" },
           { id: 3, name: "Jane Smith" },
         ]);
-      } finally {
-        setUsersLoading(false);
       }
     };
 
     fetchUsers();
-  }, []);
+  }, [authFetch]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -538,7 +527,7 @@ export default function ContactList() {
               <ContactTable
                 data={contacts}
                 currentPage={currentPage}
-                totalPages={allContactsPagination?.totalPages || 1}
+                totalPages={totalPages}
                 onPageChange={handlePageChange}
                 onEdit={handleEditContact}
                 onView={handleViewContact}

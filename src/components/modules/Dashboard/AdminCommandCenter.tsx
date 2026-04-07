@@ -361,7 +361,7 @@ const AdminCommandCenter = () => {
     };
 
     fetchFullIntelligence();
-  }, [timeframe]);
+  }, [timeframe, authFetch]);
 
   if (loading || !stats) return <Loading />;
 

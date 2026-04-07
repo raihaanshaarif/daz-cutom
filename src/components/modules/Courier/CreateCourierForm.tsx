@@ -3,27 +3,19 @@ import { createCourier } from "@/actions/create";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Truck,
   ArrowLeft,
   MapPin,
   Phone,
   Building2,
-  CheckCircle2,
   PackageSearch,
   Zap,
 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function CreateCourierForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);

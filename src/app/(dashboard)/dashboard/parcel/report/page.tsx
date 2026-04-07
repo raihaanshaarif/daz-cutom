@@ -130,7 +130,7 @@ export default function ParcelReportPage() {
       }
     };
     fetchParcels();
-  }, [selectedBuyer, selectedCourier, startDate, endDate]);
+  }, [selectedBuyer, selectedCourier, startDate, endDate, authFetch]);
 
   const clearDateRange = () => {
     setStartDate("");

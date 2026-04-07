@@ -111,7 +111,7 @@ export default function CommercialReportPage() {
       }
     };
     fetchCommercials();
-  }, [selectedBuyer, selectedFactory, selectedPaymentStatus]);
+  }, [selectedBuyer, selectedFactory, selectedPaymentStatus, authFetch]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 w-full">

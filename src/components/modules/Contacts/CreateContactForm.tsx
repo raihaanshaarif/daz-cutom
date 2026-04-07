@@ -174,7 +174,7 @@ export default function CreateContactForm() {
     };
 
     fetchCountries();
-  }, []);
+  }, [authFetch]);
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
