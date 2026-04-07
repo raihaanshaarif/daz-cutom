@@ -19,7 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CountryList() {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,6 +33,7 @@ export default function CountryList() {
   const router = useRouter();
 
   useEffect(() => {
+    if (isAuthLoading) return;
     const fetchCountries = async () => {
       setLoading(true);
       try {
@@ -67,7 +68,7 @@ export default function CountryList() {
     };
 
     fetchCountries();
-  }, [currentPage, searchTerm, authFetch]);
+  }, [currentPage, searchTerm, authFetch, isAuthLoading]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

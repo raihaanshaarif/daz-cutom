@@ -28,7 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { User as UserIcon, Plus, ChevronLeft, Filter, X } from "lucide-react";
 
 const UserList = () => {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +45,7 @@ const UserList = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const fetchUsers = useCallback(async () => {
+    if (isAuthLoading) return;
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -82,11 +83,12 @@ const UserList = () => {
     } finally {
       setLoading(false);
     }
-  }, [authFetch, currentPage, searchTerm, selectedRole]);
+  }, [authFetch, currentPage, searchTerm, selectedRole, isAuthLoading]);
 
   useEffect(() => {
+    if (isAuthLoading) return;
     fetchUsers();
-  }, [fetchUsers]);
+  }, [fetchUsers, isAuthLoading]);
 
   const handleEdit = (user: User) => {
     setEditUser(user);

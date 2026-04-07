@@ -21,7 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function CourierList() {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const router = useRouter();
   const [couriers, setCouriers] = useState<Courier[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,7 @@ export default function CourierList() {
 
   const fetchCouriers = useCallback(
     async ({ page = 1, search = "" } = {}) => {
+      if (isAuthLoading) return;
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -62,12 +63,13 @@ export default function CourierList() {
         setLoading(false);
       }
     },
-    [authFetch],
+    [authFetch, isAuthLoading],
   );
 
   useEffect(() => {
+    if (isAuthLoading) return;
     fetchCouriers({ page: currentPage, search: searchTerm });
-  }, [currentPage, searchTerm, fetchCouriers]);
+  }, [currentPage, searchTerm, fetchCouriers, isAuthLoading]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

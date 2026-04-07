@@ -60,7 +60,7 @@ export default function ParcelList() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const router = useRouter();
 
   // Modal states
@@ -92,7 +92,7 @@ export default function ParcelList() {
 
   // Extract fetchParcels as a separate function
   const fetchParcels = useCallback(async () => {
-    if (!userId || !userRole) return;
+    if (!userId || !userRole || isAuthLoading) return;
     setLoading(true);
     try {
       // Format dates to ISO string if provided
@@ -169,6 +169,7 @@ export default function ParcelList() {
     dateFrom,
     dateTo,
     selectedCourier,
+    isAuthLoading,
   ]);
 
   useEffect(() => {

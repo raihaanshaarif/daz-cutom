@@ -23,7 +23,7 @@ import Loading from "@/components/ui/Loading";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const UserDashboard = () => {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
@@ -48,7 +48,7 @@ const UserDashboard = () => {
   const [customEnd, setCustomEnd] = useState("");
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isAuthLoading) return;
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
       .then((r) => r.json())
       .then((data) => {
@@ -59,10 +59,10 @@ const UserDashboard = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [userId, authFetch]);
+  }, [userId, authFetch, isAuthLoading]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isAuthLoading) return;
     authFetch(
       `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${userId}&limit=100`,
     )
@@ -72,9 +72,10 @@ const UserDashboard = () => {
         setTasks(Array.isArray(data) ? data : []);
       })
       .catch(() => {});
-  }, [userId, authFetch]);
+  }, [userId, authFetch, isAuthLoading]);
 
   useEffect(() => {
+    if (isAuthLoading) return;
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
@@ -86,7 +87,7 @@ const UserDashboard = () => {
         setCountries(list);
       })
       .catch(() => {});
-  }, [authFetch]);
+  }, [authFetch, isAuthLoading]);
 
   if (!session || loading) return <Loading />;
   if (error || !user)

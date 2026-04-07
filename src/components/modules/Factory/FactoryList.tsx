@@ -20,7 +20,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FactoryList() {
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const router = useRouter();
   const [factories, setFactories] = useState<Factory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +35,7 @@ export default function FactoryList() {
 
   const fetchFactories = useCallback(
     async ({ page = 1, search = "" } = {}) => {
+      if (isAuthLoading) return;
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -64,12 +65,13 @@ export default function FactoryList() {
         setLoading(false);
       }
     },
-    [authFetch],
+    [authFetch, isAuthLoading],
   );
 
   useEffect(() => {
+    if (isAuthLoading) return;
     fetchFactories({ page: currentPage, search: searchTerm });
-  }, [currentPage, searchTerm, fetchFactories]);
+  }, [currentPage, searchTerm, fetchFactories, isAuthLoading]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

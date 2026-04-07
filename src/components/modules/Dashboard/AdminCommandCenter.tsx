@@ -103,7 +103,7 @@ import { useAuthFetch } from "@/hooks/use-auth-fetch";
 
 const AdminCommandCenter = () => {
   // --- Initialization & State ---
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timeframe, setTimeframe] = useState("month");
@@ -114,6 +114,11 @@ const AdminCommandCenter = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   useEffect(() => {
+    // Wait for authentication to complete before fetching data
+    if (isAuthLoading) {
+      return;
+    }
+
     /**
      * MAIN DATA AGGREGATION ENGINE
      * Fetches raw data from all core modules and transforms them into
@@ -361,7 +366,7 @@ const AdminCommandCenter = () => {
     };
 
     fetchFullIntelligence();
-  }, [timeframe, authFetch]);
+  }, [timeframe, authFetch, isAuthLoading]);
 
   if (loading || !stats) return <Loading />;
 

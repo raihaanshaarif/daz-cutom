@@ -101,10 +101,11 @@ export default function OrderList() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
   const userRole = session?.user?.role ?? "";
-  const { authFetch } = useAuthFetch();
+  const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
   console.log(userId, userRole);
 
   useEffect(() => {
+    if (isAuthLoading) return;
     const fetchAll = async () => {
       setLoading(true);
       try {
@@ -202,6 +203,7 @@ export default function OrderList() {
     selectedFactory,
     debouncedSearch,
     refreshTrigger,
+    isAuthLoading,
   ]);
 
   const handlePageChange = (page: number) => {
