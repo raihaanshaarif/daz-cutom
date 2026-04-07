@@ -4,6 +4,13 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Log all cookies for debugging
+  const allCookies = req.cookies.getAll();
+  console.log(
+    "[MIDDLEWARE DEBUG] All cookies:",
+    allCookies.map((c) => c.name).join(", "),
+  );
+
   // Get authentication token with correct cookie name for production
   const token = await getToken({
     req,

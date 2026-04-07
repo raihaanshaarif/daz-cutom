@@ -187,6 +187,10 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      console.log(
+        "[SESSION DEBUG] Session callback called for:",
+        token?.email || "unknown",
+      );
       if (session?.user) {
         session.user.id = token?.id as string;
         session.user.role = token?.role as string;
@@ -195,6 +199,10 @@ export const authOptions: NextAuthOptions = {
       session.backendToken = token?.backendToken as string;
       session.refreshToken = token?.refreshToken as string;
       session.error = token?.error as string;
+      console.log(
+        "[SESSION DEBUG] Session prepared with backendToken:",
+        !!session.backendToken,
+      );
       return session;
     },
     async redirect({ url, baseUrl }) {
@@ -234,11 +242,25 @@ export const authOptions: NextAuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === "development",
   session: {
     strategy: "jwt",
     maxAge: 24 * 60 * 60, // 24 hours
   },
-
+  cookies: {
+    sessionToken: {
+      name:
+        process.env.NODE_ENV === "production"
+          ? "__Secure-next-auth.session-token"
+          : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   pages: {
     signIn: "/login",
   },
