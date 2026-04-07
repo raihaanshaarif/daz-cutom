@@ -111,10 +111,63 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           backendToken: user.backendToken,
           refreshToken: user.refreshToken,
+          accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
         };
       }
 
-      // For subsequent calls, ensure custom properties are preserved
+      // Check if backend token needs refresh (expires in 5 minutes or less)
+      if (Date.now() > (token.accessTokenExpires as number) - 5 * 60 * 1000) {
+        console.log(
+          "[AUTH DEBUG] Backend token expiring soon, attempting refresh for:",
+          token.email,
+        );
+        try {
+          if (!token.refreshToken) {
+            console.error("[AUTH DEBUG] No refresh token available");
+            throw new Error("Missing refresh token");
+          }
+
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_API}/auth/refresh-token`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                refreshToken: token.refreshToken,
+              }),
+            },
+          );
+
+          const refreshedTokens = await response.json();
+
+          if (!response.ok) {
+            console.error(
+              "[AUTH DEBUG] Token refresh failed:",
+              refreshedTokens,
+            );
+            throw new Error("Token refresh failed");
+          }
+
+          console.log("[AUTH DEBUG] Token refreshed successfully");
+          return {
+            ...token,
+            backendToken: refreshedTokens.data.accessToken,
+            refreshToken:
+              refreshedTokens.data.refreshToken || token.refreshToken,
+            accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
+          };
+        } catch (error) {
+          console.error("[AUTH] Token refresh error:", error);
+          return {
+            ...token,
+            error: "RefreshTokenError",
+          };
+        }
+      }
+
+      // Token is still valid, preserve custom properties
       return {
         ...token,
         id: token.id,
