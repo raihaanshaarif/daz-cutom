@@ -12,6 +12,8 @@ declare module "next-auth" {
       role?: string | null;
     };
     backendToken?: string;
+    refreshToken?: string;
+    error?: string;
   }
   interface User {
     id: string;
@@ -20,6 +22,7 @@ declare module "next-auth" {
     image?: string | null;
     role?: string | null;
     backendToken?: string;
+    refreshToken?: string;
   }
 }
 
@@ -28,6 +31,9 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: string;
     backendToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    error?: string;
   }
 }
 
@@ -71,14 +77,9 @@ export const authOptions: NextAuthOptions = {
           }
 
           const response = await res.json();
-          const { user, token } = response.data;
+          const { user, accessToken, refreshToken } = response.data;
 
-          console.log("[LOGIN DEBUG] Backend token received:", token);
-          console.log("[LOGIN DEBUG] Token length:", token?.length);
-          console.log(
-            "[LOGIN DEBUG] Token first 20 chars:",
-            token?.substring(0, 20),
-          );
+          console.log("[LOGIN DEBUG] Backend token received:", accessToken);
 
           if (user?.id) {
             return {
@@ -87,7 +88,8 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               role: user.role,
               image: user.picture,
-              backendToken: token,
+              backendToken: accessToken,
+              refreshToken: refreshToken,
             };
           } else {
             return null;
@@ -121,8 +123,9 @@ export const authOptions: NextAuthOptions = {
 
           if (res.ok) {
             const { data } = await res.json();
-            // Store backend token in user object
-            user.backendToken = data?.token;
+            // Store backend tokens in user object
+            user.backendToken = data?.accessToken;
+            user.refreshToken = data?.refreshToken;
             user.id = data?.user?.id?.toString();
             user.role = data?.user?.role;
           }
@@ -134,18 +137,68 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user }) {
+      // Initial sign-in
       if (user) {
-        token.id = user?.id;
-        token.role = user?.role ?? undefined;
-        token.backendToken = user?.backendToken;
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+          backendToken: user.backendToken,
+          refreshToken: user.refreshToken,
+          accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
+        };
       }
-      return token;
+
+      // Return previous token if the access token has not expired yet
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token;
+      }
+
+      // Access token has expired, try to update it
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_API}/auth/refresh-token`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              // Some implementations pass it in header, others in cookie via credentials
+              // Here we stick to the backend's expectation of a "refreshToken" in cookie
+              // but since Next.js server might not have the cookie, we can also pass it in body if needed.
+              // For PH style, we might need to adjust based on how backend was updated.
+            },
+            body: JSON.stringify({
+              refreshToken: token.refreshToken,
+            }),
+          },
+        );
+
+        const refreshedTokens = await response.json();
+
+        if (!response.ok) {
+          throw refreshedTokens;
+        }
+
+        return {
+          ...token,
+          backendToken: refreshedTokens.data.accessToken,
+          accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
+        };
+      } catch (error) {
+        console.error("RefreshAccessTokenError", error);
+        return {
+          ...token,
+          error: "RefreshAccessTokenError",
+        };
+      }
     },
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token?.id as string;
         session.user.role = token?.role as string;
         session.backendToken = token?.backendToken as string;
+        session.refreshToken = token?.refreshToken as string;
+        session.error = token?.error as string;
       }
       return session;
     },

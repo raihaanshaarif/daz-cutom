@@ -1,13 +1,21 @@
-import { useSession } from "next-auth/react";
-import { useCallback } from "react";
+import { useSession, signOut } from "next-auth/react";
+import { useCallback, useEffect } from "react";
 
 /**
  * Custom hook for making authenticated API calls from client components
- * Automatically includes the JWT token in the Authorization header
+ * Includes JWT rotation check and handles 401 unauthorized
  */
 export function useAuthFetch() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const backendToken = session?.backendToken;
+  const error = session?.error;
+
+  // Sign out if there's a refresh token error
+  useEffect(() => {
+    if (error === "RefreshAccessTokenError") {
+      signOut({ callbackUrl: "/login" });
+    }
+  }, [error]);
 
   const authFetch = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
@@ -16,18 +24,30 @@ export function useAuthFetch() {
         ...(options.headers as Record<string, string>),
       };
 
-      // Add Authorization header if backend token exists
       if (backendToken) {
         headers["Authorization"] = `Bearer ${backendToken}`;
       }
 
-      return fetch(url, {
+      const response = await fetch(url, {
         ...options,
         headers,
       });
+
+      // Handle 401 Unauthorized globally
+      if (response.status === 401) {
+        console.error("[AUTH] 401 Unauthorized detected - triggering logout");
+        signOut({ callbackUrl: "/login" });
+      }
+
+      return response;
     },
     [backendToken],
   );
 
-  return { authFetch, backendToken, isAuthenticated: !!backendToken };
+  return {
+    authFetch,
+    backendToken,
+    isAuthenticated: !!backendToken,
+    isLoading: status === "loading",
+  };
 }

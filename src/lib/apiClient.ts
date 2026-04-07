@@ -1,9 +1,11 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/helpers/authOptions";
+import { signOut } from "next-auth/react";
 
 /**
  * Authenticated fetch wrapper for server-side API calls
  * Automatically includes Authorization header with backend JWT token
+ * Includes handle for 401 Unauthorized errors
  */
 export async function authenticatedFetch(
   url: string,
@@ -18,21 +20,22 @@ export async function authenticatedFetch(
 
   // Add Authorization header if backend token exists
   if (session?.backendToken) {
-    console.log("[API DEBUG] Sending token to:", url);
-    console.log("[API DEBUG] Token length:", session.backendToken.length);
-    console.log(
-      "[API DEBUG] Token first 20 chars:",
-      session.backendToken.substring(0, 20),
-    );
     headers["Authorization"] = `Bearer ${session.backendToken}`;
-  } else {
-    console.log("[API DEBUG] No backend token in session for:", url);
   }
 
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  // Handle 401 Unauthorized globally for server-side fetches (e.g., in Server Actions)
+  if (response.status === 401) {
+    console.error(`[API] 401 Unauthorized on server for: ${url}`);
+    // Note: We can't use signOut() directly here if this is purely a server context,
+    // but NextAuth session handling will eventually catch it.
+  }
+
+  return response;
 }
 
 /**

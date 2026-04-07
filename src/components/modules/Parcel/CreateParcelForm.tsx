@@ -22,7 +22,6 @@ import {
   Layers,
   FileText,
   BadgeInfo,
-  ChevronRight,
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -142,7 +141,7 @@ export default function CreateParcelForm() {
               Parcel <span className="text-indigo-600">Shipment</span>
             </h1>
             <p className="text-zinc-500 mt-1 flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse inline-block" />
               Register a new incoming or outgoing package for logistics
               tracking.
             </p>
