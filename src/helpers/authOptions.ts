@@ -136,9 +136,10 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       // Initial sign-in
-      if (user) {
+      if (user && account) {
+        console.log("[AUTH DEBUG] Initial sign-in for user:", user.email);
         return {
           ...token,
           id: user.id,
@@ -154,9 +155,16 @@ export const authOptions: NextAuthOptions = {
         return token;
       }
 
+      console.log(
+        "[AUTH DEBUG] Token expired, attempting rotation for:",
+        token.email,
+      );
       // Access token has expired, try to update it
       try {
         if (!token.refreshToken) {
+          console.error(
+            "[AUTH DEBUG] No refresh token available in JWT for rotation",
+          );
           throw new Error("Missing refresh token");
         }
 
