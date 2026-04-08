@@ -51,6 +51,7 @@ interface ParcelTableProps {
   currentPage?: number;
   totalPages?: number;
   onPageChange?: (page: number) => void;
+  userRole?: string;
 }
 
 export function ParcelTable({
@@ -61,6 +62,7 @@ export function ParcelTable({
   currentPage = 1,
   totalPages = 1,
   onPageChange,
+  userRole,
 }: ParcelTableProps) {
   const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "—";
@@ -124,15 +126,17 @@ export function ParcelTable({
               >
                 <Edit className="h-3.5 w-3.5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => onDelete?.(item)}
-                title="Delete"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+              {(userRole === "admin" || userRole === "superadmin") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => onDelete?.(item)}
+                  title="Delete"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           );
         },
@@ -250,7 +254,7 @@ export function ParcelTable({
         },
       },
     ],
-    [onEdit, onView, onDelete],
+    [userRole, onView, onEdit, onDelete],
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([]);

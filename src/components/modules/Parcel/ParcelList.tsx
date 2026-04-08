@@ -122,6 +122,20 @@ export default function ParcelList() {
       }
 
       // Use month dates if month is selected, otherwise use manual date range
+      const startDate = monthStartDate || formattedDateFrom;
+      const endDate = monthEndDate || formattedDateTo;
+
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+      });
+
+      if (searchTerm) params.append("search", searchTerm);
+      if (selectedCourier && selectedCourier !== "all")
+        params.append("courierId", selectedCourier);
+      if (startDate) params.append("dateFrom", startDate);
+      if (endDate) params.append("dateTo", endDate);
 
       console.log("Fetching parcels with params:", {
         page: currentPage,
@@ -136,7 +150,7 @@ export default function ParcelList() {
       });
 
       const res = await authFetch(
-        `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?page=1&limit=100`,
+        `${process.env.NEXT_PUBLIC_BASE_API}/parcel/parcels?${params.toString()}`,
         {
           cache: "no-store",
         },
@@ -454,6 +468,7 @@ export default function ParcelList() {
                 onEdit={handleEditParcel}
                 onView={handleViewParcel}
                 onDelete={handleDeleteParcel}
+                userRole={userRole}
               />
             </CardContent>
           </Card>
