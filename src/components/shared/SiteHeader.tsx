@@ -134,6 +134,22 @@ export function SiteHeader() {
         )}
       </Button>
 
+      {/* <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground transition-colors hover:text-foreground"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        title={
+          theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+        }
+      >
+        {theme === "dark" ? (
+          <Sun className="size-4" />
+        ) : (
+          <Moon className="size-4" />
+        )}
+      </Button> */}
+
       <ColorThemeSelector />
 
       <DropdownMenu>

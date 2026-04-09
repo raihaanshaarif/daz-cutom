@@ -89,9 +89,17 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
     order.commissionStatus ?? "",
   );
   const [isShipped, setIsShipped] = useState(order.isShipped ?? false);
+
+  const numDefault = (v?: number | null) => (v != null ? String(v) : "");
+  const dateDefault = (v?: string | null) =>
+    v ? new Date(v).toISOString().split("T")[0] : "";
+
   const [stages, setStages] = useState<Record<string, string>>(
     Object.fromEntries(
-      DATE_STAGES.map(({ key }) => [key, (order[key] as string | null) ?? ""]),
+      DATE_STAGES.map(({ key }) => [
+        key,
+        dateDefault(order[key] as string | null),
+      ]),
     ),
   );
 
@@ -148,10 +156,6 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
       setIsSubmitting(false);
     }
   };
-
-  const numDefault = (v?: number | null) => (v != null ? String(v) : "");
-  const dateDefault = (v?: string) =>
-    v ? new Date(v).toISOString().split("T")[0] : "";
 
   return (
     <form action={handleSubmit} className="space-y-6">

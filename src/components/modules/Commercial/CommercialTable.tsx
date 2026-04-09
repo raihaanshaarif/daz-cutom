@@ -331,7 +331,7 @@ export function CommercialTable({
             PENDING: "bg-yellow-100 text-yellow-800",
             PARTIALLY_PAID: "bg-blue-100 text-blue-800",
             PAID: "bg-green-100 text-green-800",
-            SURRENDERED: "bg-gray-100 text-gray-800",
+            SURRENDERED: "bg-indigo-100 text-indigo-800",
           };
           return (
             <div

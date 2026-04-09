@@ -24,15 +24,22 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CommercialTable } from "@/components/modules/Commercial/CommercialTable";
-import { Commercial, Buyer, Factory, CommercialOrder } from "@/types";
+import {
+  Commercial,
+  Buyer,
+  Factory,
+  CommercialOrder,
+  PaymentStatus,
+} from "@/types";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
 import { useSession } from "next-auth/react";
 
 export default function CommercialReportPage() {
   const [selectedBuyer, setSelectedBuyer] = useState<string>("all");
   const [selectedFactory, setSelectedFactory] = useState<string>("all");
-  const [selectedPaymentStatus, setSelectedPaymentStatus] =
-    useState<string>("all");
+  const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<
+    PaymentStatus | "all"
+  >("all");
 
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [factories, setFactories] = useState<Factory[]>([]);
@@ -264,6 +271,7 @@ export default function CommercialReportPage() {
                   <SelectItem value="PAID">Paid</SelectItem>
                   <SelectItem value="PARTIALLY_PAID">Partially Paid</SelectItem>
                   <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="SURRENDERED">Surrendered</SelectItem>
                 </SelectContent>
               </Select>
             </div>

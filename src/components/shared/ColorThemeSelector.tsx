@@ -25,6 +25,16 @@ const themes = [
     label: "Slack",
     swatch: "bg-[oklch(0.37_0.14_323.40)]",
   },
+  {
+    id: "playful",
+    label: "Playful",
+    swatch: "bg-[oklch(0.9354_0.0456_94.8549)]",
+  },
+  {
+    id: "twitter",
+    label: "Twitter",
+    swatch: "bg-[oklch(0.6723_0.1606_244.9955)]",
+  },
 ];
 
 export function ColorThemeSelector() {

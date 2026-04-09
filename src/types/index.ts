@@ -4,6 +4,12 @@ export type CommissionStatus =
   | "PARTIALLY_RECEIVED"
   | "SURRENDERED";
 
+export type PaymentStatus =
+  | "PENDING"
+  | "PARTIALLY_PAID"
+  | "PAID"
+  | "SURRENDERED";
+
 export interface User {
   id: number;
   name: string;
@@ -108,7 +114,7 @@ export interface Commercial {
   documentStatus: string;
   docCourierNo: string;
   approximatePaymentDate?: string | null;
-  paymentStatus: string;
+  paymentStatus: PaymentStatus;
   receivedAmount: number;
   receivedDate: string;
   balance: number;
@@ -132,7 +138,7 @@ export interface CommercialFormData {
   documentStatus: string;
   docCourierNo: string;
   approximatePaymentDate?: string | null;
-  paymentStatus: string;
+  paymentStatus: PaymentStatus;
   receivedAmount: number;
   receivedDate: string;
   balance: number;
