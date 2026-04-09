@@ -594,6 +594,7 @@ export const deleteOrder = async (id: number) => {
   if (result?.success || res.ok) {
     revalidateTag("ORDERS");
     revalidatePath("/dashboard/order/order-list");
+    return { success: true };
   }
   return result;
 };
@@ -611,6 +612,24 @@ export const deleteContact = async (id: number) => {
   if (result?.success || res.ok) {
     revalidateTag("CONTACTS");
     revalidatePath("/dashboard/my-contacts");
+  }
+  return result;
+};
+
+export const deleteCommercial = async (id: number) => {
+  const res = await authenticatedFetch(
+    `${process.env.NEXT_PUBLIC_BASE_API}/commercial/${id}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  const result = await res.json();
+
+  if (res.ok) {
+    revalidateTag("COMMERCIALS");
+    revalidatePath("/dashboard/commercial");
+    return { success: true };
   }
   return result;
 };

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthFetch } from "@/hooks/use-auth-fetch";
+import { deleteCommercial } from "@/actions/create";
 
 export default function CommercialList() {
   const { authFetch } = useAuthFetch();
@@ -164,14 +165,9 @@ export default function CommercialList() {
       )
     ) {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_API}/commercial/${commercial.id}`,
-          {
-            method: "DELETE",
-          },
-        );
+        const result = await deleteCommercial(commercial.id);
 
-        if (res.ok) {
+        if (result?.success) {
           toast.success("Commercial record deleted successfully!");
           setRefreshTrigger((prev) => prev + 1);
         } else {
