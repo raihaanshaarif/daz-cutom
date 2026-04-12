@@ -100,15 +100,15 @@ export default function CommercialList() {
             cache: "no-store",
           },
         );
-        const { data, pagination } = await res.json();
-        // console.log("API response data:", data);
-        // console.log("Number of commercials returned:", data?.length || 0);
+        const responseData = await res.json();
+        const data = responseData?.data || [];
+        const pagination = responseData?.meta || {};
 
-        const filteredData = data || [];
+        const filteredData = data;
 
         setCommercials(filteredData);
         setTotalPages(pagination?.totalPages || 1);
-        setTotalCommercials(pagination?.total || 0);
+        setTotalCommercials(pagination?.total || filteredData.length || 0);
 
         // Cache all commercials data when no filters are applied
         if (

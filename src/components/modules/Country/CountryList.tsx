@@ -3,6 +3,7 @@
 import { Country } from "@/types";
 import { useEffect, useState } from "react";
 import { CountryTable } from "./CountryTable";
+import { EditCountryModal } from "./EditCountryModal";
 import { Filter, Globe, X, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,8 @@ export default function CountryList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCountries, setTotalCountries] = useState(0);
+  const [editingCountry, setEditingCountry] = useState<Country | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const limit = 10;
 
   // Filter states
@@ -55,9 +58,11 @@ export default function CountryList() {
             cache: "no-store",
           },
         );
-        const { data, pagination } = await res.json();
+        const response = await res.json();
+        const data = response?.data || [];
+        const pagination = response?.meta || {};
 
-        setCountries(data || []);
+        setCountries(data);
         setTotalPages(pagination?.totalPages || 1);
         setTotalCountries(pagination?.total || 0);
       } catch (error) {
@@ -82,18 +87,29 @@ export default function CountryList() {
   };
 
   const handleEditCountry = (country: Country) => {
-    // TODO: Implement edit functionality
-    // console.log("Edit country:", country);
+    setEditingCountry(country);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingCountry(null);
+  };
+
+  const handleEditSuccess = () => {
+    // Refresh the countries list
+    setCurrentPage(1);
+    setLoading(true);
   };
 
   const handleViewCountry = (country: Country) => {
     // TODO: Implement view functionality
-    // console.log("View country:", country);
+    void country;
   };
 
   const handleDeleteCountry = (country: Country) => {
     // TODO: Implement delete functionality
-    // console.log("Delete country:", country);
+    void country;
   };
 
   if (loading && countries.length === 0) {
@@ -229,6 +245,13 @@ export default function CountryList() {
           </Card>
         </div>
       </div>
+
+      <EditCountryModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        country={editingCountry}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }

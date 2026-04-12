@@ -148,11 +148,11 @@ export default function OrderList() {
 
         if (buyersRes) {
           const b = await buyersRes.json();
-          setBuyers(Array.isArray(b) ? b : []);
+          setBuyers(b?.data || []);
         }
         if (factoriesRes) {
           const f = await factoriesRes.json();
-          setFactories(Array.isArray(f) ? f : []);
+          setFactories(f?.data || []);
         }
 
         // Filter orders based on user role and assigned buyers

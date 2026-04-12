@@ -48,16 +48,15 @@ export default function FactoryList() {
           `${process.env.NEXT_PUBLIC_BASE_API}/order/factories?${params.toString()}`,
           { cache: "no-store" },
         );
-        const payload = await res.json();
-        const data = Array.isArray(payload)
-          ? payload
-          : (payload?.data ?? payload?.data?.data ?? []);
-        const pagination =
-          payload?.pagination ?? payload?.meta ?? payload?.data?.meta;
+        const responseData = await res.json();
+        const data = responseData?.data || [];
+        const pagination = responseData?.meta || {};
 
-        setFactories(data || []);
+        const filteredData = data;
+
+        setFactories(filteredData);
         setTotalPages(pagination?.totalPages || 1);
-        setTotalFactories(pagination?.total || data.length || 0);
+        setTotalFactories(pagination?.total || filteredData.length || 0);
       } catch (error) {
         console.error(error);
         toast.error("Failed to fetch factories");

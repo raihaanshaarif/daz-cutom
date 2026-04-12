@@ -54,10 +54,12 @@ export default function CreateOrderForm() {
           authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`),
           authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/factories`),
         ]);
-        const buyersData = await buyersRes.json();
-        const factoriesData = await factoriesRes.json();
-        setBuyers(Array.isArray(buyersData) ? buyersData : []);
-        setFactories(Array.isArray(factoriesData) ? factoriesData : []);
+
+        const buyersPayload = await buyersRes.json();
+        const factoriesPayload = await factoriesRes.json();
+
+        setBuyers(buyersPayload?.data || []);
+        setFactories(factoriesPayload?.data || []);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -80,9 +82,14 @@ export default function CreateOrderForm() {
 
       const result = await createOrder(formData);
 
-      if (result?.id) {
+      const createdId = result?.data?.id || result?.id;
+      if (createdId) {
+        const orderNumber =
+          result?.data?.orderNumber || result?.orderNumber || "";
         toast.success("Order created successfully!", {
-          description: `Order ${result.orderNumber} has been created.`,
+          description: orderNumber
+            ? `Order ${orderNumber} has been created.`
+            : undefined,
           duration: 4000,
         });
         setTimeout(() => {

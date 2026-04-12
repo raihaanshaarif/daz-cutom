@@ -62,9 +62,7 @@ const AdminDashboard = () => {
           ).then((r) => r.json()),
         ]);
 
-        const userList: UserWithTasks[] = Array.isArray(userData)
-          ? userData
-          : [];
+        const userList: UserWithTasks[] = userData?.data || [];
 
         // Fetch tasks for all users in a single batch call
         const userIds = userList.map((u) => u.id).join(",");
@@ -76,24 +74,16 @@ const AdminDashboard = () => {
           ).then((r) => r.json());
           userList.forEach((u) => {
             const userTasks = batchTaskRes[u.id];
-            u.tasks = Array.isArray(userTasks) ? userTasks : [];
+            u.tasks = userTasks || [];
           });
         }
 
         setUsers(userList);
 
-        const contacts = Array.isArray(contactData)
-          ? contactData
-          : Array.isArray(contactData?.data)
-            ? contactData.data
-            : [];
+        const contacts = contactData?.data || [];
         setAllContacts(contacts);
 
-        const list = Array.isArray(countryData)
-          ? countryData
-          : Array.isArray(countryData?.data)
-            ? countryData.data
-            : [];
+        const list = countryData?.data || [];
         setCountries(list);
       } finally {
         setLoading(false);

@@ -26,7 +26,7 @@ export default function CreateBuyerForm() {
     setIsSubmitting(true);
     try {
       const result = await createBuyer(formData);
-      if (result?.id) {
+      if (result?.data?.id) {
         toast.success("Buyer created successfully!", {
           description: "The new buyer has been added to your list.",
           duration: 4000,

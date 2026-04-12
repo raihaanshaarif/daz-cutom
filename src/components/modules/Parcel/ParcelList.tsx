@@ -158,9 +158,8 @@ export default function ParcelList() {
       const responseData = await res.json();
       console.log("API response data:", responseData);
 
-      // Response structure: { success, data: { data: [...], meta: { ... } } }
-      const data = responseData.data?.data || [];
-      const pagination = responseData.data?.meta;
+      const data = responseData?.data || [];
+      const pagination = responseData?.meta || {};
 
       console.log("Number of parcels returned:", data?.length || 0);
 

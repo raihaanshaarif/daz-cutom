@@ -69,8 +69,8 @@ export default function CommercialReportPage() {
         ]);
         const buyersData = await buyersRes.json();
         const factoriesData = await factoriesRes.json();
-        setBuyers(Array.isArray(buyersData) ? buyersData : []);
-        setFactories(Array.isArray(factoriesData) ? factoriesData : []);
+        setBuyers(buyersData?.data || []);
+        setFactories(factoriesData?.data || []);
       } catch (err) {
         console.error("Failed to fetch filter data:", err);
       }
@@ -258,7 +258,9 @@ export default function CommercialReportPage() {
             <div className="flex flex-col gap-1.5 min-w-[200px]">
               <Select
                 value={selectedPaymentStatus}
-                onValueChange={setSelectedPaymentStatus}
+                onValueChange={(value) =>
+                  setSelectedPaymentStatus(value as PaymentStatus | "all")
+                }
               >
                 <SelectTrigger className="bg-slate-50 dark:bg-slate-800 border-none h-11 focus:ring-1 focus:ring-emerald-500 transition-all">
                   <div className="flex items-center gap-2">

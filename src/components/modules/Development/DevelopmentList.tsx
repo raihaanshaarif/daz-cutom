@@ -115,9 +115,10 @@ export default function DevelopmentList() {
 
         if (res.ok) {
           const result = await res.json();
+          const pagination = result.meta || {};
           setSamples(result.data || []);
-          setTotalSamples(result.pagination?.total || 0);
-          setTotalPages(result.pagination?.totalPages || 1);
+          setTotalSamples(pagination?.total || 0);
+          setTotalPages(pagination?.totalPages || 1);
         }
       } catch (error) {
         console.error("Failed to fetch development samples:", error);
@@ -150,9 +151,7 @@ export default function DevelopmentList() {
 
         if (buyersRes.ok) {
           const buyersData = await buyersRes.json();
-          setBuyers(
-            Array.isArray(buyersData) ? buyersData : buyersData.data || [],
-          );
+          setBuyers(buyersData?.data || []);
         }
       } catch (error) {
         console.error("Failed to fetch filter data:", error);

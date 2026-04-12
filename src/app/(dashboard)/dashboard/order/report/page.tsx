@@ -62,8 +62,8 @@ export default function OrderReportPage() {
         ]);
         const buyersData = await buyersRes.json();
         const factoriesData = await factoriesRes.json();
-        setBuyers(Array.isArray(buyersData) ? buyersData : []);
-        setFactories(Array.isArray(factoriesData) ? factoriesData : []);
+        setBuyers(buyersData?.data || []);
+        setFactories(factoriesData?.data || []);
       } catch (err) {
         console.error("Failed to fetch filter data:", err);
       }

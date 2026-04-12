@@ -91,8 +91,8 @@ export function EditModal({
         const buyersData = await buyersResponse.json();
         const factoriesData = await factoriesResponse.json();
 
-        setBuyers(Array.isArray(buyersData) ? buyersData : []);
-        setFactories(Array.isArray(factoriesData) ? factoriesData : []);
+        setBuyers(buyersData?.data || []);
+        setFactories(factoriesData?.data || []);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }

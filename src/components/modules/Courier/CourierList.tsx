@@ -52,8 +52,10 @@ export default function CourierList() {
           `${process.env.NEXT_PUBLIC_BASE_API}/parcel/courier-companies?${params.toString()}`,
           { cache: "no-store" },
         );
-        const { data, pagination } = await res.json();
-        setCouriers(data || []);
+        const responseData = await res.json();
+        const data = responseData?.data || [];
+        const pagination = responseData?.meta || {};
+        setCouriers(data);
         setTotalPages(pagination?.totalPages || 1);
         setTotalCouriers(pagination?.total || 0);
       } catch (error) {

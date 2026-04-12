@@ -66,18 +66,11 @@ const UserList = () => {
       }
 
       const responseData = await res.json();
-      // Support different response shapes
-      const data =
-        responseData?.data?.data || responseData?.data || responseData || [];
-      const pagination =
-        responseData?.data?.meta ||
-        responseData?.pagination ||
-        responseData?.meta;
+      const data = responseData?.data || [];
+      const pagination = responseData?.meta || {};
 
-      setUsers(Array.isArray(data) ? data : []);
-      setTotalUsers(
-        pagination?.total || (Array.isArray(data) ? data.length : 0),
-      );
+      setUsers(data);
+      setTotalUsers(pagination?.total || data.length);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {

@@ -153,9 +153,7 @@ export default function CreateContactForm() {
           // console.log("Countries API response:", data);
 
           // Handle different response structures
-          const countriesArray = Array.isArray(data)
-            ? data
-            : data.data || data.countries || [];
+          const countriesArray = data?.data || [];
 
           // console.log("Parsed countries array:", countriesArray);
           // console.log("Countries array length:", countriesArray.length);
@@ -188,7 +186,7 @@ export default function CreateContactForm() {
       const result = await createContact(formData);
       // console.log("createContact result:", result);
 
-      if (result?.id) {
+      if (result?.data?.id) {
         toast.success("Lead created successfully!", {
           description: "The new lead has been added to database.",
           duration: 4000,
@@ -395,15 +393,14 @@ export default function CreateContactForm() {
                         <SelectValue placeholder="Select Country" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.isArray(countries) &&
-                          countries.map((country) => (
-                            <SelectItem
-                              key={country.id}
-                              value={country.id.toString()}
-                            >
-                              {country.name}
-                            </SelectItem>
-                          ))}
+                        {countries.map((country) => (
+                          <SelectItem
+                            key={country.id}
+                            value={country.id.toString()}
+                          >
+                            {country.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

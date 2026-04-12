@@ -76,8 +76,8 @@ const UserProfile = () => {
         if (!response.ok) {
           throw new Error("Failed to fetch user");
         }
-        const data = await response.json();
-        setUser(data);
+        const responseData = await response.json();
+        setUser(responseData?.data || null);
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
@@ -92,11 +92,7 @@ const UserProfile = () => {
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-            ? data.data
-            : [];
+        const list = data?.data || [];
         setCountries(list);
       })
       .catch(() => {});
@@ -109,8 +105,8 @@ const UserProfile = () => {
           `${process.env.NEXT_PUBLIC_BASE_API}/task/my?userId=${userId}&limit=100`,
         );
         const json = await res.json();
-        const data = json?.data || json || [];
-        setTasks(Array.isArray(data) ? data : []);
+        const data = json?.data || [];
+        setTasks(data);
       } catch {
         // silently ignore
       }

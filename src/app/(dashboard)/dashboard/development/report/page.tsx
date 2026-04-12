@@ -62,7 +62,7 @@ export default function DevelopmentReportPage() {
           `${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`,
         );
         const buyersData = await buyersRes.json();
-        setBuyers(Array.isArray(buyersData) ? buyersData : []);
+        setBuyers(buyersData?.data || []);
       } catch (err) {
         console.error("Failed to fetch buyers:", err);
       }
@@ -212,7 +212,7 @@ export default function DevelopmentReportPage() {
                     value="all"
                     className="font-bold uppercase tracking-tighter italic"
                   >
-                    All Partners
+                    All Factory
                   </SelectItem>
                   {buyers.map((buyer) => (
                     <SelectItem

@@ -61,12 +61,8 @@ export default function ParcelReportPage() {
         ]);
         const buyersData = await buyersRes.json();
         const couriersData = await couriersRes.json();
-        setBuyers(
-          Array.isArray(buyersData) ? buyersData : buyersData.data || [],
-        );
-        setCouriers(
-          Array.isArray(couriersData) ? couriersData : couriersData.data || [],
-        );
+        setBuyers(buyersData?.data || []);
+        setCouriers(couriersData?.data || []);
       } catch (err) {
         console.error("Failed to fetch filter data:", err);
       }

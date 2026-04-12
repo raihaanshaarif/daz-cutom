@@ -109,9 +109,7 @@ const UserCommandCenter = () => {
           ]);
 
         // Process orders - filter by user and apply buyer assignment logic
-        const allOrders = Array.isArray(ordersRes)
-          ? ordersRes
-          : ordersRes?.data || [];
+        const allOrders = ordersRes?.data || [];
 
         // Apply buyer assignment filtering for non-admin users
         const user = userRes;
@@ -131,9 +129,7 @@ const UserCommandCenter = () => {
             );
 
         // Process commercials - filter by user buyer assignments
-        const allCommercials = Array.isArray(commercialsRes)
-          ? commercialsRes
-          : commercialsRes?.data || [];
+        const allCommercials = commercialsRes?.data || [];
         let userCommercials = allCommercials;
 
         // Apply buyer assignment filtering for non-admin users
@@ -149,17 +145,13 @@ const UserCommandCenter = () => {
         }
 
         // Process contacts - filter by user
-        const allContacts = Array.isArray(contactsRes)
-          ? contactsRes
-          : contactsRes?.data || [];
+        const allContacts = contactsRes?.data || [];
         const userContacts = allContacts.filter(
           (contact: Contact) => contact.authorId === parseInt(userId),
         );
 
         // Process tasks
-        const userTasks = Array.isArray(tasksRes)
-          ? tasksRes
-          : tasksRes?.data || [];
+        const userTasks = tasksRes?.data || [];
 
         // Calculate stats
         const totalOrderValue = filteredOrders.reduce(

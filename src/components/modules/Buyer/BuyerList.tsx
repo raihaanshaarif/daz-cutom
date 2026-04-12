@@ -49,16 +49,15 @@ export default function BuyerList() {
           { cache: "no-store" },
         );
 
-        const payload = await res.json();
-        const data = Array.isArray(payload)
-          ? payload
-          : (payload?.data ?? payload?.data?.data ?? []);
-        const pagination =
-          payload?.pagination ?? payload?.meta ?? payload?.data?.meta;
+        const responseData = await res.json();
+        const data = responseData?.data || [];
+        const pagination = responseData?.meta || {};
 
-        setBuyers(data || []);
+        const filteredData = data;
+
+        setBuyers(filteredData);
         setTotalPages(pagination?.totalPages || 1);
-        setTotalBuyers(pagination?.total || data.length || 0);
+        setTotalBuyers(pagination?.total || filteredData.length || 0);
       } catch (error) {
         console.error(error);
         toast.error("Failed to fetch buyers");

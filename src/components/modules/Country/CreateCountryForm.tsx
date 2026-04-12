@@ -17,7 +17,8 @@ export default function CreateCountryForm() {
     try {
       const result = await createCountry(formData);
 
-      if (result?.id) {
+      const createdId = result?.data?.id || result?.id;
+      if (createdId) {
         toast.success("Country registered!", {
           description: "New geographical sector added to the platform.",
           duration: 4000,

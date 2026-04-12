@@ -49,14 +49,12 @@ export default function MyTaskList() {
           { cache: "no-store" },
         );
         const json = await res.json();
-        const data = json?.data || json || [];
-        const pagination = json?.pagination;
+        const data = json?.data || [];
+        const pagination = json?.meta || {};
 
-        setTasks(Array.isArray(data) ? data : []);
+        setTasks(data);
         setTotalPages(pagination?.totalPages || 1);
-        setTotalTasks(
-          pagination?.total || (Array.isArray(data) ? data.length : 0),
-        );
+        setTotalTasks(pagination?.total || data.length);
       } catch (error) {
         console.error("Failed to fetch tasks:", error);
       } finally {

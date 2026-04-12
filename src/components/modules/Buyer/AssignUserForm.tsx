@@ -35,16 +35,11 @@ const AssignUserForm = () => {
   useEffect(() => {
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/order/buyers`)
       .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setBuyers(data);
-        else setBuyers(data.data || []);
-      });
+      .then((data) => setBuyers(data?.data || []));
     // Fetch users
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`)
       .then((res) => res.json())
-      .then((data) => {
-        setUsers(Array.isArray(data) ? data : data.data || []);
-      });
+      .then((data) => setUsers(data?.data || []));
   }, [authFetch]);
 
   // Assign user to buyer

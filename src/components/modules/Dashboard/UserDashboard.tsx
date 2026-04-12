@@ -68,8 +68,8 @@ const UserDashboard = () => {
     )
       .then((r) => r.json())
       .then((json) => {
-        const data = json?.data || json || [];
-        setTasks(Array.isArray(data) ? data : []);
+        const data = json?.data || [];
+        setTasks(data);
       })
       .catch(() => {});
   }, [userId, authFetch, isAuthLoading]);
@@ -79,11 +79,7 @@ const UserDashboard = () => {
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/country?limit=1000`)
       .then((r) => r.json())
       .then((data) => {
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.data)
-            ? data.data
-            : [];
+        const list = data?.data || [];
         setCountries(list);
       })
       .catch(() => {});

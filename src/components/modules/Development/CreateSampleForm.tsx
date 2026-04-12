@@ -41,8 +41,8 @@ export default function CreateSampleForm() {
         const buyersData = await buyersResponse.json();
         const factoriesData = await factoriesResponse.json();
 
-        setBuyers(Array.isArray(buyersData) ? buyersData : []);
-        setFactories(Array.isArray(factoriesData) ? factoriesData : []);
+        setBuyers(buyersData?.data || []);
+        setFactories(factoriesData?.data || []);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -61,9 +61,9 @@ export default function CreateSampleForm() {
 
       const result = await createDevelopmentSample(formData);
 
-      if (result?.id) {
+      if (result?.data?.id) {
         toast.success("Sample created successfully!", {
-          description: `Sample for style ${result.style} has been created.`,
+          description: `Sample for style ${result.data.style} has been created.`,
           duration: 4000,
         });
         setTimeout(() => {

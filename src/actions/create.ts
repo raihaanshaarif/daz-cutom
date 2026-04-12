@@ -26,7 +26,8 @@ export const create = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("POSTS");
     revalidatePath("/blogs");
     redirect("/blogs");
@@ -79,7 +80,8 @@ export const createContact = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("CONTACTS");
     revalidatePath("/dashboard/my-contacts");
   }
@@ -102,7 +104,8 @@ export const createCountry = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("COUNTRY");
     revalidatePath("/dashboard/country-list");
   }
@@ -125,7 +128,8 @@ export const createBuyer = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("BUYERS");
     revalidatePath("/dashboard/buyer/buyer-list");
   }
@@ -148,7 +152,8 @@ export const createCourier = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("COURIERS");
     revalidatePath("/dashboard/courier");
   }
@@ -289,7 +294,8 @@ export const createFactory = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("FACTORIES");
     revalidatePath("/dashboard/factory/factory-list");
   }
@@ -354,7 +360,9 @@ export const createOrder = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  // API may return created resource under `data` (sendResponse) or top-level `id`.
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("ORDERS");
     revalidatePath("/dashboard/order/order-list");
   }
@@ -399,7 +407,8 @@ export const createDevelopmentSample = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const createdId = result?.data?.id || result?.id;
+  if (createdId) {
     revalidateTag("DEVELOPMENT_SAMPLES");
     revalidatePath("/dashboard/development");
   }
@@ -428,7 +437,6 @@ export const deleteDevelopmentSample = async (id: number) => {
 };
 
 export const updateDevelopmentSample = async (data: FormData) => {
-  const session = await getUserSession();
   const o = Object.fromEntries(data.entries());
 
   const parseDate = (v: unknown) => {
@@ -482,7 +490,8 @@ export const updateDevelopmentSample = async (data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const updatedId = result?.data?.id || result?.id;
+  if (updatedId) {
     revalidateTag("DEVELOPMENT_SAMPLES");
     revalidatePath("/dashboard/development");
   }
@@ -574,7 +583,8 @@ export const updateOrder = async (id: number, data: FormData) => {
 
   const result = await res.json();
 
-  if (result?.id) {
+  const updatedId = result?.data?.id || result?.id;
+  if (updatedId) {
     revalidateTag("ORDERS");
     revalidatePath("/dashboard/order/order-list");
   }

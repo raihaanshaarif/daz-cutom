@@ -58,7 +58,7 @@ export default function CreateParcelForm() {
         );
         const result = await res.json();
         console.log("Fetched buyers:", result);
-        const buyerData = Array.isArray(result) ? result : result.data || [];
+        const buyerData = result?.data || [];
         setBuyers(buyerData);
       } catch (error) {
         console.error("Failed to fetch buyers:", error);
@@ -88,7 +88,7 @@ export default function CreateParcelForm() {
         );
         const result = await res.json();
         console.log("Fetched couriers:", result);
-        const courierData = Array.isArray(result) ? result : result.data || [];
+        const courierData = result?.data || [];
         setCouriers(courierData);
       } catch (error) {
         console.error("Failed to fetch couriers:", error);

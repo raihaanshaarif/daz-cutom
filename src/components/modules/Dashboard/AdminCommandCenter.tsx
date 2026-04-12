@@ -166,9 +166,7 @@ const AdminCommandCenter = () => {
         const allOrders: ExtendedOrder[] = ordersRes.data || [];
         const allCommercials: Commercial[] = commercialRes.data || [];
         const allContacts: Contact[] = contactsRes.data || [];
-        const userList: UserWithTasks[] = Array.isArray(usersRes)
-          ? usersRes
-          : usersRes?.data || [];
+        const userList: UserWithTasks[] = usersRes?.data || [];
 
         // 3. Enrich Users with Tasks for Performance Tracking (single batch call)
         const userIds = userList.map((u) => u.id).join(",");
@@ -180,7 +178,7 @@ const AdminCommandCenter = () => {
           ).then((r) => r.json());
           userList.forEach((u) => {
             const userTasks = batchTaskRes[u.id];
-            u.tasks = Array.isArray(userTasks) ? userTasks : [];
+            u.tasks = userTasks || [];
           });
         }
 
@@ -233,7 +231,7 @@ const AdminCommandCenter = () => {
         const upcomingCommissions = allCommercials.filter(
           (c) =>
             c.paymentStatus === "PENDING" ||
-            (c.paymentStatus === "PARTIAL" &&
+            (c.paymentStatus === "PARTIALLY_PAID" &&
               c.approximatePaymentDate &&
               new Date(c.approximatePaymentDate as any) >= now),
         );
@@ -257,7 +255,8 @@ const AdminCommandCenter = () => {
         const totalPendingLAC = timeframeInvoices
           .filter(
             (c) =>
-              c.paymentStatus === "PENDING" || c.paymentStatus === "PARTIAL",
+              c.paymentStatus === "PENDING" ||
+              c.paymentStatus === "PARTIALLY_PAID",
           )
           .reduce((s, c) => s + (c.lacAmount || 0), 0);
 

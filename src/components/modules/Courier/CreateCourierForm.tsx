@@ -25,7 +25,7 @@ export default function CreateCourierForm() {
     setIsSubmitting(true);
     try {
       const result = await createCourier(formData);
-      if (result?.data.id) {
+      if (result?.data?.id) {
         toast.success("Courier created successfully!", {
           description: "The new courier company has been added to your list.",
           duration: 4000,

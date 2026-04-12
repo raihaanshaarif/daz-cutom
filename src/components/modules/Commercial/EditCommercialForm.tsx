@@ -53,7 +53,7 @@ export function EditCommercialForm({
     lacAmount: 0,
     documentStatus: "PREPARING",
     docCourierNo: "",
-    approximatePaymentDate: null,
+    approximatePaymentDate: "",
     paymentStatus: "PENDING",
     receivedAmount: 0,
     receivedDate: "",
@@ -88,7 +88,7 @@ export function EditCommercialForm({
         docCourierNo: commercial.docCourierNo,
         approximatePaymentDate: commercial.approximatePaymentDate
           ? commercial.approximatePaymentDate.split("T")[0]
-          : null,
+          : "",
         paymentStatus: commercial.paymentStatus,
         receivedAmount: commercial.receivedAmount,
         receivedDate: commercial.receivedDate
@@ -109,7 +109,7 @@ export function EditCommercialForm({
         );
         if (res.ok) {
           const data = await res.json();
-          const ordersArray = Array.isArray(data) ? data : data?.data || [];
+          const ordersArray = data?.data || [];
           setAvailableOrders(ordersArray);
         }
       } catch (error) {

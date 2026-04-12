@@ -4,15 +4,17 @@ import { getToken } from "next-auth/jwt";
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Log all cookies for debugging
-  const allCookies = req.cookies.getAll();
-  const cookieNames = allCookies.map((c) => c.name);
-  console.log(
-    "[MIDDLEWARE DEBUG] Cookies found:",
-    cookieNames.length,
-    "names:",
-    cookieNames.join(", ") || "NONE",
-  );
+  // Log all cookies for debugging - only in development
+  if (process.env.NODE_ENV === "development") {
+    const allCookies = req.cookies.getAll();
+    const cookieNames = allCookies.map((c) => c.name);
+    console.log(
+      "[MIDDLEWARE DEBUG] Cookies found:",
+      cookieNames.length,
+      "names:",
+      cookieNames.join(", ") || "NONE",
+    );
+  }
 
   // Get authentication token - let NextAuth determine the correct cookie name
   const token = await getToken({
@@ -20,16 +22,22 @@ export async function middleware(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  console.log(
-    "Middleware - Path:",
-    pathname,
-    "Token exists:",
-    !!token,
-    "Token details:",
-    token
-      ? { id: token.id, email: token.email, backendToken: !!token.backendToken }
-      : "none",
-  );
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "Middleware - Path:",
+      pathname,
+      "Token exists:",
+      !!token,
+      "Token details:",
+      token
+        ? {
+            id: token.id,
+            email: token.email,
+            backendToken: !!token.backendToken,
+          }
+        : "none",
+    );
+  }
 
   // Redirect authenticated users away from login page
   if (pathname === "/login" && token) {

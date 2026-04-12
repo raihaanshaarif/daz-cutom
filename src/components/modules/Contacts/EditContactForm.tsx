@@ -75,7 +75,7 @@ export function EditContactForm({
         );
         if (res.ok) {
           const data = await res.json();
-          const countriesArray = Array.isArray(data) ? data : data?.data || [];
+          const countriesArray = data?.data || [];
           setCountries(countriesArray);
         }
       } catch (error) {

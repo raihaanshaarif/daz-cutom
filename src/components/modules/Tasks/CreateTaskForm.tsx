@@ -75,7 +75,7 @@ export default function CreateTaskForm() {
         const res = await authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user`);
         if (res.ok) {
           const data = await res.json();
-          setUsers(Array.isArray(data) ? data : data?.data || []);
+          setUsers(data?.data || []);
         }
       } catch (err) {
         console.error("Failed to fetch users:", err);
@@ -377,7 +377,7 @@ export default function CreateTaskForm() {
                         className={`mt-1.5 w-1.5 h-1.5 rounded-full ${item.color} shadow-[0_0_8px_rgba(0,0,0,0.5)] shrink-0 group-hover/li:scale-150 transition-transform`}
                       />
                       <div className="space-y-1">
-                        <span className="text-[10px] uppercase font-black tracking-tighter text-zinc-500 group-hover/li:text-zinc-400 transition-colors uppercase italic">
+                        <span className="text-[10px] uppercase font-black tracking-tighter text-zinc-500 group-hover/li:text-zinc-400 transition-colors italic">
                           {item.label}
                         </span>
                         <p className="text-[13px] text-zinc-300 font-semibold leading-snug">

@@ -17,7 +17,9 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {
-          console.error("Email or Password is missing");
+          if (process.env.NODE_ENV === "development") {
+            console.error("Email or Password is missing");
+          }
           return null;
         }
 
@@ -37,14 +39,18 @@ export const authOptions: NextAuthOptions = {
           );
 
           if (!res?.ok) {
-            console.error("Login Failed", await res.text());
+            if (process.env.NODE_ENV === "development") {
+              console.error("Login Failed", await res.text());
+            }
             return null;
           }
 
           const response = await res.json();
           const { user, accessToken, refreshToken } = response.data;
 
-          console.log("[LOGIN DEBUG] Backend token received:", accessToken);
+          if (process.env.NODE_ENV === "development") {
+            console.log("[LOGIN DEBUG] Backend token received:", accessToken);
+          }
 
           if (user?.id) {
             return {
@@ -60,7 +66,9 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
         } catch (err) {
-          console.error(err);
+          if (process.env.NODE_ENV === "development") {
+            console.error("[LOGIN] Error:", err);
+          }
           return null;
         }
       },
@@ -95,7 +103,9 @@ export const authOptions: NextAuthOptions = {
             user.role = data?.user?.role;
           }
         } catch (error) {
-          console.error("Error authenticating with backend:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("[SIGNIN] Error authenticating with backend:", error);
+          }
           return false;
         }
       }
@@ -113,7 +123,17 @@ export const authOptions: NextAuthOptions = {
 
       // Initial sign-in
       if (user && account) {
-        console.log("[AUTH DEBUG] Initial sign-in for user:", user.email);
+        if (process.env.NODE_ENV === "development") {
+          console.log("[JWT] Initial sign-in for user:", user.email);
+          console.log("[JWT] Tokens received:", {
+            hasBackendToken: !!user.backendToken,
+            hasRefreshToken: !!user.refreshToken,
+            backendTokenPreview: user.backendToken
+              ? user.backendToken.substring(0, 20) + "..."
+              : "NONE",
+          });
+        }
+
         return {
           ...token,
           id: user.id,
@@ -129,16 +149,39 @@ export const authOptions: NextAuthOptions = {
         token.accessTokenExpires &&
         Date.now() > (token.accessTokenExpires as number) - 10 * 60 * 1000
       ) {
-        console.log(
-          "[AUTH DEBUG] Backend token expiring soon, attempting refresh for:",
-          token.email,
-        );
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "[AUTH] Backend token expiring soon, attempting refresh for:",
+            token.email,
+            "Current time:",
+            new Date(Date.now()).toISOString(),
+            "Token expires at:",
+            new Date(token.accessTokenExpires as number).toISOString(),
+          );
+        }
         try {
           if (!token.refreshToken) {
-            console.error("[AUTH DEBUG] No refresh token available");
-            throw new Error("Missing refresh token");
+            if (process.env.NODE_ENV === "development") {
+              console.error(
+                "[AUTH] CRITICAL: No refresh token available in JWT token",
+                {
+                  email: token.email,
+                  hasBackendToken: !!token.backendToken,
+                  hasRefreshToken: !!token.refreshToken,
+                  tokenKeys: Object.keys(token),
+                },
+              );
+            }
+            throw new Error(
+              "Missing refresh token - cannot refresh access token. User will need to login again.",
+            );
           }
 
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "[AUTH] Calling /auth/refresh-token with refresh token",
+            );
+          }
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_BASE_API}/auth/refresh-token`,
             {
@@ -155,14 +198,36 @@ export const authOptions: NextAuthOptions = {
           const refreshedTokens = await response.json();
 
           if (!response.ok) {
-            console.error(
-              "[AUTH DEBUG] Token refresh failed:",
-              refreshedTokens,
+            if (process.env.NODE_ENV === "development") {
+              console.error("[AUTH] Token refresh API failed:", {
+                status: response.status,
+                response: refreshedTokens,
+                email: token.email,
+              });
+            }
+            throw new Error(
+              `Token refresh failed: ${refreshedTokens.message || "Unknown error"}`,
             );
-            throw new Error("Token refresh failed");
           }
 
-          console.log("[AUTH DEBUG] Token refreshed successfully");
+          if (!refreshedTokens.data?.accessToken) {
+            if (process.env.NODE_ENV === "development") {
+              console.error("[AUTH] Backend returned no access token:", {
+                response: refreshedTokens,
+                email: token.email,
+              });
+            }
+            throw new Error(
+              "Backend returned no access token in refresh response",
+            );
+          }
+
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "[AUTH] ✅ Token refreshed successfully for:",
+              token.email,
+            );
+          }
           return {
             ...token,
             backendToken: refreshedTokens.data.accessToken,
@@ -171,7 +236,13 @@ export const authOptions: NextAuthOptions = {
             accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
           };
         } catch (error) {
-          console.error("[AUTH] Token refresh error:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("[AUTH] ❌ Token refresh failed:", {
+              error: error instanceof Error ? error.message : error,
+              email: token.email,
+              hasRefreshToken: !!token.refreshToken,
+            });
+          }
           return {
             ...token,
             error: "RefreshTokenError",
@@ -179,40 +250,49 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      console.log(
-        "[JWT DEBUG] Returning token as-is for:",
-        token?.email || "unknown",
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.log("[JWT] Token still valid for:", token?.email || "unknown", {
+          expiresAt: token?.accessTokenExpires
+            ? new Date(token.accessTokenExpires as number).toISOString()
+            : "unknown",
+        });
+      }
       // Token is still valid, return as-is
       return token;
     },
     async session({ session, token }) {
-      console.log(
-        "[SESSION DEBUG] Session callback called for:",
-        token?.email || "unknown",
-      );
-      console.log(
-        "[SESSION DEBUG] Token has backendToken:",
-        !!token?.backendToken,
-      );
-      console.log(
-        "[SESSION DEBUG] Token preview:",
-        token?.backendToken
-          ? token.backendToken.toString().substring(0, 20) + "..."
-          : "NONE",
-      );
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "[SESSION] Session callback - preparing session for:",
+          token?.email || "unknown",
+        );
+        console.log("[SESSION] Token state:", {
+          hasBackendToken: !!token?.backendToken,
+          hasRefreshToken: !!token?.refreshToken,
+          hasError: !!token?.error,
+          errorMessage: token?.error || "none",
+        });
+      }
+
       if (session?.user) {
         session.user.id = token?.id as string;
         session.user.role = token?.role as string;
       }
+
       // Add custom properties to session
       session.backendToken = token?.backendToken as string;
       session.refreshToken = token?.refreshToken as string;
       session.error = token?.error as string;
-      console.log(
-        "[SESSION DEBUG] Session prepared with backendToken:",
-        !!session.backendToken,
-      );
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("[SESSION] ✅ Session prepared:", {
+          email: token?.email,
+          hasBackendToken: !!session.backendToken,
+          hasRefreshToken: !!session.refreshToken,
+          error: session.error || "none",
+        });
+      }
+
       return session;
     },
     async redirect({ url, baseUrl }) {

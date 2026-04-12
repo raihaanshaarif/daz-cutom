@@ -110,7 +110,9 @@ export default function ContactList() {
             cache: "no-store",
           },
         );
-        const { data, pagination } = await res.json();
+        const response = await res.json();
+        const data = response?.data || [];
+        const pagination = response?.meta || {};
         // console.log("API response data:", data);
         // console.log("Number of contacts returned:", data?.length || 0);
 
@@ -217,9 +219,7 @@ export default function ContactList() {
               // console.log(`Success from ${endpoint}:`, data);
 
               // Handle different response structures
-              const usersArray = Array.isArray(data)
-                ? data
-                : data?.data || data?.users || [];
+              const usersArray = data?.data || [];
 
               if (usersArray.length > 0) {
                 usersData = usersArray;
@@ -247,9 +247,7 @@ export default function ContactList() {
 
             if (contactsRes.ok) {
               const contactsData = await contactsRes.json();
-              const contacts = Array.isArray(contactsData)
-                ? contactsData
-                : contactsData?.data || [];
+              const contacts = contactsData?.data || [];
 
               // Extract unique users from contacts
               const uniqueUsers = new Map();

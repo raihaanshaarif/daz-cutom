@@ -91,9 +91,7 @@ export default function CreateCommercialForm() {
         );
         if (res.ok) {
           const json = await res.json();
-          const arr: Order[] = Array.isArray(json)
-            ? json
-            : json.data || json.orders || [];
+          const arr: Order[] = json?.data || [];
           setSearchResults(arr);
           setShowDropdown(true);
         }
@@ -182,7 +180,7 @@ export default function CreateCommercialForm() {
 
       const result = await res.json();
 
-      if (res.ok && result?.id) {
+      if (res.ok && result?.data?.id) {
         toast.success("Commercial created successfully!");
         setTimeout(() => {
           router.push("/dashboard/commercial/invoice-list");

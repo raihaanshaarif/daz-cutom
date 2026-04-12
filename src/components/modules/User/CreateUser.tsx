@@ -64,7 +64,7 @@ export default function CreateUser() {
   const onSubmit = async (values: UserFormValues) => {
     try {
       const res = await register(values);
-      if (res?.id) {
+      if (res?.data?.id) {
         toast.success("User created successfully");
         router.push("/dashboard/user/user-list");
       }
