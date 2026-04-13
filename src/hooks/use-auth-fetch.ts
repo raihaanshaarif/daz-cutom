@@ -8,6 +8,7 @@ import { useCallback, useEffect } from "react";
 export function useAuthFetch() {
   const { data: session, status, update: updateSession } = useSession();
   const backendToken = session?.backendToken;
+  const refreshToken = session?.refreshToken;
   const error = session?.error;
 
   // Sign out if there's a refresh token error
@@ -141,13 +142,16 @@ export function useAuthFetch() {
 
       return response;
     },
-    [backendToken, status, updateSession],
+    [backendToken, refreshToken, status, updateSession],
   );
 
   return {
     authFetch,
     backendToken,
+    refreshToken,
     isAuthenticated: !!backendToken,
+    hasRefreshToken: !!refreshToken,
     isLoading: status === "loading",
+    authError: error || null,
   };
 }

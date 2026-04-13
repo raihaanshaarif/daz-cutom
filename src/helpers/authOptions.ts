@@ -122,7 +122,7 @@ export const authOptions: NextAuthOptions = {
       // );
 
       // Initial sign-in
-      if (user && account) {
+      if (user) {
         if (process.env.NODE_ENV === "development") {
           console.log("[JWT] Initial sign-in for user:", user.email);
           console.log("[JWT] Tokens received:", {
@@ -130,6 +130,9 @@ export const authOptions: NextAuthOptions = {
             hasRefreshToken: !!user.refreshToken,
             backendTokenPreview: user.backendToken
               ? user.backendToken.substring(0, 20) + "..."
+              : "NONE",
+            refreshTokenPreview: user.refreshToken
+              ? user.refreshToken.substring(0, 20) + "..."
               : "NONE",
           });
         }
@@ -226,13 +229,31 @@ export const authOptions: NextAuthOptions = {
             console.log(
               "[AUTH] ✅ Token refreshed successfully for:",
               token.email,
+              {
+                newRefreshToken: !!refreshedTokens.data.refreshToken,
+                preservedRefreshToken: !!token.refreshToken,
+              },
             );
           }
+
+          // IMPORTANT: Always preserve refresh token - either use new one or keep existing
+          const preservedRefreshToken =
+            refreshedTokens.data.refreshToken || token.refreshToken;
+
+          if (
+            process.env.NODE_ENV === "development" &&
+            !preservedRefreshToken
+          ) {
+            console.warn(
+              "[AUTH] ⚠️ WARNING: No refresh token preserved after token refresh!",
+              { email: token.email },
+            );
+          }
+
           return {
             ...token,
             backendToken: refreshedTokens.data.accessToken,
-            refreshToken:
-              refreshedTokens.data.refreshToken || token.refreshToken,
+            refreshToken: preservedRefreshToken,
             accessTokenExpires: Date.now() + 30 * 60 * 1000, // 30 minutes
           };
         } catch (error) {
@@ -255,9 +276,10 @@ export const authOptions: NextAuthOptions = {
           expiresAt: token?.accessTokenExpires
             ? new Date(token.accessTokenExpires as number).toISOString()
             : "unknown",
+          hasRefreshToken: !!token?.refreshToken,
         });
       }
-      // Token is still valid, return as-is
+      // Token is still valid, return as-is (preserving all properties including refreshToken)
       return token;
     },
     async session({ session, token }) {
