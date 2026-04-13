@@ -52,7 +52,7 @@ const UserDashboard = () => {
     authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
       .then((r) => r.json())
       .then((data) => {
-        setUser(data);
+        setUser(data?.data || data);
         setLoading(false);
       })
       .catch((err) => {
