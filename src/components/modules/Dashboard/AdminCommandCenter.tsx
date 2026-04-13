@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   Package,
   Users,
@@ -55,6 +56,116 @@ import { useRouter } from "next/navigation";
 // Types mapping to your attached folder structures
 import { Order, Commercial, Contact, User, Task } from "@/types";
 
+/**
+ * HELPER FUNCTIONS FOR SHIPMENT LOGIC
+ * These functions factor out common shipment filtering patterns
+ * to reduce code duplication and improve maintainability
+ */
+
+/**
+ * Helper function to normalize dates to UTC midnight for accurate date-only comparison
+ * @param date - Date to normalize
+ * @returns Date object set to UTC midnight
+ */
+const getNormalizedDateUTC = (date: Date | string): Date => {
+  const d = new Date(date);
+  // Convert to UTC and set time to midnight
+  return new Date(
+    Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()),
+  );
+};
+
+/**
+ * Calculate failed (overdue) shipments
+ * Returns orders whose shipDate has passed, not shipped yet, and haven't been handed over
+ * @param allOrders - Array of all orders
+ * @param now - Current date reference
+ * @returns Array of failed shipments sorted by date
+ */
+const calculateFailedShipments = (
+  allOrders: ExtendedOrder[],
+  now: Date,
+): ExtendedOrder[] => {
+  // Normalize current date to UTC midnight for proper comparison
+  const todayUTC = getNormalizedDateUTC(now);
+
+  return allOrders
+    .filter((o) => {
+      // Must have a shipDate to be considered overdue
+      if (!o.shipDate) return false;
+
+      // Normalize shipDate to UTC midnight for accurate comparison
+      const shipDateUTC = getNormalizedDateUTC(o.shipDate);
+
+      // Check if shipment date has passed (shipDate < today)
+      const isLate = shipDateUTC < todayUTC;
+      // Check if order has NOT been shipped yet
+      const isNotShipped = !o.isShipped;
+      // Check if order has been handed over: any commercialOrder with a handoverDate exists
+      const isHandedOver =
+        o.commercialOrders &&
+        o.commercialOrders.some(
+          (co) => co.commercial && co.commercial.handoverDate,
+        );
+
+      // Include only orders that are: late, not shipped, and NOT handed over
+      return isLate && isNotShipped && !isHandedOver;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.shipDate!).getTime() - new Date(b.shipDate!).getTime(),
+    );
+};
+
+/**
+ * Calculate upcoming shipments for forecasting
+ * Returns orders whose shipDate is within the next 30 days, not shipped yet, and not handed over
+ * @param allOrders - Array of all orders
+ * @param now - Current date reference
+ * @returns Array of upcoming shipments sorted by date
+ */
+const calculateUpcomingShipments = (
+  allOrders: ExtendedOrder[],
+  now: Date,
+): ExtendedOrder[] => {
+  // Normalize current date to UTC midnight
+  const todayUTC = getNormalizedDateUTC(now);
+
+  // Calculate 30 days from now - defines the forecasting window
+  const thirtyDaysFromNowUTC = new Date(
+    todayUTC.getTime() + 30 * 24 * 60 * 60 * 1000,
+  );
+
+  return allOrders
+    .filter((o) => {
+      // Must have a shipDate to be scheduled for shipment
+      if (!o.shipDate) return false;
+
+      // Normalize shipDate to UTC midnight for accurate comparison
+      const shipDateUTC = getNormalizedDateUTC(o.shipDate);
+
+      // Check if shipment date is today or in the future (shipDate >= today)
+      const isFuture = shipDateUTC >= todayUTC;
+      // Check if shipment date is within 30 days window
+      const withinWindow = shipDateUTC <= thirtyDaysFromNowUTC;
+      // Check if order has NOT been shipped yet
+      const isNotShipped = !o.isShipped;
+      // Check if order has been handed over: any commercialOrder with a handoverDate exists
+      const isHandedOver =
+        o.commercialOrders &&
+        o.commercialOrders.some(
+          (co) => co.commercial && co.commercial.handoverDate,
+        );
+
+      // Include orders scheduled for upcoming period that are: in 30-day window, not shipped and NOT handed over
+      return isFuture && withinWindow && isNotShipped && !isHandedOver;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.shipDate!).getTime() - new Date(b.shipDate!).getTime(),
+    );
+};
+
 interface ExtendedOrder extends Order {
   commercialOrders?: any[];
 }
@@ -70,6 +181,7 @@ interface DashboardStats {
     avgOrderValue: number;
     monthlyTrend: number; // percentage
     failedShipments: ExtendedOrder[];
+    upcomingShipments: ExtendedOrder[];
     receivedThisMonth: number;
   };
   commercial: {
@@ -104,6 +216,7 @@ import { useAuthFetch } from "@/hooks/use-auth-fetch";
 const AdminCommandCenter = () => {
   // --- Initialization & State ---
   const { authFetch, isLoading: isAuthLoading } = useAuthFetch();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [timeframe, setTimeframe] = useState("month");
@@ -168,6 +281,53 @@ const AdminCommandCenter = () => {
         const allContacts: Contact[] = contactsRes.data || [];
         const userList: UserWithTasks[] = usersRes?.data || [];
 
+        // Apply role-based filtering for orders
+        // ADMIN, SUPER_ADMIN, and COMMERCIAL can see all orders
+        // MERCHANDISER and USER can only see orders for their assigned buyers
+        let filteredOrders = allOrders;
+        const userRole = session?.user?.role;
+        if (
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL"
+        ) {
+          const assignedBuyerIds =
+            session?.user?.assignedBuyers?.map((buyer: any) => buyer.id) || [];
+          if (assignedBuyerIds.length === 0) {
+            filteredOrders = [];
+          } else {
+            filteredOrders = allOrders.filter(
+              (order: ExtendedOrder) =>
+                order.buyerId && assignedBuyerIds.includes(order.buyerId),
+            );
+          }
+        }
+
+        // Apply role-based filtering for commercials
+        // ADMIN, SUPER_ADMIN, and COMMERCIAL can see all commercials
+        // MERCHANDISER and USER can only see commercials for their assigned buyers' orders
+        let filteredCommercials = allCommercials;
+        if (
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL"
+        ) {
+          const assignedBuyerIds =
+            session?.user?.assignedBuyers?.map((buyer: any) => buyer.id) || [];
+          if (assignedBuyerIds.length === 0) {
+            filteredCommercials = [];
+          } else {
+            filteredCommercials = allCommercials.filter(
+              (commercial: Commercial) => {
+                const orders = commercial.orders;
+                const buyerId = orders?.find((o: any) => o.order?.buyer?.id)
+                  ?.order?.buyer?.id;
+                return buyerId && assignedBuyerIds.includes(buyerId);
+              },
+            );
+          }
+        }
+
         // 3. Enrich Users with Tasks for Performance Tracking (single batch call)
         const userIds = userList.map((u) => u.id).join(",");
         if (!userIds) {
@@ -197,31 +357,27 @@ const AdminCommandCenter = () => {
           };
         });
 
-        // 5. Order Logic: Filter for current timeframe & Find "Failed Shipments"
-        const timeframeOrders = allOrders.filter((o) => {
+        // 5. Order Logic: Filter for current timeframe
+        const timeframeOrders = filteredOrders.filter((o) => {
           const d = new Date(o.createdAt);
           return d >= startDate && d <= endDate;
         });
 
-        const failedShipments = allOrders
-          .filter((o) => {
-            const hasHandover =
-              o.commercialOrders && o.commercialOrders.length > 0;
-            const isLate = o.shipDate && new Date(o.shipDate) < now;
-            return isLate && !hasHandover;
-          })
-          .sort(
-            (a, b) =>
-              new Date(a.shipDate!).getTime() - new Date(b.shipDate!).getTime(),
-          );
+        // Calculate failed shipments (overdue) and upcoming shipments using factored helper functions
+        // This reduces code duplication and makes shipment calculations reusable
+        const failedShipments = calculateFailedShipments(filteredOrders, now);
+        const upcomingShipments = calculateUpcomingShipments(
+          filteredOrders,
+          now,
+        );
 
         // 6. Commercial Logic: Calculate LAC (Commission) & Shipped Status
-        const timeframeInvoices = allCommercials.filter((c) => {
+        const timeframeInvoices = filteredCommercials.filter((c) => {
           const d = new Date(c.createdAt || (c as any).etd);
           return d >= startDate && d <= endDate;
         });
 
-        const shippedInvoices = allCommercials.filter((c) => {
+        const shippedInvoices = filteredCommercials.filter((c) => {
           if (!c.etd) return false;
           const etdDate = new Date(c.etd);
           return etdDate >= startDate && etdDate <= endDate;
@@ -289,6 +445,7 @@ const AdminCommandCenter = () => {
                 : 0,
             monthlyTrend: 12.5,
             failedShipments: failedShipments.slice(0, 10),
+            upcomingShipments: upcomingShipments.slice(0, 10),
             receivedThisMonth: timeframeOrders.length,
           },
           commercial: {
@@ -338,7 +495,13 @@ const AdminCommandCenter = () => {
     };
 
     fetchFullIntelligence();
-  }, [timeframe, authFetch, isAuthLoading]);
+  }, [
+    timeframe,
+    authFetch,
+    isAuthLoading,
+    session?.user?.role,
+    session?.user?.assignedBuyers,
+  ]);
 
   if (loading || !stats) return <Loading />;
 
@@ -516,6 +679,123 @@ const AdminCommandCenter = () => {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+
+          {/* UPCOMING SHIPMENT FORECAST - Next 30 Days */}
+          <Card className="border-none shadow-xl shadow-slate-200/50">
+            <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
+              <div>
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <Truck className="w-5 h-5 text-blue-500" />
+                  Upcoming Shipment
+                </CardTitle>
+                <CardDescription>
+                  Orders scheduled for shipment in the next 30 days
+                </CardDescription>
+              </div>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                {stats.orders.upcomingShipments.length} Forecast
+              </Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+              {/* Empty state message when no upcoming shipments */}
+              {stats.orders.upcomingShipments.length === 0 ? (
+                <div className="p-8 text-center text-slate-500">
+                  <Package className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p className="text-sm font-medium">No upcoming shipments</p>
+                  <p className="text-xs text-slate-400">
+                    All scheduled orders are either completed or beyond 30 days
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader className="bg-slate-50">
+                    <TableRow>
+                      <TableHead className="font-bold text-xs">
+                        ORDER #
+                      </TableHead>
+                      <TableHead className="font-bold text-xs">BUYER</TableHead>
+                      <TableHead className="font-bold text-xs">
+                        SHIP DATE
+                      </TableHead>
+                      <TableHead className="font-bold text-xs">
+                        DAYS TO SHIP
+                      </TableHead>
+                      <TableHead className="font-bold text-xs text-right">
+                        VALUE
+                      </TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stats.orders.upcomingShipments.map((order) => {
+                      // Calculate days until shipment for better forecasting visibility
+                      const daysToShip = order.shipDate
+                        ? Math.ceil(
+                            (new Date(order.shipDate).getTime() -
+                              new Date().getTime()) /
+                              (1000 * 60 * 60 * 24),
+                          )
+                        : 0;
+
+                      return (
+                        <TableRow
+                          key={order.id}
+                          className="hover:bg-blue-50/30 transition-colors group"
+                        >
+                          <TableCell className="font-mono text-xs font-bold">
+                            {order.orderNumber}
+                          </TableCell>
+                          <TableCell className="text-xs font-medium">
+                            {order.buyer?.name}
+                          </TableCell>
+                          <TableCell className="text-xs">
+                            <span className="text-blue-600 font-bold">
+                              {formatDate(order.shipDate)}
+                            </span>
+                          </TableCell>
+                          {/* Days to ship badge with color coding for prioritization */}
+                          <TableCell className="text-xs">
+                            <Badge
+                              variant="outline"
+                              className={
+                                daysToShip <= 7
+                                  ? "bg-amber-50 text-amber-700 border-amber-200 font-bold"
+                                  : daysToShip <= 14
+                                    ? "bg-blue-50 text-blue-700 border-blue-200 font-bold"
+                                    : "bg-emerald-50 text-emerald-700 border-emerald-200 font-bold"
+                              }
+                            >
+                              {daysToShip}d
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-bold text-xs">
+                            {formatUSD(order.totalPrice || 0)}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger>
+                                <MoreVertical className="w-4 h-4 text-slate-400" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setViewingOrder(order);
+                                    setIsViewModalOpen(true);
+                                  }}
+                                >
+                                  View Order
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
 

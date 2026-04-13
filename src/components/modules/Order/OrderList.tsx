@@ -110,7 +110,9 @@ export default function OrderList() {
       try {
         // Determine if we need to fetch all orders or paginated results
         const shouldFetchAll =
-          userRole !== "ADMIN" && userRole !== "SUPER_ADMIN";
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL";
 
         const ordersParams = new URLSearchParams({
           page: shouldFetchAll ? "1" : currentPage.toString(),
@@ -158,8 +160,14 @@ export default function OrderList() {
         // Filter orders based on user role and assigned buyers
         let filteredOrders: Order[] = ordersData || [];
 
-        if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
-          // For regular users, only show orders where buyer is assigned to them
+        // ADMIN, SUPER_ADMIN, and COMMERCIAL roles can see all orders
+        // MERCHANDISER and USER roles can only see orders for their assigned buyers
+        if (
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN" &&
+          userRole !== "COMMERCIAL"
+        ) {
+          // For regular users (MERCHANDISER, USER), only show orders where buyer is assigned to them
           const assignedBuyerIds =
             userData?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
 
@@ -222,7 +230,7 @@ export default function OrderList() {
           );
           setOrderItems(mappedItems);
         } else {
-          // For admin/super admin users, use API pagination directly
+          // For admin/super admin/commercial users, use API pagination directly
           setOrders(filteredOrders);
 
           // Create OrderItems from API results

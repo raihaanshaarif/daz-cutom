@@ -115,12 +115,14 @@ const UserCommandCenter = () => {
         const user = userRes;
         const assignedBuyerIds =
           user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
-        const isAdminOrSuperAdmin =
-          user?.role === "admin" || user?.role === "super_admin";
+        const isAdminOrSuperAdminOrCommercial =
+          user?.role === "ADMIN" ||
+          user?.role === "SUPER_ADMIN" ||
+          user?.role === "COMMERCIAL";
 
-        // For admin/super admin: show all orders
-        // For regular users: show only orders where buyer is assigned to them
-        const filteredOrders = isAdminOrSuperAdmin
+        // For admin/super admin/commercial: show all orders
+        // For regular users (MERCHANDISER, USER): show only orders where buyer is assigned to them
+        const filteredOrders = isAdminOrSuperAdminOrCommercial
           ? allOrders
           : allOrders.filter(
               (order: Order) =>
@@ -133,14 +135,17 @@ const UserCommandCenter = () => {
         let userCommercials = allCommercials;
 
         // Apply buyer assignment filtering for non-admin users
-        if (!isAdminOrSuperAdmin && assignedBuyerIds.length > 0) {
+        if (!isAdminOrSuperAdminOrCommercial && assignedBuyerIds.length > 0) {
           userCommercials = allCommercials.filter((commercial: Commercial) => {
             const orders = commercial.orders;
             const buyerId = orders?.find((o) => o.order?.buyer?.id)?.order
               ?.buyer?.id;
             return buyerId && assignedBuyerIds.includes(buyerId);
           });
-        } else if (!isAdminOrSuperAdmin && assignedBuyerIds.length === 0) {
+        } else if (
+          !isAdminOrSuperAdminOrCommercial &&
+          assignedBuyerIds.length === 0
+        ) {
           userCommercials = [];
         }
 

@@ -6,6 +6,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role?: string;
+      assignedBuyers?: { id: number; name: string }[];
     } & DefaultSession["user"];
     backendToken?: string;
     refreshToken?: string;
@@ -17,6 +18,7 @@ declare module "next-auth" {
     backendToken?: string;
     refreshToken?: string;
     role?: string;
+    assignedBuyers?: { id: number; name: string }[];
   }
 }
 
