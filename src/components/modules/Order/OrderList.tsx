@@ -145,7 +145,9 @@ export default function OrderList() {
           ],
         );
 
-        const { data: ordersData, pagination } = await ordersRes.json();
+        const ordersResponse = await ordersRes.json();
+        const ordersData = ordersResponse?.data || [];
+        const pagination = ordersResponse?.meta || {};
         const userResponse = await userRes.json();
         const userData = userResponse?.data || userResponse;
 
