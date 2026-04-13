@@ -158,12 +158,6 @@ export default function OrderList() {
           setFactories(f?.data || []);
         }
 
-        // Debug logging
-        console.log("[OrderList] User Data:", userData);
-        console.log("[OrderList] Assigned Buyers:", userData?.assignedBuyers);
-        console.log("[OrderList] User Role:", userRole);
-        console.log("[OrderList] Orders Data:", ordersData);
-
         // Filter orders based on user role and assigned buyers
         let filteredOrders: Order[] = ordersData || [];
 
@@ -178,34 +172,16 @@ export default function OrderList() {
           const assignedBuyerIds =
             userData?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
 
-          console.log("[OrderList] Assigned Buyer IDs:", assignedBuyerIds);
-          console.log(
-            "[OrderList] Order Buyer IDs:",
-            ordersData?.map((o: Order) => o.buyerId),
-          );
-
           // If no buyers are assigned, show no data
           if (assignedBuyerIds.length === 0) {
-            console.log("[OrderList] No assigned buyers, filtering to empty");
             filteredOrders = [];
           } else {
-            console.log(
-              "[OrderList] Filtering orders - checking each order's buyerId against assigned buyers",
-            );
             filteredOrders = filteredOrders.filter((order: Order) => {
               const match =
                 order.buyerId && assignedBuyerIds.includes(order.buyerId);
-              console.log(
-                `[OrderList] Order ${order.orderNumber} (buyerId: ${order.buyerId}): ${match ? "MATCH" : "NO MATCH"}`,
-              );
               return match;
             });
           }
-
-          console.log(
-            "[OrderList] Final filtered orders count:",
-            filteredOrders.length,
-          );
 
           // Apply client-side pagination for filtered results
           const startIndex = (currentPage - 1) * limit;

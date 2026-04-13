@@ -74,6 +74,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const isAdmin =
     session?.user?.role === "ADMIN" || session?.user?.role === "SUPER_ADMIN";
 
+  const isCommercialUser =
+    session?.user?.role === "ADMIN" ||
+    session?.user?.role === "SUPER_ADMIN" ||
+    session?.user?.role === "COMMERCIAL";
+
   const navGroups: NavGroup[] = [
     {
       label: "Overview",
@@ -203,11 +208,15 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               url: "/dashboard/order/report",
               icon: BarChart3,
             },
-            {
-              title: "Commercial Report",
-              url: "/dashboard/commercial/report",
-              icon: BarChart3,
-            },
+            ...(isCommercialUser
+              ? [
+                  {
+                    title: "Commercial Report",
+                    url: "/dashboard/commercial/report",
+                    icon: BarChart3,
+                  },
+                ]
+              : []),
             {
               title: "Development Report",
               url: "/dashboard/development/report",

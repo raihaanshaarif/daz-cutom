@@ -51,9 +51,6 @@ export default function DevelopmentReportPage() {
   const { authFetch } = useAuthFetch();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
-  const userRole = session?.user?.role ?? "";
-  const isAdminOrSuperAdmin =
-    userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   useEffect(() => {
     const fetchFilterData = async () => {
@@ -74,18 +71,8 @@ export default function DevelopmentReportPage() {
     const fetchSamples = async () => {
       setLoading(true);
       try {
-        // Determine if we need to fetch all samples or paginated results
-        const shouldFetchAll =
-          userRole !== "ADMIN" &&
-          userRole !== "SUPER_ADMIN" &&
-          userRole !== "COMMERCIAL";
-
         const params = new URLSearchParams();
-        if (shouldFetchAll) {
-          params.set("limit", "10000"); // Large limit to get all samples for filtering
-        } else {
-          params.set("limit", "1000"); // Normal limit for admin users
-        }
+        params.set("limit", "10000"); // Large limit to get all samples for filtering
 
         if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
         if (selectedStatus !== "all")
@@ -93,47 +80,51 @@ export default function DevelopmentReportPage() {
         if (selectedSeason !== "all")
           params.append("seasonYear", selectedSeason);
 
+        // Fetch samples and user data in parallel
         const [samplesRes, userRes] = await Promise.all([
           authFetch(
             `${process.env.NEXT_PUBLIC_BASE_API}/development/?${params.toString()}`,
+          ).then((r) => r.json()),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`).then(
+            (r) => r.json(),
           ),
-          shouldFetchAll
-            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
-            : Promise.resolve(null),
         ]);
 
-        const result = await samplesRes.json();
-        let samplesData = result.data || [];
+        const samplesData = samplesRes?.data || [];
+        const user = userRes?.data || userRes;
 
         // Filter samples based on user role and assigned buyers
-        if (shouldFetchAll && userRes) {
-          const user = await userRes.json();
+        let filteredSamples = samplesData;
+        const isAdminOrSuperAdminOrCommercial =
+          user?.role === "ADMIN" ||
+          user?.role === "SUPER_ADMIN" ||
+          user?.role === "COMMERCIAL";
+
+        if (!isAdminOrSuperAdminOrCommercial) {
           const assignedBuyerIds =
             user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
 
           if (assignedBuyerIds.length === 0) {
-            // If no buyers assigned, show no samples
-            samplesData = [];
+            filteredSamples = [];
           } else {
-            // Filter samples where buyerId matches assigned buyers
-            samplesData = samplesData.filter(
+            filteredSamples = samplesData.filter(
               (sample: DevelopmentSample) =>
                 sample.buyerId && assignedBuyerIds.includes(sample.buyerId),
             );
           }
         }
 
-        setSamples(samplesData);
+        setSamples(filteredSamples);
 
         setMetrics({
-          totalSamples: samplesData.length,
-          approvedSamples: samplesData.filter(
+          totalSamples: filteredSamples.length,
+          approvedSamples: filteredSamples.filter(
             (s: DevelopmentSample) => s.smsStatus === "APPROVED",
           ).length,
-          pendingSamples: samplesData.filter(
+          pendingSamples: filteredSamples.filter(
             (s: DevelopmentSample) => s.smsStatus === "PENDING",
           ).length,
-          rejectedSamples: samplesData.filter(
+          rejectedSamples: filteredSamples.filter(
             (s: DevelopmentSample) => s.smsStatus === "DROPPED",
           ).length,
         });
@@ -144,15 +135,7 @@ export default function DevelopmentReportPage() {
       }
     };
     fetchSamples();
-  }, [
-    selectedBuyer,
-    selectedStatus,
-    selectedSeason,
-    authFetch,
-    userId,
-    userRole,
-    isAdminOrSuperAdmin,
-  ]);
+  }, [selectedBuyer, selectedStatus, selectedSeason, authFetch, userId]);
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-8 max-w-[1600px] mx-auto w-full bg-zinc-50/50 min-h-screen">

@@ -48,9 +48,6 @@ export default function OrderReportPage() {
   const { authFetch } = useAuthFetch();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
-  const userRole = session?.user?.role ?? "";
-  const isAdminOrSuperAdmin =
-    userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
   // Fetch buyers and factories for filters
   useEffect(() => {
@@ -76,13 +73,9 @@ export default function OrderReportPage() {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        // Determine if we need to fetch all orders or paginated results
-        const shouldFetchAll =
-          userRole !== "ADMIN" &&
-          userRole !== "SUPER_ADMIN" &&
-          userRole !== "COMMERCIAL";
-
         const params = new URLSearchParams();
+        params.set("limit", "10000"); // Large limit to get all orders for filtering
+
         if (selectedBuyer !== "all") params.append("buyerId", selectedBuyer);
         if (selectedFactory !== "all")
           params.append("factoryId", selectedFactory);
@@ -93,35 +86,34 @@ export default function OrderReportPage() {
           );
         }
 
-        // For non-admin users, fetch all orders to filter client-side
-        if (shouldFetchAll) {
-          params.set("limit", "10000"); // Large limit to get all orders
-        }
-
+        // Fetch orders and user data in parallel
         const [ordersRes, userRes] = await Promise.all([
           authFetch(
             `${process.env.NEXT_PUBLIC_BASE_API}/order/orders?${params.toString()}`,
+          ).then((r) => r.json()),
+          authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`).then(
+            (r) => r.json(),
           ),
-          shouldFetchAll
-            ? authFetch(`${process.env.NEXT_PUBLIC_BASE_API}/user/${userId}`)
-            : Promise.resolve(null),
         ]);
 
-        const { data } = await ordersRes.json();
-        let ordersData = data || [];
+        const ordersData = ordersRes?.data || [];
+        const user = userRes?.data || userRes;
 
         // Filter orders based on user role and assigned buyers
-        if (shouldFetchAll && userRes) {
-          const user = await userRes.json();
+        let filteredOrders = ordersData;
+        const isAdminOrSuperAdminOrCommercial =
+          user?.role === "ADMIN" ||
+          user?.role === "SUPER_ADMIN" ||
+          user?.role === "COMMERCIAL";
+
+        if (!isAdminOrSuperAdminOrCommercial) {
           const assignedBuyerIds =
             user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
 
           if (assignedBuyerIds.length === 0) {
-            // If no buyers assigned, show no orders
-            ordersData = [];
+            filteredOrders = [];
           } else {
-            // Filter orders where buyerId matches assigned buyers
-            ordersData = ordersData.filter(
+            filteredOrders = ordersData.filter(
               (order: Order) =>
                 order.buyerId && assignedBuyerIds.includes(order.buyerId),
             );
@@ -129,7 +121,7 @@ export default function OrderReportPage() {
         }
 
         // Map to OrderItem format for table
-        const mappedItems: OrderItem[] = ordersData.map((order: Order) => ({
+        const mappedItems: OrderItem[] = filteredOrders.map((order: Order) => ({
           id: order.id,
           orderNumber: order.orderNumber,
           shipDate: order.shipDate,
@@ -166,12 +158,12 @@ export default function OrderReportPage() {
         setOrderItems(mappedItems);
 
         // Calculate metrics
-        const totalOrders = ordersData.length;
-        const totalValue = ordersData.reduce(
+        const totalOrders = filteredOrders.length;
+        const totalValue = filteredOrders.reduce(
           (sum: number, order: Order) => sum + (order.totalPrice || 0),
           0,
         );
-        const totalCommission = ordersData.reduce(
+        const totalCommission = filteredOrders.reduce(
           (sum: number, order: Order) => sum + (order.dazCommission || 0),
           0,
         );
@@ -194,8 +186,6 @@ export default function OrderReportPage() {
     selectedShippedStatus,
     authFetch,
     userId,
-    userRole,
-    isAdminOrSuperAdmin,
   ]);
 
   return (

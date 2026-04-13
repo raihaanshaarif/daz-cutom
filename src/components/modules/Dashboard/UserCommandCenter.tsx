@@ -116,16 +116,6 @@ const UserCommandCenter = () => {
         const assignedBuyerIds =
           user?.assignedBuyers?.map((buyer: Buyer) => buyer.id) || [];
 
-        console.log("[UserCommandCenter] User data:", user);
-        console.log(
-          "[UserCommandCenter] Assigned buyers:",
-          user?.assignedBuyers,
-        );
-        console.log(
-          "[UserCommandCenter] Assigned buyer IDs:",
-          assignedBuyerIds,
-        );
-
         const isAdminOrSuperAdminOrCommercial =
           user?.role === "ADMIN" ||
           user?.role === "SUPER_ADMIN" ||
@@ -140,12 +130,6 @@ const UserCommandCenter = () => {
                 assignedBuyerIds.length > 0 &&
                 assignedBuyerIds.includes(order.buyerId),
             );
-
-        console.log("[UserCommandCenter] Total orders:", allOrders.length);
-        console.log(
-          "[UserCommandCenter] Filtered orders:",
-          filteredOrders.length,
-        );
 
         // Process commercials - filter by user buyer assignments
         const allCommercials = commercialsRes?.data || [];
