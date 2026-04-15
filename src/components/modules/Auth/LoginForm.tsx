@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { FieldValues, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,9 @@ import { signIn } from "next-auth/react";
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const form = useForm<FieldValues>({
     defaultValues: {
       email: "",
@@ -29,19 +33,30 @@ export default function LoginForm() {
     },
   });
 
+  // Check for error from NextAuth redirect
+  useEffect(() => {
+    const errorParam = searchParams.get("error");
+    if (errorParam) {
+      setError("Invalid email or password. Please try again.");
+    }
+  }, [searchParams]);
+
   const onSubmit = async (values: FieldValues) => {
     setIsLoading(true);
-    try {
-      // Let NextAuth handle the redirect automatically
-      await signIn("credentials", {
-        ...values,
-        callbackUrl: "/dashboard",
-      });
-      // If we reach here and there's no error, NextAuth will redirect
-    } catch (err) {
-      console.error("Login error:", err);
-      alert("Login failed. Please try again.");
+    setError(null);
+
+    const result = await signIn("credentials", {
+      ...values,
+      callbackUrl: "/dashboard",
+      redirect: false,
+    });
+
+    if (!result?.ok) {
+      setError("Invalid email or password. Please try again.");
       setIsLoading(false);
+    } else {
+      // Redirect on successful login
+      router.push("/dashboard");
     }
   };
 
@@ -56,6 +71,13 @@ export default function LoginForm() {
             <h2 className="text-3xl font-bold text-center">
               Daz Employee Login
             </h2>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
 
             {/* Email */}
             <FormField
