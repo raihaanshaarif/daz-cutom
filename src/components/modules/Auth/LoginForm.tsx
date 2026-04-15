@@ -48,7 +48,7 @@ export default function LoginForm() {
     const result = await signIn("credentials", {
       ...values,
       callbackUrl: "/dashboard",
-      redirect: false,
+      redirect: true,
     });
 
     if (!result?.ok) {
