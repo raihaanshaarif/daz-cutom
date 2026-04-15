@@ -90,7 +90,8 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
   );
   const [isShipped, setIsShipped] = useState(order.isShipped ?? false);
 
-  const numDefault = (v?: number | null) => (v != null ? String(v) : "");
+  const numDefault = (v?: number | null) =>
+    v != null ? (Math.round(v * 100) / 100).toFixed(2) : "";
   const dateDefault = (v?: string | null) =>
     v ? new Date(v).toISOString().split("T")[0] : "";
 
