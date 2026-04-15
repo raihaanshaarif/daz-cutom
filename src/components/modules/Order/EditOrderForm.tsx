@@ -311,7 +311,8 @@ export default function EditOrderForm({ order, onClose }: EditOrderFormProps) {
               step="0.01"
               min="0"
               defaultValue={numDefault(order.dazCommission)}
-              className="h-8"
+              className="h-8 bg-gray-50"
+              disabled
             />
           </Field>
           <Field label="Discount (Factory)">
