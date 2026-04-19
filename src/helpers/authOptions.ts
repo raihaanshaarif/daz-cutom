@@ -118,7 +118,7 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account: _account }) {
       // console.log(
       //   "[JWT DEBUG] JWT callback called for:",
       //   token?.email || "unknown",
@@ -356,6 +356,4 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  trustHost: true,
-  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
 };
