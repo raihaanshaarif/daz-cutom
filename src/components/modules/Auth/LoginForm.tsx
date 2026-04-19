@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { FieldValues, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,6 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const router = useRouter();
   const { data: session, status } = useSession();
 
   const form = useForm<FieldValues>({
@@ -47,19 +46,19 @@ export default function LoginForm() {
   useEffect(() => {
     if (status === "authenticated" && session && isLoading) {
       console.log(
-        "[LoginForm] Session detected, waiting 2 seconds before redirect",
+        "[LoginForm] Session detected, waiting 1 second before redirect",
       );
 
-      // Wait 2 seconds to ensure server-side session is established
+      // Use hard redirect (window.location) to ensure server properly reads session cookie
       const timer = setTimeout(() => {
         console.log("[LoginForm] Redirecting to dashboard after delay");
         setIsLoading(false);
-        router.push("/dashboard");
-      }, 2000);
+        window.location.href = "/dashboard";
+      }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [status, session, isLoading, router]);
+  }, [status, session, isLoading]);
 
   const onSubmit = async (values: FieldValues) => {
     setIsLoading(true);
