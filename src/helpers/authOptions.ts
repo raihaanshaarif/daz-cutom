@@ -318,26 +318,24 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // If the URL is just the base URL or the login page, redirect to dashboard
-      if (url === baseUrl || url === `${baseUrl}/login`) {
-        return `${baseUrl}/dashboard`;
-      }
+      console.log("[REDIRECT CALLBACK]", { url, baseUrl });
 
-      // If URL starts with base URL origin, allow it (relative redirect)
-      if (url.startsWith(baseUrl)) {
-        return url;
-      }
+      // Always redirect to dashboard on successful sign-in
+      // The url passed here is what would normally be redirected to
+      // We override it to always go to dashboard unless it's an external URL
 
-      // For external URLs, only allow if they're on the same origin
       try {
-        if (new URL(url).origin === new URL(baseUrl).origin) {
-          return url;
+        const urlObj = new URL(url);
+        // Only allow same-origin URLs
+        if (urlObj.origin === new URL(baseUrl).origin || url.startsWith("/")) {
+          // For any same-origin URL during login, go to dashboard
+          return `${baseUrl}/dashboard`;
         }
       } catch {
-        // ignore malformed URLs
+        // If URL parsing fails, it's likely a relative path
       }
 
-      // Default: redirect to dashboard on successful login
+      // Default: redirect to dashboard
       return `${baseUrl}/dashboard`;
     },
   },
