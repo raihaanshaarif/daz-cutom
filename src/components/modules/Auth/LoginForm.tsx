@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 // type LoginFormValues = {
 //   email: string;
@@ -26,6 +26,8 @@ export default function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
+
   const form = useForm<FieldValues>({
     defaultValues: {
       email: "",
@@ -41,42 +43,51 @@ export default function LoginForm() {
     }
   }, [searchParams]);
 
+  // Watch for session changes and redirect when authenticated
+  useEffect(() => {
+    if (status === "authenticated" && session && isLoading) {
+      console.log("[LoginForm] Session detected, redirecting to dashboard");
+      setIsLoading(false);
+      router.push("/dashboard");
+    }
+  }, [status, session, isLoading, router]);
+
   const onSubmit = async (values: FieldValues) => {
     setIsLoading(true);
     setError(null);
 
+    console.log("[LoginForm] Starting login process...");
+
     try {
+      console.log("[LoginForm] Calling signIn with credentials");
       const result = await signIn("credentials", {
-        ...values,
-        callbackUrl: "/dashboard",
+        email: values.email,
+        password: values.password,
         redirect: false,
       });
 
+      console.log("[LoginForm] signIn result:", {
+        ok: result?.ok,
+        error: result?.error,
+        status: result?.status,
+        url: result?.url,
+      });
+
       if (!result?.ok || result?.error) {
-        setError(result?.error || "Invalid email or password. Please try again.");
+        console.log("[LoginForm] Login failed, setting error:", result?.error);
+        setError(
+          result?.error || "Invalid email or password. Please try again.",
+        );
         setIsLoading(false);
         return;
       }
 
-      // Add a small delay to ensure session is established before redirecting
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // Redirect on successful login
-      try {
-        router.push("/dashboard");
-      } catch (redirectErr) {
-        if (process.env.NODE_ENV === "development") {
-          console.error("[LoginForm] Redirect error:", redirectErr);
-        }
-        setError("Failed to redirect to dashboard. Please refresh the page.");
-        setIsLoading(false);
-      }
+      console.log("[LoginForm] Login successful, waiting for session update");
+      // The useEffect above will handle the redirect when session updates
     } catch (err) {
+      console.error("[LoginForm] Caught error:", err);
       setError("An error occurred during login. Please try again.");
       setIsLoading(false);
-      if (process.env.NODE_ENV === "development") {
-        console.error("[LoginForm] Error:", err);
-      }
     }
   };
 
