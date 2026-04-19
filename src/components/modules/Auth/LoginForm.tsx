@@ -46,9 +46,18 @@ export default function LoginForm() {
   // Watch for session changes and redirect when authenticated
   useEffect(() => {
     if (status === "authenticated" && session && isLoading) {
-      console.log("[LoginForm] Session detected, redirecting to dashboard");
-      setIsLoading(false);
-      router.push("/dashboard");
+      console.log(
+        "[LoginForm] Session detected, waiting 2 seconds before redirect",
+      );
+
+      // Wait 2 seconds to ensure server-side session is established
+      const timer = setTimeout(() => {
+        console.log("[LoginForm] Redirecting to dashboard after delay");
+        setIsLoading(false);
+        router.push("/dashboard");
+      }, 2000);
+
+      return () => clearTimeout(timer);
     }
   }, [status, session, isLoading, router]);
 

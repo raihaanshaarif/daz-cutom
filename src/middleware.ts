@@ -22,6 +22,16 @@ export async function middleware(req: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  console.log("[MIDDLEWARE] Checking token for path:", pathname);
+  console.log("[MIDDLEWARE] Token exists:", !!token);
+  console.log(
+    "[MIDDLEWARE] NEXTAUTH_SECRET configured:",
+    !!process.env.NEXTAUTH_SECRET,
+  );
+  if (token) {
+    console.log("[MIDDLEWARE] Token found for user:", token.email);
+  }
+
   if (process.env.NODE_ENV === "development") {
     console.log(
       "Middleware - Path:",

@@ -2,6 +2,13 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 
+console.log("[AUTH OPTIONS] NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+console.log(
+  "[AUTH OPTIONS] NEXTAUTH_SECRET configured:",
+  !!process.env.NEXTAUTH_SECRET,
+);
+console.log("[AUTH OPTIONS] Environment:", process.env.NODE_ENV);
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -349,4 +356,6 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
+  trustHost: true,
+  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
 };
