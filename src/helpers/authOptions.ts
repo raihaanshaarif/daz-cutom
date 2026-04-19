@@ -318,39 +318,27 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      const loginPath = "/login";
-      const absoluteUrl = url.startsWith("/") ? `${baseUrl}${url}` : url;
+      // If the URL is just the base URL or the login page, redirect to dashboard
+      if (url === baseUrl || url === `${baseUrl}/login`) {
+        return `${baseUrl}/dashboard`;
+      }
+
+      // If URL starts with base URL origin, allow it (relative redirect)
+      if (url.startsWith(baseUrl)) {
+        return url;
+      }
+
+      // For external URLs, only allow if they're on the same origin
       try {
-        const urlObj = new URL(absoluteUrl);
-        if (urlObj.pathname === loginPath) {
-          const rawCallback = urlObj.searchParams.get("callbackUrl");
-          if (rawCallback) {
-            try {
-              const decoded = decodeURIComponent(rawCallback);
-              const absoluteCallback = decoded.startsWith("/")
-                ? `${baseUrl}${decoded}`
-                : decoded;
-              const callbackObj = new URL(absoluteCallback);
-              if (callbackObj.pathname === loginPath) {
-                return `${baseUrl}${loginPath}`;
-              }
-            } catch {
-              // if parsing fails, strip to be safe
-              return `${baseUrl}${loginPath}`;
-            }
-          }
+        if (new URL(url).origin === new URL(baseUrl).origin) {
+          return url;
         }
       } catch {
-        // ignore malformed url
+        // ignore malformed URLs
       }
-      // Default NextAuth behaviour
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      try {
-        if (new URL(url).origin === new URL(baseUrl).origin) return url;
-      } catch {
-        // ignore
-      }
-      return baseUrl;
+
+      // Default: redirect to dashboard on successful login
+      return `${baseUrl}/dashboard`;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,

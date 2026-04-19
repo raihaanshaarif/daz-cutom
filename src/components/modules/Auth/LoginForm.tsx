@@ -90,6 +90,18 @@ export default function LoginForm() {
       setIsLoading(false);
     }
   };
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("[LoginForm] Login successful, waiting for session update");
+      // The useEffect above will handle the redirect when session updates
+    } catch (err) {
+      console.error("[LoginForm] Caught error:", err);
+      setError("An error occurred during login. Please try again.");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50">
