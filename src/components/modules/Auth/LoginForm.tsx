@@ -45,18 +45,38 @@ export default function LoginForm() {
     setIsLoading(true);
     setError(null);
 
-    const result = await signIn("credentials", {
-      ...values,
-      callbackUrl: "/dashboard",
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        ...values,
+        callbackUrl: "/dashboard",
+        redirect: false,
+      });
 
-    if (!result?.ok) {
-      setError("Invalid email or password. Please try again.");
-      setIsLoading(false);
-    } else {
+      if (!result?.ok || result?.error) {
+        setError(result?.error || "Invalid email or password. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Add a small delay to ensure session is established before redirecting
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // Redirect on successful login
-      router.push("/dashboard");
+      try {
+        router.push("/dashboard");
+      } catch (redirectErr) {
+        if (process.env.NODE_ENV === "development") {
+          console.error("[LoginForm] Redirect error:", redirectErr);
+        }
+        setError("Failed to redirect to dashboard. Please refresh the page.");
+        setIsLoading(false);
+      }
+    } catch (err) {
+      setError("An error occurred during login. Please try again.");
+      setIsLoading(false);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[LoginForm] Error:", err);
+      }
     }
   };
 
